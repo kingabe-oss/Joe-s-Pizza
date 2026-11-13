@@ -7,435 +7,358 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Courier+Prime:wght@400;700&family=Rubik:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: a pizzeria kitchen. Steel order rail on top, then prep counter, oven, and the pass, left to right in the order a pie moves. */
+/* Layout: the Business 101 deck's look (cream ground, charcoal panels, tomato red, mustard, sage).
+   The kitchen runs left to right in routing order: 1 Prepare dough, 2 Add toppings, 3 Bake, 4 Cut, 5 Box. */
 :root {
-  --wall: #15302a;
-  --wall-line: #1c3c35;
-  --ink: #f6ecd9;
-  --muted: #a7bdb5;
-  --wood: #b07a45;
-  --wood-dark: #84552c;
-  --steel: #2a3034;
-  --steel-hi: #3a4247;
-  --paper: #fbf6ea;
-  --paper-ink: #2a211b;
-  --red: #d2402a;
-  --gold: #f2b33d;
-  --good: #4fae5b;
-  --bad: #e0573f;
-  --display: "Bowlby One", Impact, "Arial Black", sans-serif;
-  --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
-  color-scheme: dark;
+  --cream: #fbf3e6;
+  --card: #fffaf2;
+  --line: #eadcc6;
+  --navy: #1f2833;
+  --navy-2: #2b3641;
+  --ink: #1f2833;
+  --muted: #6b7480;
+  --red: #c94d3a;
+  --red-tint: #f5dad3;
+  --mustard: #e6ae47;
+  --mustard-tint: #f7e7c2;
+  --sage: #52765c;
+  --sage-tint: #dce7de;
+  --brown: #a06e58;
+  --on-dark: #f6efe4;
+  --on-dark-muted: #a9b2bc;
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { min-height: 100%; }
-body {
-  margin: 0;
-  font-family: var(--body);
-  font-size: 15px;
-  color: var(--ink);
-  background-color: var(--wall);
-  background-image:
-    linear-gradient(var(--wall-line) 2px, transparent 2px),
-    linear-gradient(90deg, var(--wall-line) 2px, transparent 2px);
-  background-size: 34px 34px;
-  -webkit-tap-highlight-color: transparent;
-}
+body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.4; -webkit-tap-highlight-color: transparent; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 1240px; margin: 0 auto;
   padding-block: 14px 40px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* HUD */
-.hud { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
-.brand {
-  font-family: var(--display);
-  font-size: clamp(28px, 4.4vw, 42px);
-  line-height: 1;
-  color: var(--gold);
-  text-shadow: 0 3px 0 var(--red);
-  margin: 0;
-  white-space: nowrap;
-}
-.stats { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
-.stat {
-  display: flex; flex-direction: column; justify-content: center;
-  min-width: 78px; padding: 6px 12px;
-  background: rgba(0,0,0,.3); border: 1px solid var(--wall-line); border-radius: 10px;
-}
-.stat small { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
-.stat b { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.stat.cash b.bump { animation: bump .5s ease; }
-@keyframes bump { 40% { transform: scale(1.18); color: var(--gold); } }
-.stars { position: relative; display: inline-block; font-size: 17px; letter-spacing: 2px; line-height: 1.2; }
-.stars::before { content: "★★★★★"; color: rgba(255,255,255,.18); }
-.stars span { position: absolute; inset: 0 auto 0 0; overflow: hidden; white-space: nowrap; color: var(--gold); }
-.stars span::before { content: "★★★★★"; }
-.hud-buttons { display: flex; gap: 8px; }
-.icon-btn {
-  border: 1px solid var(--wall-line); background: rgba(0,0,0,.3); border-radius: 10px;
-  padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 500;
-}
-.icon-btn:hover { background: rgba(0,0,0,.45); }
-.daybar { height: 6px; background: rgba(0,0,0,.35); border-radius: 3px; overflow: hidden; }
-.daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--red)); }
-
-/* Order rail */
-.rail-wrap {
-  background: linear-gradient(#69737a, #434b51 14px, #343a3f);
-  border-radius: 10px;
-  padding: 26px 12px 14px;
-  position: relative;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,.25);
-}
-.rail-wrap::before {
-  content: "ORDER RAIL"; position: absolute; top: 6px; left: 14px;
-  font-size: 10px; letter-spacing: .14em; color: #c7cfd4; font-weight: 700;
-}
-.rail { display: flex; gap: 14px; overflow-x: auto; min-height: 196px; align-items: flex-start; padding: 4px 2px 6px; scrollbar-width: thin; }
-.rail-empty { margin: auto; color: #c7cfd4; font-size: 14px; text-align: center; max-width: 34ch; }
-.ticket {
-  flex: 0 0 172px;
-  display: flex; flex-direction: column; gap: 6px;
-  text-align: left; cursor: pointer;
-  background: var(--paper); color: var(--paper-ink);
-  border: 0; border-top: 7px solid #cfd3d6; border-radius: 1px 1px 6px 6px;
-  padding: 10px 12px 10px;
-  font-family: var(--mono); font-size: 13px; line-height: 1.25;
-  transform: rotate(var(--tilt, 0deg));
-  box-shadow: 0 7px 14px rgba(0,0,0,.35);
-  animation: drop .35s cubic-bezier(.2,1.4,.5,1);
-  transition: transform .15s ease, background-color .3s;
-}
-.ticket:hover { transform: rotate(0deg) translateY(3px); }
-@keyframes drop { from { transform: translateY(-30px) rotate(-4deg); opacity: 0; } }
-body.serving .ticket { outline: 2px dashed var(--gold); outline-offset: 3px; }
-.ticket[data-mood="angry"] { background: #fde6dc; }
-.t-top { display: flex; align-items: center; gap: 8px; }
-.face { width: 38px; height: 38px; flex: none; }
-.face .brows { opacity: 0; transition: opacity .2s; }
-.ticket[data-mood="angry"] .face .brows { opacity: 1; }
-.t-who { display: flex; flex-direction: column; min-width: 0; }
-.t-name { font-weight: 700; font-size: 14px; }
-.t-meta { font-size: 11px; color: #6c5f53; }
-.t-title { font-family: var(--body); font-weight: 700; font-size: 14px; border-top: 1px dashed #b9ab98; padding-top: 6px; }
-.t-items { display: flex; flex-direction: column; gap: 1px; }
-.t-items .no { color: var(--red); font-weight: 700; }
-.t-items .add { font-weight: 700; }
-.t-foot { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6c5f53; margin-top: auto; }
-.t-foot b { color: var(--paper-ink); font-size: 14px; }
-.patience { height: 6px; background: #e3d9c6; border-radius: 3px; overflow: hidden; }
-.patience i { display: block; height: 100%; background: var(--good); transition: background-color .3s; }
-.ticket[data-mood="meh"] .patience i { background: var(--gold); }
-.ticket[data-mood="angry"] .patience i { background: var(--bad); }
-
-/* Kitchen */
-.kitchen { display: grid; gap: 14px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) minmax(0, .8fr); align-items: start; }
-@media (max-width: 1000px) { .kitchen { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .prep { grid-column: 1 / -1; } }
-@media (max-width: 640px) { .kitchen { grid-template-columns: minmax(0, 1fr); } }
-.station { border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.station-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.station h2 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 0; letter-spacing: .02em; }
-.station-head small { font-size: 12px; opacity: .8; }
-
-.prep {
-  background-color: var(--wood);
-  background-image:
-    repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, transparent 2px 46px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 13px);
-  color: #2b1a0c;
-  box-shadow: inset 0 -5px 0 var(--wood-dark);
-}
-.prep-body { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.peel {
-  flex: none; width: 250px; height: 250px; max-width: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #e2b882, #c99257 70%, #a87039);
-  box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(0,0,0,.25);
-  display: grid; place-items: center; position: relative; margin-inline: auto;
-}
-.peel canvas { width: 228px; height: 228px; }
-.peel-hint {
-  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  padding: 50px; font-weight: 500; font-size: 14px; color: #5a3a1c; pointer-events: none;
-}
-.prep-side { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.bins { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
-.bin {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 8px 4px 7px; border-radius: 9px; cursor: pointer;
-  background: var(--steel); color: var(--ink); border: 2px solid transparent;
-  font-size: 12px; font-weight: 500; line-height: 1.15; text-align: center;
-  box-shadow: 0 3px 0 #15191b;
-  transition: transform .08s;
-}
-.bin:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #15191b; }
-.bin canvas { width: 40px; height: 40px; }
-.bin kbd { position: absolute; top: 3px; left: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
-.bin .lock { font-size: 10.5px; color: var(--gold); }
-.bin.on { border-color: var(--good); background: #233a2c; }
-.bin.on::after { content: "✓"; position: absolute; top: 2px; right: 6px; color: var(--good); font-weight: 700; }
-.bin:disabled { opacity: .5; cursor: not-allowed; }
-.bin.locked canvas { filter: grayscale(1) brightness(.6); }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn {
-  border: 0; border-radius: 9px; padding: 10px 14px; cursor: pointer; font-weight: 700; font-size: 14px;
-  background: var(--steel); color: var(--ink); box-shadow: 0 3px 0 #15191b;
-  display: inline-flex; align-items: center; gap: 8px;
-}
-.btn kbd { font-family: var(--mono); font-size: 11px; opacity: .7; font-weight: 400; }
-.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #15191b; }
-.btn.primary { background: var(--gold); color: #2a1b08; box-shadow: 0 3px 0 #a8741a; }
-.btn.hot { background: var(--red); color: #fff; box-shadow: 0 3px 0 #8e2414; }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-
-.oven { background: linear-gradient(#2c3033, #1b1d1f); border: 1px solid #3a3f44; }
-.oven .station-head small { color: var(--muted); }
-.decks { display: flex; flex-direction: column; gap: 10px; }
-.deck {
-  display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px;
-  border-radius: 10px; border: 0; text-align: left; cursor: pointer;
-  background: radial-gradient(ellipse at 25% 50%, rgba(255,128,32,.28), transparent 62%), #111214;
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.05);
-}
-.deck:disabled { cursor: default; }
-.deck canvas { width: 92px; height: 92px; flex: none; }
-.deck-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-.deck-label { font-weight: 700; font-size: 14px; }
-.deck-hint { font-size: 12px; color: var(--muted); }
-.gauge {
-  position: relative; height: 12px; border-radius: 6px;
-  background: linear-gradient(90deg, #6b6f73 0 40.6%, #c99a3c 40.6% 55%, #4fae5b 55% 71.9%, #d67a2c 71.9% 87.5%, #b5301c 87.5%);
-}
-.deck:disabled .gauge { opacity: .25; }
-.needle { position: absolute; top: -4px; bottom: -4px; left: 0; width: 4px; margin-left: -2px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px #000; }
-.deck[data-grade="perfect"] { box-shadow: inset 0 0 0 2px var(--good); }
-.deck[data-grade="perfect"] .deck-label { color: #8fe09a; }
-.deck[data-grade="dark"] .deck-label { color: #f0a35e; }
-.deck[data-grade="burnt"] { box-shadow: inset 0 0 0 2px var(--bad); animation: smoke .6s ease-in-out infinite alternate; }
-.deck[data-grade="burnt"] .deck-label { color: var(--bad); }
-@keyframes smoke { to { background-color: #2a1512; } }
-
-.pass {
-  background: linear-gradient(160deg, #d6dbdf, #aab2b8);
-  color: #1d2326;
-  box-shadow: inset 0 -5px 0 #858e95;
-}
-.plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.plate {
-  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px;
-  border-radius: 10px; border: 2px solid transparent; background: transparent; cursor: pointer; color: #1d2326;
-  font-size: 12px; font-weight: 700;
-}
-.plate:disabled { cursor: default; color: #5c666c; font-weight: 500; }
-.plate canvas {
-  width: 76px; height: 76px; max-width: 100%; border-radius: 50%;
-  background: radial-gradient(circle, #fff 58%, #e1e5e8 60%, #fdfdfd 68%, #cfd5d9 71%);
-}
-.plate.sel { border-color: var(--red); background: rgba(255,255,255,.5); }
-.plate[data-grade="perfect"] .plate-label { color: #23753a; }
-.plate[data-grade="raw"] .plate-label, .plate[data-grade="burnt"] .plate-label { color: #b5301c; }
-.pass-hint { font-size: 12.5px; margin: 0; color: #3b4449; line-height: 1.4; }
-.pass .btn { background: #48525a; color: #fff; box-shadow: 0 3px 0 #2c3338; align-self: flex-start; }
-
-/* Overlay panels */
-.overlay {
-  position: fixed; inset: 0; z-index: 30;
-  background: rgba(8, 20, 17, .74);
-  backdrop-filter: blur(3px);
-  display: grid; place-items: center; overflow-y: auto;
-  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-}
-.panel {
-  width: 100%; max-width: 560px;
-  background: var(--paper); color: var(--paper-ink);
-  border-radius: 4px; padding: 28px clamp(18px, 5vw, 34px);
-  box-shadow: 0 20px 50px rgba(0,0,0,.5);
   display: flex; flex-direction: column; gap: 14px;
-  border-top: 10px solid var(--red);
 }
-.panel h1, .panel h2 { font-family: var(--display); font-weight: 400; margin: 0; line-height: 1.05; text-wrap: balance; }
-.panel h1 { font-size: clamp(40px, 9vw, 60px); color: var(--red); text-shadow: 0 3px 0 var(--gold); }
-.panel h2 { font-size: 30px; color: var(--red); }
-.panel p { margin: 0; line-height: 1.5; }
-.eyebrow { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: #7a6a5b; }
-.howto { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; line-height: 1.45; }
-.keys { font-family: var(--mono); font-size: 12.5px; color: #6c5f53; }
-.panel .btn.primary { align-self: flex-start; font-size: 16px; padding: 12px 20px; }
-.ledger { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
-.ledger td { padding: 4px 0; border-bottom: 1px dotted #c9bba6; }
-.ledger td:last-child { text-align: right; }
-.ledger tr.total td { border-bottom: 0; border-top: 2px solid var(--paper-ink); font-weight: 700; padding-top: 7px; }
-.ledger .neg { color: var(--red); }
-.shop { display: flex; flex-direction: column; gap: 8px; }
-.shop h3 { margin: 6px 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: #7a6a5b; }
-.item { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f1e9d8; border-radius: 6px; }
-.item div { min-width: 0; }
-.item b { display: block; }
-.item span { font-size: 13px; color: #6c5f53; }
-.item .btn { flex: none; background: var(--paper-ink); color: var(--paper); box-shadow: 0 3px 0 #000; padding: 8px 12px; }
-.item .btn:disabled { background: #cbbfa9; color: #6c5f53; box-shadow: none; opacity: 1; }
-.note { font-size: 13.5px; color: #6c5f53; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--red); margin: 0; }
 
-/* Toast */
-.toast {
-  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
-  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
-  max-width: min(92vw, 520px); width: max-content;
-  padding: 10px 16px; border-radius: 10px; font-weight: 500; font-size: 14px; line-height: 1.35;
-  background: #101c19; color: var(--ink); border: 1px solid var(--wall-line); box-shadow: 0 8px 24px rgba(0,0,0,.4);
-  transition: opacity .2s, transform .2s;
+/* Top bar */
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.title h1 { margin: 2px 0 0; font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: -.01em; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; min-width: 92px; }
+.stat small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat.dark { background: var(--navy); border-color: var(--navy); color: var(--on-dark); }
+.stat.dark small { color: var(--on-dark-muted); }
+.stat.warn b { color: var(--red); }
+.stat.dark.warn b { color: #ff8f7a; }
+.stat.ok b { color: var(--sage); }
+.tools { display: flex; gap: 8px; }
+.ghost { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.ghost:hover { background: #fff; }
+.progress { height: 8px; border-radius: 4px; background: #eadfcd; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--sage); }
+
+/* Line of stations */
+.line { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, .9fr) minmax(0, .8fr); align-items: stretch; }
+@media (max-width: 1060px) { .line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (max-width: 620px) { .line { grid-template-columns: minmax(0, 1fr); } }
+.station { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.station.dark { background: var(--navy); border-color: var(--navy); color: var(--on-dark); }
+.st-head { display: flex; align-items: center; gap: 10px; }
+.steps { display: flex; gap: 4px; }
+.step { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; background: var(--navy); color: var(--on-dark); flex: none; }
+.station.dark .step { background: var(--red); }
+.st-head h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.st-head small { margin-left: auto; font-size: 12px; color: var(--muted); text-align: right; }
+.station.dark .st-head small { color: var(--on-dark-muted); }
+
+.prep-body { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.peel { flex: none; width: 216px; height: 216px; max-width: 100%; border-radius: 50%; margin-inline: auto; background: radial-gradient(circle at 40% 35%, #e9c595, #d3a26b 70%, #b98250); box-shadow: 0 5px 0 #a3713f; display: grid; place-items: center; position: relative; }
+.peel canvas { width: 196px; height: 196px; }
+.peel-hint { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 44px; font-weight: 600; font-size: 13.5px; color: #6b4521; pointer-events: none; }
+.prep-side { flex: 1 1 210px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pour {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center;
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #fff; cursor: pointer; text-align: left;
+  touch-action: none; user-select: none; -webkit-user-select: none;
 }
+.pour:disabled { cursor: not-allowed; opacity: .5; }
+.pour.active { border-color: var(--red); box-shadow: 0 0 0 2px var(--red-tint); }
+.pour b { font-size: 14px; }
+.pour kbd, .btn kbd, .routing kbd { font-family: inherit; font-weight: 700; font-size: 11px; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; opacity: .75; }
+.pour .cost { grid-column: 1 / -1; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pgauge { grid-column: 1 / -1; position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #e6dccb 0 59.4%, #9fc3a6 59.4% 71.9%, #f0c0b5 71.9%); }
+.pgauge i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--navy-2); opacity: .85; width: 0; }
+.pgauge em { position: absolute; top: -3px; bottom: -3px; left: 62.5%; width: 2px; background: var(--sage); }
+.pour .state { font-size: 12px; font-weight: 700; }
+.pour[data-s="ok"] .state { color: var(--sage); }
+.pour[data-s="heavy"] .state { color: var(--red); }
+.pour[data-s="short"] .state { color: var(--muted); }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { border: 0; border-radius: 9px; padding: 10px 14px; cursor: pointer; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; background: var(--navy); color: var(--on-dark); }
+.btn.red { background: var(--red); color: #fff; }
+.btn.mustard { background: var(--mustard); color: var(--navy); }
+.btn.light { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.station.dark .btn.light { background: var(--navy-2); color: var(--on-dark); border-color: #3c4855; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.decks { display: flex; flex-direction: column; gap: 8px; }
+.deck { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 10px; border: 0; text-align: left; cursor: pointer; color: var(--on-dark);
+  background: radial-gradient(ellipse at 22% 50%, rgba(230,120,50,.32), transparent 60%), #151b22; }
+.deck:disabled { cursor: default; }
+.deck canvas { width: 70px; height: 70px; flex: none; }
+.deck-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.deck-top { display: flex; justify-content: space-between; gap: 6px; font-size: 13px; font-weight: 700; }
+.deck-top kbd { font-family: inherit; font-size: 11px; color: var(--on-dark-muted); border: 1px solid #3c4855; border-radius: 4px; padding: 0 4px; font-weight: 600; }
+.bgauge { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #56606b 0 56.25%, #5f9a6c 56.25% 81.25%, #c94d3a 81.25%); }
+.deck:disabled .bgauge { opacity: .3; }
+.bgauge i { position: absolute; top: -3px; bottom: -3px; width: 4px; margin-left: -2px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px #000; left: 0; }
+.deck[data-g="good"] { box-shadow: inset 0 0 0 2px #7fc08e; }
+.deck[data-g="good"] .deck-label { color: #a8e0b3; }
+.deck[data-g="burnt"] { box-shadow: inset 0 0 0 2px var(--red); }
+.deck[data-g="burnt"] .deck-label { color: #ff8f7a; }
+
+.board { width: 150px; height: 150px; margin-inline: auto; border-radius: 12px; background: repeating-linear-gradient(90deg, #d9b68a 0 14px, #d1ad7f 14px 15px); box-shadow: 0 4px 0 #b48b5c; display: grid; place-items: center; }
+.board canvas { width: 136px; height: 136px; }
+.board-status { text-align: center; font-size: 13px; font-weight: 700; min-height: 1.4em; margin: 0; }
+.board-status.good { color: var(--sage); }
+.board-status.bad { color: var(--red); }
+
+.boxes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.boxes span { aspect-ratio: 1; max-width: 100%; border-radius: 4px; border: 1.5px dashed #cdbfa8; }
+.boxes span.done { border: 0; background: var(--mustard); box-shadow: inset 0 -4px 0 rgba(0,0,0,.12); position: relative; }
+.boxes span.done::after { content: ""; position: absolute; inset: 30% 22%; border-radius: 50%; background: var(--red); opacity: .8; }
+.box-count { text-align: center; font-size: 13px; color: var(--muted); margin: 0; }
+.box-count b { color: var(--ink); font-size: 20px; font-weight: 800; }
+
+/* Live standard vs actual */
+.ledger-live { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+@media (max-width: 820px) { .ledger-live { grid-template-columns: minmax(0, 1fr); } }
+.panel-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+.panel-card h3 { margin: 0 0 8px; font-size: 14px; font-weight: 800; }
+.tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+.tbl th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: right; padding: 0 0 6px 8px; }
+.tbl th:first-child { text-align: left; padding-left: 0; }
+.tbl td { padding: 5px 0 5px 8px; border-top: 1px solid var(--line); text-align: right; }
+.tbl td:first-child { text-align: left; padding-left: 0; }
+.tbl tr.total td { font-weight: 800; border-top: 2px solid var(--ink); }
+.over { color: var(--red); font-weight: 700; }
+.under { color: var(--sage); font-weight: 700; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.fact { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.fact small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+.fact b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Overlay */
+.overlay { position: fixed; inset: 0; z-index: 30; background: rgba(31, 40, 51, .62); backdrop-filter: blur(3px); overflow-y: auto; display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet { width: 100%; max-width: 780px; background: var(--cream); border-radius: 16px; padding: clamp(18px, 4vw, 32px); box-shadow: 0 24px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 16px; }
+.sheet.wide { max-width: 1000px; }
+.sheet h1, .sheet h2 { margin: 0; font-weight: 800; letter-spacing: -.015em; line-height: 1.1; text-wrap: balance; }
+.sheet h1 { font-size: clamp(30px, 6vw, 44px); }
+.sheet h2 { font-size: clamp(24px, 4.4vw, 32px); }
+.sheet p { margin: 0; max-width: 70ch; }
+.lead { font-size: 16px; }
+.cost-eq { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--navy); color: var(--on-dark); border-radius: 12px; padding: 14px; }
+.chip { background: var(--navy-2); border-radius: 9px; padding: 8px 12px; text-align: center; min-width: 88px; }
+.chip b { display: block; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.chip small { font-size: 11px; color: var(--on-dark-muted); font-weight: 600; }
+.chip.m b { color: var(--mustard); }
+.chip.r b { color: #f08a76; }
+.chip.g b { color: #8fbf98; }
+.chip.total { background: var(--red); }
+.chip.total b, .chip.total small { color: #fff; }
+.op { font-size: 18px; color: var(--on-dark-muted); font-weight: 700; }
+.routing { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 680px) { .routing { grid-template-columns: minmax(0, 1fr); } }
+.routing li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.routing li b { font-size: 14px; }
+.note { font-size: 13px; color: var(--muted); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cta-row .btn { font-size: 16px; padding: 12px 20px; }
+
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.opt { text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.opt[aria-checked="true"] { border-color: var(--red); background: #fff; box-shadow: 0 0 0 3px var(--red-tint); }
+.opt .rate { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.opt .rate small { font-size: 13px; font-weight: 600; color: var(--muted); }
+.opt .tag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
+.opt .math { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.opt .ready { font-size: 15px; font-weight: 800; }
+.quote { font-size: clamp(22px, 4vw, 30px); font-weight: 800; }
+
+/* Report */
+.rep-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 760px) { .rep-grid { grid-template-columns: minmax(0, 1fr); } }
+.bars { display: flex; flex-direction: column; gap: 14px; }
+.bar-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13px; }
+.bar-row > span:first-child { font-weight: 600; }
+.bar-track { position: relative; height: 24px; }
+.bar-track i { position: absolute; top: 0; height: 18px; border-radius: 4px; }
+.bar-track i.std { top: 20px; height: 5px; background: #bfae94; }
+.bar-track b { position: absolute; top: 9px; transform: translateY(-50%); font-size: 13px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.zero { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--ink); opacity: .35; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; margin-top: 14px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+.headline { background: var(--navy); color: var(--on-dark); border-radius: 14px; padding: 18px; display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; }
+.headline .big { font-size: clamp(36px, 7vw, 52px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.headline .big.neg { color: #ff8f7a; }
+.headline .big.pos { color: #8fbf98; }
+.headline p { color: var(--on-dark-muted); flex: 1 1 300px; }
+.headline strong { color: var(--on-dark); }
+.lessons { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.lesson { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.lesson b { display: block; margin-bottom: 4px; }
+.lesson p { font-size: 13.5px; color: #3c4652; }
+.cap { display: flex; gap: 10px; flex-wrap: wrap; }
+.cap div { flex: 1 1 120px; border-radius: 10px; padding: 10px 12px; }
+.cap .plan { background: var(--mustard-tint); }
+.cap .real { background: var(--red-tint); }
+.cap b { display: block; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cap small { font-size: 12px; color: #4b5560; }
+.hist { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.hist th { text-align: right; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 0 6px 10px; white-space: nowrap; }
+.hist td { text-align: right; padding: 5px 0 5px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+.hist th:first-child, .hist td:first-child { text-align: left; padding-left: 0; }
+.scroll-x { overflow-x: auto; }
+
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+  width: max-content; max-width: min(92vw, 520px); padding: 10px 16px; border-radius: 10px; background: var(--navy); color: var(--on-dark); font-weight: 600; font-size: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.3); transition: opacity .2s, transform .2s; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
-.toast.good { border-color: var(--good); }
-.toast.bad { border-color: var(--bad); }
+.toast.bad { background: var(--red); color: #fff; }
+.toast.good { background: var(--sage); color: #fff; }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <header class="hud">
-    <p class="brand">Joe's Pizza</p>
-    <div class="stats">
-      <div class="stat"><small>Day</small><b id="hudDay">1</b></div>
-      <div class="stat"><small>Clock</small><b id="hudClock">11:00 AM</b></div>
-      <div class="stat cash"><small>Cash</small><b id="hudCash">$0.00</b></div>
-      <div class="stat"><small>Rent tonight</small><b id="hudRent">$0.00</b></div>
-      <div class="stat"><small>Rating</small><span class="stars" id="hudStars" role="img" aria-label="5 of 5 stars"><span style="width:100%"></span></span></div>
+<div class="app">
+  <header class="top">
+    <div class="title">
+      <p class="eyebrow">Business 101 · Joe's Pizza</p>
+      <h1>The Friday shift</h1>
     </div>
-    <div class="hud-buttons">
-      <button class="icon-btn" id="btnMute" type="button" aria-pressed="false">Sound on</button>
-      <button class="icon-btn" id="btnPause" type="button">Pause</button>
+    <div class="stats">
+      <div class="stat dark" id="stClockBox"><small>Clock</small><b id="stClock">4:00 PM</b></div>
+      <div class="stat"><small>Promised</small><b id="stPromise">5:00 PM</b></div>
+      <div class="stat" id="stProjBox"><small>On pace for</small><b id="stProj">…</b></div>
+      <div class="stat" id="stRateBox"><small>Run rate</small><b id="stRate">… /hr</b></div>
+      <div class="stat"><small>Boxed</small><b id="stBoxed">0 / 20</b></div>
+    </div>
+    <div class="tools">
+      <button class="ghost" id="btnMute" type="button" aria-pressed="false">Sound on</button>
+      <button class="ghost" id="btnPause" type="button">Pause</button>
     </div>
   </header>
-  <div class="daybar" aria-hidden="true"><i id="dayFill"></i></div>
+  <div class="progress" aria-hidden="true"><i id="progFill"></i></div>
 
-  <section class="rail-wrap" aria-label="Order tickets">
-    <div class="rail" id="rail"></div>
-  </section>
-
-  <main class="kitchen">
-    <section class="station prep" aria-label="Prep counter">
-      <div class="station-head"><h2>Prep counter</h2><small>Build the pie on the ticket</small></div>
+  <main class="line">
+    <section class="station" aria-label="Prepare dough and add toppings">
+      <div class="st-head"><span class="steps"><span class="step">1</span><span class="step">2</span></span><h2>Prep: dough and toppings</h2><small>Hold to pour.<br>Let go in the green.</small></div>
       <div class="prep-body">
-        <div class="peel">
-          <canvas id="prepCanvas" aria-label="Pizza being prepared"></canvas>
-          <div class="peel-hint" id="peelHint">Stretch some dough to start a pie</div>
-        </div>
+        <div class="peel"><canvas id="prepCv" aria-label="Pizza on the prep counter"></canvas><div class="peel-hint" id="peelHint">Stretch dough to start a pizza</div></div>
         <div class="prep-side">
-          <div class="actions">
-            <button class="btn primary" id="btnDough" type="button">Stretch dough <kbd>D</kbd></button>
-            <button class="btn hot" id="btnBake" type="button">Into the oven <kbd>B</kbd></button>
-            <button class="btn" id="btnBin" type="button">Bin it <kbd>X</kbd></button>
+          <div class="btns">
+            <button class="btn mustard" id="btnDough" type="button">Stretch dough <kbd>D</kbd></button>
           </div>
-          <div class="bins" id="bins"></div>
+          <button class="pour" id="pour-sauce" data-k="sauce" type="button"><b>Sauce <kbd>S</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 1 ladle · $0.50</span></button>
+          <button class="pour" id="pour-cheese" data-k="cheese" type="button"><b>Cheese <kbd>C</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 1 handful · $2.00</span></button>
+          <button class="pour" id="pour-pep" data-k="pep" type="button"><b>Pepperoni <kbd>P</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 12 slices · $1.00</span></button>
+          <div class="btns">
+            <button class="btn red" id="btnOven" type="button">Into the oven <kbd>O</kbd></button>
+            <button class="btn light" id="btnBinPrep" type="button">Scrap it</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="station oven" aria-label="Oven">
-      <div class="station-head"><h2>Oven</h2><small>Pull it in the green</small></div>
+    <section class="station dark" aria-label="Bake">
+      <div class="st-head"><span class="steps"><span class="step">3</span></span><h2>Bake</h2><small>Pull it in the green</small></div>
       <div class="decks" id="decks"></div>
     </section>
 
-    <section class="station pass" aria-label="The pass">
-      <div class="station-head"><h2>The pass</h2></div>
-      <div class="plates" id="plates"></div>
-      <p class="pass-hint">Tap a pie, then tap the customer's ticket to serve it.</p>
-      <button class="btn" id="btnTossPass" type="button">Bin selected pie</button>
+    <section class="station" aria-label="Cut">
+      <div class="st-head"><span class="steps"><span class="step">4</span></span><h2>Cut</h2><small>Check it, then cut</small></div>
+      <div class="board"><canvas id="boardCv" aria-label="Pizza on the cutting board"></canvas></div>
+      <p class="board-status" id="boardStatus">Board is empty</p>
+      <div class="btns">
+        <button class="btn" id="btnCut" type="button">Cut <kbd>K</kbd></button>
+        <button class="btn light" id="btnRework" type="button">Back in oven</button>
+        <button class="btn light" id="btnScrapBoard" type="button">Scrap</button>
+      </div>
+    </section>
+
+    <section class="station" aria-label="Box">
+      <div class="st-head"><span class="steps"><span class="step">5</span></span><h2>Box</h2><small>The order</small></div>
+      <div class="boxes" id="boxes"></div>
+      <p class="box-count"><b id="boxN">0</b> of 20 boxed</p>
+      <div class="btns"><button class="btn red" id="btnBox" type="button">Box it <kbd>B</kbd></button></div>
     </section>
   </main>
+
+  <section class="ledger-live">
+    <div class="panel-card">
+      <h3>Cost per pizza: Joe's standard vs. this shift so far</h3>
+      <table class="tbl" id="liveTbl"></table>
+    </div>
+    <div class="panel-card">
+      <h3>What the shift has used</h3>
+      <div class="facts" id="liveFacts"></div>
+    </div>
+  </section>
 </div>
 
-<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (() => {
 'use strict';
 
-/* ---------- constants ---------- */
-const DAY_LEN = 120;          // seconds of real time per shift (11 AM to 9 PM)
-const PASS_SIZE = 3;
-const MAX_QUEUE = 4;
-const BAKE_MAX = 1.6;
+/* ---------- The deck's numbers ---------- */
+const ORDER = 20;            // pizzas in the catering order
+const PRICE = 12;            // customer pays per pizza
+const OTHER = 3;             // other business costs, per pizza equivalent
+const WAGE = 20, OT_WAGE = 30;
+const STD_RATE = 20;         // Joe's standard run rate, pizzas per hour
+const OH_PER_HR = 30;        // overhead runs $30/hr, which is $1.50 a pizza at 20/hr
+const COST = { dough: 1.00, sauce: 0.50, cheese: 2.00, pep: 1.00 };
+const STD_MAT = 4.50, STD_LAB = 1.00, STD_OH = 1.50, STD_COST = 7.00;
+
+/* ---------- Pace of play ---------- */
+const SEC_PER_MIN = 2;       // 2 real seconds = 1 kitchen minute, so 20/hr is one pizza every 6 seconds
+const START = 16 * 60;       // 4:00 PM
+const MAX_MIN = 300;         // Joe sends everyone home after 5 hours
+const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
+const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
+const BAKE_SEC = 7, GOOD_LO = 0.9, GOOD_HI = 1.3, BAKE_MAX = 1.6;
+const DECKS = 3;
+const HIST_KEY = 'joes-pizza-b101-history';
 const TAU = Math.PI * 2;
-const BEST_KEY = 'joes-pizza-best';
-
-const TOPPINGS = {
-  pepperoni: { label: 'Pepperoni',    day: 1, n: 7 },
-  mushroom:  { label: 'Mushroom',     day: 1, n: 6 },
-  pepper:    { label: 'Green pepper', day: 2, n: 7 },
-  olive:     { label: 'Black olive',  day: 2, n: 9 },
-  onion:     { label: 'Red onion',    day: 3, n: 7 },
-  sausage:   { label: 'Sausage',      day: 3, n: 10 },
-  basil:     { label: 'Basil',        day: 4, n: 5 },
-  pineapple: { label: 'Pineapple',    day: 4, n: 8 },
-};
-const TKEYS = Object.keys(TOPPINGS);
-
-const NAMES = ['Rosa','Marco','Dee','Tony','Priya','Sal','Mei','Luis','Gina','Omar','Bea','Frankie','Nico','June','Ray','Ada','Vince','Lou','Tess','Kofi','Hana','Carmen','Eddie','Yusuf'];
-const SKINS = ['#f1c9a5','#e0ad85','#c48a5f','#9a6643','#6b432b','#f5d8c2'];
-const HATS  = ['#d2402a','#2f6fb5','#f2b33d','#3d8c55','#6b4aa0','#2a211b','#e07b9a'];
-const MOUTH = {
-  happy: 'M14 28 Q20 34 26 28',
-  meh:   'M14.5 29.5 L25.5 29.5',
-  angry: 'M14 32 Q20 26 26 32',
-};
-
-const GRADE_LABEL = { raw: 'Raw', light: 'Pale', perfect: 'Perfect', dark: 'Well done', burnt: 'Burnt' };
-const DECK_LABEL  = { raw: 'Raw dough', light: 'Nearly there', perfect: 'Golden. Pull it!', dark: 'Getting dark', burnt: 'Burning!' };
-
-const UPGRADES = [
-  { id: 'heat1', name: 'Hotter oven',      desc: 'Pies bake 25% faster.',                     cost: 45, owned: () => S.up.heat >= 1, buy: () => { S.up.heat = 1; } },
-  { id: 'heat2', name: 'Stone deck',       desc: 'Another 25% faster. Needs the hotter oven.', cost: 80, owned: () => S.up.heat >= 2, ready: () => S.up.heat >= 1, buy: () => { S.up.heat = 2; } },
-  { id: 'oven3', name: 'Third oven deck',  desc: 'Bake three pies at once.',                  cost: 70, owned: () => S.up.oven3, buy: () => { S.up.oven3 = true; } },
-  { id: 'juke',  name: 'Jukebox',          desc: 'Customers wait 25% longer.',                cost: 40, owned: () => S.up.juke, buy: () => { S.up.juke = true; } },
-  { id: 'sauce', name: 'Pre-sauced dough', desc: 'Fresh dough comes out already sauced.',     cost: 35, owned: () => S.up.sauce, buy: () => { S.up.sauce = true; } },
-  { id: 'tip',   name: 'Tip jar',          desc: 'Tips are 50% bigger.',                      cost: 30, owned: () => S.up.tip, buy: () => { S.up.tip = true; } },
-  { id: 'sign',  name: 'Neon sign',        desc: 'Good word gets around. Rating up one star.', cost: 50, owned: () => S.rating >= 5, ownedLabel: 'Full', buy: () => { S.rating = Math.min(5, S.rating + 1); } },
-];
-
-/* ---------- state ---------- */
-let S;
-let muted = false;
-let uidN = 1;
-const uid = () => uidN++;
-
-function freshState() {
-  return {
-    phase: 'title', paused: false,
-    day: 1, time: 0, cash: 20, rating: 5,
-    orders: [], nextOrderIn: 1.5, ticketNo: 1,
-    prep: null, oven: [null, null], pass: Array(PASS_SIZE).fill(null), selected: -1,
-    up: { heat: 0, oven3: false, juke: false, sauce: false, tip: false },
-    stats: blankStats(), served: 0, closedNotice: false,
-  };
-}
-function blankStats() { return { served: 0, perfect: 0, walkouts: 0, wrong: 0, revenue: 0, tips: 0, rent: 0 }; }
 
 /* ---------- helpers ---------- */
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const money = (v) => (v < 0 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const money = (v) => (v < -0.004 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
+const signed = (v) => (v > 0.004 ? '+' : v < -0.004 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
+const r1 = (v) => Math.round(v * 10) / 10;
+function clock(min) {
+  const m = Math.round(START + min), h24 = Math.floor(m / 60) % 24, mm = m % 60;
+  return `${((h24 + 11) % 12) + 1}:${String(mm).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
+}
+function dur(min) {
+  const m = Math.round(min), h = Math.floor(m / 60), mm = m % 60;
+  return h ? `${h} h ${String(mm).padStart(2, '0')} m` : `${mm} min`;
+}
 function rng(seed) {
   let s = seed | 0;
   return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -443,549 +366,370 @@ function rng(seed) {
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
 function ramp(stops, v) {
   if (v <= stops[0][0]) return stops[0][1];
-  for (let i = 1; i < stops.length; i++) {
-    if (v <= stops[i][0]) {
-      const [a0, c0] = stops[i - 1], [a1, c1] = stops[i];
-      const t = (v - a0) / (a1 - a0), x = hexRgb(c0), y = hexRgb(c1);
-      return `rgb(${x.map((c, k) => Math.round(c + (y[k] - c) * t)).join(',')})`;
-    }
+  for (let i = 1; i < stops.length; i++) if (v <= stops[i][0]) {
+    const [a0, c0] = stops[i - 1], [a1, c1] = stops[i], t = (v - a0) / (a1 - a0), x = hexRgb(c0), y = hexRgb(c1);
+    return `rgb(${x.map((c, k) => Math.round(c + (y[k] - c) * t)).join(',')})`;
   }
   return stops[stops.length - 1][1];
 }
-function rentFor(day) { return 35 + 20 * (day - 1); }
-function bakeSpeed() { return (1 / 9) * Math.pow(1.25, S.up.heat); }
-function grade(b) {
-  if (b < 0.65) return 'raw';
-  if (b < 0.88) return 'light';
-  if (b <= 1.15) return 'perfect';
-  if (b <= 1.4) return 'dark';
-  return 'burnt';
-}
-function clockStr(t) {
-  const mins = 11 * 60 + Math.floor(clamp(t / DAY_LEN, 0, 1) * 600);
-  const h24 = Math.floor(mins / 60), m = mins % 60;
-  const h12 = ((h24 + 11) % 12) + 1;
-  return `${h12}:${String(m).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
-}
-function loadBest() { try { return JSON.parse(localStorage.getItem(BEST_KEY)) || null; } catch (e) { return null; } }
-function saveBest(days, served) {
-  const best = loadBest();
-  if (best && (best.days > days || (best.days === days && best.served >= served))) return best;
-  const next = { days, served };
-  try { localStorage.setItem(BEST_KEY, JSON.stringify(next)); } catch (e) { /* storage unavailable */ }
-  return next;
-}
+function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } }
+function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-12))); } catch (e) { /* storage unavailable */ } }
 
 /* ---------- audio ---------- */
-let ac = null;
+let ac = null, muted = false;
 function sfx(kind) {
   if (muted) return;
   try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
   if (ac.state === 'suspended') ac.resume();
   const t0 = ac.currentTime;
-  const tone = (f, dur, type = 'sine', vol = 0.12, delay = 0) => {
+  const tone = (f, d, type = 'sine', v = 0.1, at = 0) => {
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type; o.frequency.value = f;
-    g.gain.setValueAtTime(vol, t0 + delay);
-    g.gain.exponentialRampToValueAtTime(0.0008, t0 + delay + dur);
-    o.connect(g); g.connect(ac.destination);
-    o.start(t0 + delay); o.stop(t0 + delay + dur + 0.02);
+    g.gain.setValueAtTime(v, t0 + at); g.gain.exponentialRampToValueAtTime(0.0008, t0 + at + d);
+    o.connect(g); g.connect(ac.destination); o.start(t0 + at); o.stop(t0 + at + d + 0.02);
   };
-  switch (kind) {
-    case 'pop':   tone(520, 0.06, 'square', 0.04); break;
-    case 'bell':  tone(1320, 0.25, 'triangle', 0.08); tone(990, 0.35, 'triangle', 0.08, 0.12); break;
-    case 'ready': tone(740, 0.12, 'sine', 0.09); tone(988, 0.2, 'sine', 0.09, 0.1); break;
-    case 'ding':  tone(1046, 0.25, 'sine', 0.12); tone(1568, 0.4, 'sine', 0.1, 0.09); break;
-    case 'buzz':  tone(130, 0.35, 'sawtooth', 0.06); break;
-    case 'burn':  tone(200, 0.45, 'square', 0.04); tone(180, 0.45, 'square', 0.04, 0.2); break;
-    case 'close': [784, 659, 523].forEach((f, i) => tone(f, 0.3, 'triangle', 0.09, i * 0.16)); break;
-  }
+  if (kind === 'pop') tone(520, 0.06, 'square', 0.035);
+  if (kind === 'ready') { tone(740, 0.12); tone(988, 0.18, 'sine', 0.1, 0.1); }
+  if (kind === 'box') { tone(1046, 0.2, 'sine', 0.1); tone(1568, 0.3, 'sine', 0.08, 0.08); }
+  if (kind === 'bad') tone(130, 0.3, 'sawtooth', 0.05);
+  if (kind === 'burn') { tone(200, 0.4, 'square', 0.035); tone(180, 0.4, 'square', 0.035, 0.2); }
+  if (kind === 'done') [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.3, 'triangle', 0.08, i * 0.12));
 }
 
 /* ---------- drawing ---------- */
-const CRUST  = [[0, '#f2ddb0'], [0.6, '#edca8c'], [1, '#d9953f'], [1.3, '#a0602b'], [1.7, '#3a2517']];
-const SAUCE  = [[0, '#cf3b20'], [1, '#b8301a'], [1.4, '#7e2312'], [1.7, '#3d160c']];
+const CRUST = [[0, '#f2ddb0'], [0.6, '#edca8c'], [1, '#d9953f'], [1.3, '#a0602b'], [1.7, '#3a2517']];
+const SAUCE = [[0, '#cf3b20'], [1, '#b8301a'], [1.4, '#7e2312'], [1.7, '#3d160c']];
 const CHEESE = [[0.25, '#f8e8a8'], [0.9, '#f6d265'], [1.15, '#eab248'], [1.5, '#a8682a']];
-
 function setupCanvas(cv, size) {
   const d = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(size * d); cv.height = Math.round(size * d);
-  const ctx = cv.getContext('2d');
-  ctx.setTransform(d, 0, 0, d, 0, 0);
-  return ctx;
+  const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0); return ctx;
 }
 function blob(ctx, r, seed, amp = 0.03, n = 30) {
   const R = rng(seed), o1 = R() * TAU, o2 = R() * TAU, o3 = R() * TAU;
   ctx.beginPath();
   for (let i = 0; i <= n; i++) {
-    const a = (i / n) * TAU;
-    const k = 1 + amp * (Math.sin(a * 3 + o1) + 0.6 * Math.sin(a * 5 + o2) + 0.3 * Math.sin(a * 7 + o3));
-    const x = Math.cos(a) * r * k, y = Math.sin(a) * r * k;
-    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    const a = (i / n) * TAU, k = 1 + amp * (Math.sin(a * 3 + o1) + 0.6 * Math.sin(a * 5 + o2) + 0.3 * Math.sin(a * 7 + o3));
+    if (i) ctx.lineTo(Math.cos(a) * r * k, Math.sin(a) * r * k); else ctx.moveTo(Math.cos(a) * r * k, Math.sin(a) * r * k);
   }
   ctx.closePath(); ctx.fill();
 }
-function drawShreds(ctx, R, seed) {
+function shreds(ctx, R, seed, count) {
   const r = rng(seed);
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < count; i++) {
     const a = r() * TAU, d = Math.sqrt(r()) * R;
-    ctx.save();
-    ctx.translate(Math.cos(a) * d, Math.sin(a) * d);
-    ctx.rotate(r() * TAU);
+    ctx.save(); ctx.translate(Math.cos(a) * d, Math.sin(a) * d); ctx.rotate(r() * TAU);
     ctx.fillStyle = r() < 0.5 ? '#fbeeb8' : '#f3dd8e';
-    ctx.fillRect(-R * 0.09, -R * 0.018, R * 0.18, R * 0.036);
-    ctx.restore();
+    ctx.fillRect(-R * 0.09, -R * 0.018, R * 0.18, R * 0.036); ctx.restore();
   }
 }
-function drawTopping(ctx, type, x, y, r, a) {
-  const s = r * 0.1;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(a);
-  ctx.lineCap = 'round';
-  switch (type) {
-    case 'pepperoni':
-      ctx.fillStyle = '#b3301d'; ctx.beginPath(); ctx.arc(0, 0, s * 1.15, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#8a2213'; ctx.lineWidth = s * 0.18; ctx.stroke();
-      ctx.fillStyle = '#e2765f';
-      [[-0.4, -0.3], [0.35, 0.2], [-0.1, 0.5]].forEach(([u, v]) => { ctx.beginPath(); ctx.arc(u * s, v * s, s * 0.13, 0, TAU); ctx.fill(); });
-      break;
-    case 'mushroom':
-      ctx.fillStyle = '#e8dcc4';
-      ctx.fillRect(-s * 0.28, -s * 0.1, s * 0.56, s * 0.9);
-      ctx.fillStyle = '#c9b18c';
-      ctx.beginPath(); ctx.ellipse(0, -s * 0.05, s * 0.95, s * 0.6, 0, Math.PI, TAU); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#8f7553'; ctx.lineWidth = s * 0.12; ctx.stroke();
-      break;
-    case 'pepper':
-      ctx.strokeStyle = '#2f7f2c'; ctx.lineWidth = s * 0.42;
-      ctx.beginPath(); ctx.arc(0, 0, s * 0.85, 0, 2.3); ctx.stroke();
-      ctx.strokeStyle = '#5cb24f'; ctx.lineWidth = s * 0.14;
-      ctx.beginPath(); ctx.arc(0, 0, s * 0.8, 0.2, 2.0); ctx.stroke();
-      break;
-    case 'olive':
-      ctx.strokeStyle = '#1c1a1d'; ctx.lineWidth = s * 0.4;
-      ctx.beginPath(); ctx.arc(0, 0, s * 0.48, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = s * 0.1;
-      ctx.beginPath(); ctx.arc(0, 0, s * 0.55, 3.6, 4.6); ctx.stroke();
-      break;
-    case 'onion':
-      ctx.strokeStyle = '#8e3f86'; ctx.lineWidth = s * 0.22;
-      ctx.beginPath(); ctx.arc(0, 0, s * 1.0, 0, 2.6); ctx.stroke();
-      ctx.strokeStyle = '#ead2e6'; ctx.lineWidth = s * 0.16;
-      ctx.beginPath(); ctx.arc(0, 0, s * 0.72, 0.2, 2.4); ctx.stroke();
-      break;
-    case 'sausage':
-      ctx.fillStyle = '#6f3c1d';
-      [[0, 0, 0.55], [0.45, 0.2, 0.42], [-0.35, 0.3, 0.38], [0.1, -0.4, 0.36]].forEach(([u, v, k]) => { ctx.beginPath(); ctx.arc(u * s, v * s, k * s, 0, TAU); ctx.fill(); });
-      ctx.fillStyle = '#9a5a30';
-      ctx.beginPath(); ctx.arc(-0.1 * s, -0.1 * s, 0.18 * s, 0, TAU); ctx.fill();
-      break;
-    case 'basil':
-      ctx.fillStyle = '#2d7a33';
-      ctx.beginPath(); ctx.ellipse(0, 0, s * 1.15, s * 0.55, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#69b46a'; ctx.lineWidth = s * 0.1;
-      ctx.beginPath(); ctx.moveTo(-s * 1.0, 0); ctx.lineTo(s * 1.0, 0); ctx.stroke();
-      break;
-    case 'pineapple':
-      ctx.fillStyle = '#f5d14a'; ctx.strokeStyle = '#cf9f24'; ctx.lineWidth = s * 0.12;
-      ctx.beginPath(); ctx.moveTo(-s * 0.7, -s * 0.45); ctx.lineTo(s * 0.7, -s * 0.45); ctx.lineTo(s * 0.45, s * 0.5); ctx.lineTo(-s * 0.45, s * 0.5); ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      break;
+function pepperoni(ctx, x, y, s) {
+  ctx.fillStyle = '#b3301d'; ctx.beginPath(); ctx.arc(x, y, s, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#8a2213'; ctx.lineWidth = s * 0.16; ctx.stroke();
+  ctx.fillStyle = '#e2765f';
+  [[-0.35, -0.3], [0.3, 0.2], [-0.1, 0.45]].forEach(([u, v]) => { ctx.beginPath(); ctx.arc(x + u * s, y + v * s, s * 0.12, 0, TAU); ctx.fill(); });
+}
+function scatter(n, seed) {
+  const r = rng(seed), pts = []; let tries = 0;
+  while (pts.length < n && tries < 600) {
+    tries++;
+    const a = r() * TAU, d = Math.sqrt(r()) * 0.68, x = Math.cos(a) * d, y = Math.sin(a) * d, m = tries < 300 ? 0.27 : 0.14;
+    if (pts.every((p) => (p.x - x) ** 2 + (p.y - y) ** 2 > m * m)) pts.push({ x, y });
   }
-  ctx.restore();
+  return pts;
 }
 function drawPizza(ctx, p, size) {
   ctx.clearRect(0, 0, size, size);
   if (!p) return;
-  const c = size / 2, r = size * 0.46, b = p.bake;
-  ctx.save();
-  ctx.translate(c, c);
-  ctx.fillStyle = 'rgba(0,0,0,.22)';
-  ctx.beginPath(); ctx.ellipse(0, r * 0.05, r, r * 0.98, 0, 0, TAU); ctx.fill();
-  ctx.fillStyle = ramp(CRUST, b);
-  blob(ctx, r, p.seed, 0.025);
-  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = r * 0.05;
+  const r = size * 0.46, b = p.bake;
+  ctx.save(); ctx.translate(size / 2, size / 2);
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(0, r * 0.05, r, r * 0.98, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = ramp(CRUST, b); blob(ctx, r, p.seed, 0.025);
+  ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = r * 0.05;
   ctx.beginPath(); ctx.arc(0, 0, r * 0.91, Math.PI * 1.08, Math.PI * 1.55); ctx.stroke();
-  if (p.sauce) { ctx.fillStyle = ramp(SAUCE, b); blob(ctx, r * 0.83, p.seed + 1, 0.035); }
-  else { ctx.fillStyle = 'rgba(0,0,0,.05)'; blob(ctx, r * 0.83, p.seed + 1, 0.03); }
-  if (p.cheese) {
-    const melt = clamp((b - 0.25) / 0.6, 0, 1);
-    if (melt < 1) { ctx.globalAlpha = 1 - melt; drawShreds(ctx, r * 0.76, p.seed + 2); ctx.globalAlpha = 1; }
+  if (p.sauce > 0) { ctx.fillStyle = ramp(SAUCE, b); blob(ctx, r * 0.83 * clamp(0.3 + 0.7 * p.sauce, 0.3, 1.1), p.seed + 1, 0.04); }
+  if (p.cheese > 0) {
+    const melt = clamp((b - 0.25) / 0.6, 0, 1), cr = r * 0.78 * clamp(0.45 + 0.55 * p.cheese, 0.45, 1.08);
+    if (melt < 1) { ctx.globalAlpha = 1 - melt; shreds(ctx, cr, p.seed + 2, Math.round(60 * Math.min(p.cheese, 1.6))); ctx.globalAlpha = 1; }
     if (melt > 0) {
-      ctx.globalAlpha = melt;
-      ctx.fillStyle = ramp(CHEESE, b);
-      blob(ctx, r * 0.79, p.seed + 3, 0.06, 44);
+      ctx.globalAlpha = melt; ctx.fillStyle = ramp(CHEESE, b); blob(ctx, cr, p.seed + 3, 0.06, 44);
       const R = rng(p.seed + 4), spots = Math.floor(clamp((b - 0.7) / 0.6, 0, 1) * 16);
       ctx.fillStyle = 'rgba(170,98,34,.55)';
-      for (let i = 0; i < spots; i++) {
-        const a = R() * TAU, d = Math.sqrt(R()) * r * 0.7;
-        ctx.beginPath(); ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r * (0.03 + R() * 0.04), 0, TAU); ctx.fill();
-      }
+      for (let i = 0; i < spots; i++) { const a = R() * TAU, d = Math.sqrt(R()) * cr * 0.85; ctx.beginPath(); ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r * (0.03 + R() * 0.04), 0, TAU); ctx.fill(); }
       ctx.globalAlpha = 1;
     }
   }
-  for (const t of p.tops) for (const pt of t.pts) drawTopping(ctx, t.type, pt.x * r, pt.y * r, r, pt.a);
-  if (b > 1.15) {
-    ctx.fillStyle = `rgba(35,18,8,${clamp((b - 1.15) / 0.55, 0, 1) * 0.78})`;
-    blob(ctx, r * 1.004, p.seed, 0.025);
+  const n = Math.min(p.pts.length, Math.round(12 * p.pep));
+  for (let i = 0; i < n; i++) pepperoni(ctx, p.pts[i].x * r, p.pts[i].y * r, r * 0.105);
+  if (b > GOOD_HI - 0.1) { ctx.fillStyle = `rgba(35,18,8,${clamp((b - GOOD_HI + 0.1) / 0.5, 0, 1) * 0.8})`; blob(ctx, r * 1.004, p.seed, 0.025); }
+  if (p.cut) {
+    ctx.strokeStyle = 'rgba(70,35,12,.55)'; ctx.lineWidth = Math.max(1.2, r * 0.025);
+    for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI + 0.3; ctx.beginPath(); ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r); ctx.lineTo(-Math.cos(a) * r, -Math.sin(a) * r); ctx.stroke(); }
   }
   ctx.restore();
 }
-function drawIcon(cv, k) {
-  const ctx = setupCanvas(cv, 40);
-  ctx.translate(20, 20);
-  if (k === 'sauce') {
-    ctx.fillStyle = '#cf3b20'; blob(ctx, 14, 7, 0.06);
-    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.arc(-5, -5, 3, 0, TAU); ctx.fill();
-  } else if (k === 'cheese') {
-    drawShreds(ctx, 14, 11);
-  } else {
-    [[-7, -5, 0.4], [7, -3, 2.1], [0, 8, 4.0]].forEach(([x, y, a]) => drawTopping(ctx, k, x, y, 62, a));
-  }
+
+/* ---------- state ---------- */
+const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null };
+function newShift(rate) {
+  return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(DECKS).fill(null), board: null,
+    pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false };
 }
-function scatter(n, seed) {
-  const r = rng(seed), pts = [];
-  let tries = 0;
-  while (pts.length < n && tries < 500) {
-    tries++;
-    const a = r() * TAU, d = Math.sqrt(r()) * 0.66;
-    const x = Math.cos(a) * d, y = Math.sin(a) * d;
-    const minD = tries < 250 ? 0.3 : 0.16;
-    if (pts.every((p) => (p.x - x) ** 2 + (p.y - y) ** 2 > minD * minD)) pts.push({ x, y, a: r() * TAU });
-  }
-  return pts;
+const nowMin = () => G.sh.t / SEC_PER_MIN;
+const playing = () => G.phase === 'play' && !G.paused;
+const pieMat = (p) => COST.dough + COST.sauce * p.sauce + COST.cheese * p.cheese + COST.pep * p.pep;
+function grade(b) { return b < GOOD_LO ? 'under' : b <= GOOD_HI ? 'good' : 'burnt'; }
+
+/* ---------- economics ---------- */
+function calc(sh, final) {
+  const min = sh.t / SEC_PER_MIN, hrs = min / 60, sched = sh.promiseMin / 60, good = sh.boxed;
+  const mat = sh.pies.reduce((s, p) => s + pieMat(p), 0);
+  const goodMat = sh.pies.filter((p) => p.state === 'boxed').reduce((s, p) => s + pieMat(p), 0);
+  const otHrs = Math.max(0, hrs - sched);
+  const idleHrs = final && good >= ORDER ? Math.max(0, sched - hrs) : 0;
+  const labor = WAGE * Math.min(hrs, sched) + OT_WAGE * otHrs + WAGE * idleHrs;
+  const oh = OH_PER_HR * hrs;
+  const late = Math.max(0, min - sh.promiseMin);
+  const discPct = final && late > 0.5 ? Math.min(0.25, 0.05 * Math.ceil(late / 15)) : 0;
+  const revGross = PRICE * good, disc = revGross * discPct, rev = revGross - disc;
+  const cogs = mat + labor + oh, gp = rev - cogs, other = OTHER * good, op = gp - other;
+  const parts = {
+    over: goodMat - STD_MAT * good,
+    scrap: mat - goodMat,
+    slow: WAGE * hrs - STD_LAB * good,
+    ot: (OT_WAGE - WAGE) * otHrs,
+    idle: WAGE * idleHrs,
+    oh: oh - STD_OH * good,
+    disc,
+  };
+  return { min, hrs, good, mat, goodMat, labor, oh, late, discPct, revGross, disc, rev, cogs, gp, other, op, parts,
+    rate: hrs > 0 ? good / hrs : 0, std: { rev: PRICE * good, cogs: STD_COST * good, gp: 5 * good, other: OTHER * good, op: 2 * good } };
 }
 
-/* ---------- orders ---------- */
-function unlocked() { return TKEYS.filter((k) => TOPPINGS[k].day <= S.day); }
-function priceOf(o) { return 9 + 1.5 * o.tops.length; }
-function orderTitle(o) {
-  if (!o.tops.length) return o.cheese ? 'Plain cheese' : 'Marinara';
-  if (o.tops.length === 1 && o.cheese) return TOPPINGS[o.tops[0]].label + ' pie';
-  if (!o.cheese) return 'No-cheese special';
-  return ['', '', 'Two-topper', 'Three-topper'][o.tops.length] || 'Loaded pie';
+/* ---------- UI refs ---------- */
+const prepCtx = setupCanvas($('#prepCv'), 196);
+const boardCtx = setupCanvas($('#boardCv'), 136);
+let deckEls = [];
+function buildDecks() {
+  const el = $('#decks'); el.innerHTML = ''; deckEls = [];
+  for (let i = 0; i < DECKS; i++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'deck'; b.disabled = true;
+    b.innerHTML = `<canvas></canvas><span class="deck-info"><span class="deck-top"><span class="deck-label">Empty deck</span><kbd>${i + 1}</kbd></span><span class="bgauge"><i></i></span></span>`;
+    b.addEventListener('click', () => pull(i));
+    el.appendChild(b);
+    deckEls.push({ b, ctx: setupCanvas(b.querySelector('canvas'), 70), label: b.querySelector('.deck-label'), needle: b.querySelector('.bgauge i'), g: null });
+  }
 }
-function makeOrder() {
-  const d = S.day;
-  const [lo, hi] = d === 1 ? [0, 1] : d === 2 ? [0, 2] : d === 3 ? [1, 2] : d < 6 ? [1, 3] : [2, 3];
-  const n = lo + Math.floor(Math.random() * (hi - lo + 1));
-  const tops = shuffle(unlocked()).slice(0, n);
-  const cheese = !(d >= 2 && Math.random() < 0.12);
-  const max = (Math.max(26, 44 - 2.5 * (d - 1)) + 5 * n) * (S.up.juke ? 1.25 : 1);
-  return {
-    id: uid(), no: S.ticketNo++, name: pick(NAMES), skin: pick(SKINS), hat: pick(HATS),
-    tops, cheese, patience: max, max, placed: clockStr(S.time),
-  };
+function buildBoxes() { $('#boxes').innerHTML = Array.from({ length: ORDER }, () => '<span></span>').join(''); }
+
+/* ---------- toast ---------- */
+let toastT = 0;
+function toast(msg, kind = '') {
+  const el = $('#toast'); el.textContent = msg; el.className = 'toast show ' + kind;
+  clearTimeout(toastT); toastT = setTimeout(() => { el.className = 'toast ' + kind; }, 2400);
 }
-function spawnGap() { return Math.max(5.5, 14 - 1.4 * (S.day - 1)) * (0.75 + Math.random() * 0.5); }
-function mismatch(p, o) {
-  if (!p.sauce) return 'Where is the sauce?';
-  if (p.cheese && !o.cheese) return 'I said no cheese.';
-  if (!p.cheese && o.cheese) return 'Where is the cheese?';
-  const types = p.tops.map((t) => t.type);
-  const missing = o.tops.find((t) => !types.includes(t));
-  if (missing) return `You forgot the ${TOPPINGS[missing].label.toLowerCase()}.`;
-  const extra = types.find((t) => !o.tops.includes(t));
-  if (extra) return `I didn't order ${TOPPINGS[extra].label.toLowerCase()}.`;
+
+/* ---------- actions ---------- */
+function dough() {
+  if (!playing()) return;
+  const sh = G.sh;
+  if (sh.prep) { toast('Finish the pizza on the counter first.'); return; }
+  const seed = (Math.random() * 1e9) | 0;
+  sh.prep = { seed, sauce: 0, cheese: 0, pep: 0, bake: 0, cut: false, pts: scatter(20, seed + 9), state: 'wip' };
+  sh.pies.push(sh.prep);
+  sfx('pop'); refreshPrep();
+}
+function pourBlock(k) {
+  const p = G.sh.prep;
+  if (!p) return 'Stretch dough first.';
+  if (k === 'cheese' && p.sauce < MIN_P) return 'Routing: sauce goes on before cheese.';
+  if (k === 'pep' && p.cheese < MIN_P) return 'Routing: cheese goes on before pepperoni.';
+  if (p[k] >= MAX_P) return 'That is way past the portion already.';
   return null;
 }
-
-/* ---------- UI: toast ---------- */
-let toastTimer = 0;
-function toast(msg, kind = '') {
-  const el = $('#toast');
-  el.textContent = msg;
-  el.className = 'toast show ' + kind;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = 'toast ' + kind; }, 2400);
-}
-
-/* ---------- UI: HUD ---------- */
-let lastClock = '';
-function updateHud() {
-  $('#hudDay').textContent = S.day;
-  $('#hudCash').textContent = money(S.cash);
-  $('#hudRent').textContent = money(rentFor(S.day));
-  const stars = $('#hudStars');
-  stars.firstElementChild.style.width = (S.rating / 5 * 100) + '%';
-  stars.setAttribute('aria-label', `${S.rating.toFixed(1)} of 5 stars`);
-  updateClock();
-}
-function updateClock() {
-  const txt = S.time >= DAY_LEN ? 'Closed' : clockStr(S.time);
-  if (txt !== lastClock) { $('#hudClock').textContent = txt; lastClock = txt; }
-  $('#dayFill').style.width = clamp(S.time / DAY_LEN, 0, 1) * 100 + '%';
-}
-function bumpCash() {
-  const el = $('#hudCash');
-  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-}
-
-/* ---------- UI: prep ---------- */
-let prepCtx;
-function buildBins() {
-  const el = $('#bins');
-  el.innerHTML = '';
-  const items = [
-    { k: 'sauce', label: 'Red sauce', key: 'S' },
-    { k: 'cheese', label: 'Mozzarella', key: 'C' },
-    ...TKEYS.map((k, i) => ({ k, label: TOPPINGS[k].label, key: String(i + 1) })),
-  ];
-  for (const it of items) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'bin'; b.dataset.k = it.k;
-    b.innerHTML = `<kbd>${it.key}</kbd><canvas width="40" height="40"></canvas><span>${it.label}</span><span class="lock"></span>`;
-    drawIcon(b.querySelector('canvas'), it.k);
-    b.addEventListener('click', () => addIngredient(it.k));
-    el.appendChild(b);
-  }
-}
-function refreshPrep() {
-  const p = S.prep;
-  drawPizza(prepCtx, p, 228);
-  $('#peelHint').hidden = !!p;
-  document.querySelectorAll('.bin').forEach((b) => {
-    const k = b.dataset.k, t = TOPPINGS[k];
-    const locked = !!t && t.day > S.day;
-    const on = !!p && (k === 'sauce' ? p.sauce : k === 'cheese' ? p.cheese : p.tops.some((x) => x.type === k));
-    b.disabled = locked || !p;
-    b.classList.toggle('locked', locked);
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.querySelector('.lock').textContent = locked ? `Day ${t.day}` : '';
-  });
-  $('#btnDough').disabled = !!p;
-  $('#btnBake').disabled = !p;
-  $('#btnBin').disabled = !p;
-}
-const playing = () => S.phase === 'open' && !S.paused;
-function newDough() {
-  if (!playing() || S.prep) return;
-  S.prep = { id: uid(), seed: (Math.random() * 1e9) | 0, sauce: S.up.sauce, cheese: false, tops: [], bake: 0 };
-  sfx('pop'); refreshPrep();
-}
-function addIngredient(k) {
+function startPour(k) {
   if (!playing()) return;
-  const p = S.prep;
-  if (!p) { toast('Stretch some dough first.'); return; }
-  if (k === 'sauce') { if (p.sauce) return; p.sauce = true; }
-  else if (k === 'cheese') { if (p.cheese) return; p.cheese = true; }
-  else {
-    const t = TOPPINGS[k];
-    if (!t || t.day > S.day || p.tops.some((x) => x.type === k)) return;
-    p.tops.push({ type: k, pts: scatter(t.n, p.seed + 131 * (p.tops.length + 1)) });
-  }
-  sfx('pop'); refreshPrep();
+  const why = pourBlock(k);
+  if (why) { toast(why); return; }
+  G.sh.pouring = k; refreshPrep();
 }
-function binPrep() {
-  if (!playing() || !S.prep) return;
-  S.prep = null; sfx('buzz'); refreshPrep();
+function stopPour() { if (G.sh && G.sh.pouring) { G.sh.pouring = null; refreshPrep(); } }
+function toOven() {
+  if (!playing()) return;
+  const sh = G.sh, p = sh.prep;
+  if (!p) return;
+  if (p.sauce < MIN_P || p.cheese < MIN_P || p.pep < MIN_P) { toast('Not to standard yet. Every ingredient needs a full portion.'); return; }
+  const i = sh.oven.indexOf(null);
+  if (i < 0) { toast('All three decks are full. Pull a pizza first.', 'bad'); return; }
+  sh.oven[i] = p; sh.prep = null; sh.pouring = null;
+  sfx('pop'); refreshPrep(); refreshOven();
 }
-function bake() {
-  if (!playing() || !S.prep) return;
-  const i = S.oven.indexOf(null);
-  if (i < 0) { toast('The oven is full. Pull a pie out first.', 'bad'); return; }
-  S.oven[i] = S.prep; S.prep = null;
-  sfx('pop'); refreshPrep(); renderOven();
+function scrapPrep() {
+  if (!playing() || !G.sh.prep) return;
+  G.sh.prep.state = 'scrap'; G.sh.scrapN++; G.sh.prep = null; G.sh.pouring = null;
+  sfx('bad'); toast('Scrapped. The ingredients are still paid for.', 'bad'); refreshPrep(); refreshLive();
+}
+function pull(i) {
+  if (!playing()) return;
+  const sh = G.sh, p = sh.oven[i];
+  if (!p) return;
+  if (sh.board) { toast('The cutting board is full. Cut and box that pizza first.', 'bad'); return; }
+  sh.oven[i] = null; sh.board = p;
+  sfx('pop'); refreshOven(); refreshBoard();
+}
+function cut() {
+  if (!playing()) return;
+  const p = G.sh.board;
+  if (!p || p.cut) return;
+  const g = grade(p.bake);
+  if (g === 'under') { toast('Still pale. Put it back in the oven.'); return; }
+  if (g === 'burnt') { toast('Nobody pays $12 for that. Scrap it.'); return; }
+  p.cut = true; sfx('pop'); refreshBoard();
+}
+function rework() {
+  if (!playing()) return;
+  const sh = G.sh, p = sh.board;
+  if (!p || grade(p.bake) !== 'under') return;
+  const i = sh.oven.indexOf(null);
+  if (i < 0) { toast('No free deck. Pull something out first.', 'bad'); return; }
+  sh.oven[i] = p; sh.board = null; sh.reworkN++;
+  sfx('pop'); refreshBoard(); refreshOven();
+}
+function scrapBoard() {
+  if (!playing() || !G.sh.board) return;
+  G.sh.board.state = 'scrap'; G.sh.scrapN++; G.sh.board = null;
+  sfx('bad'); toast('Scrapped. Ingredients, labor and oven time, all for nothing.', 'bad'); refreshBoard(); refreshLive();
+}
+function box() {
+  if (!playing()) return;
+  const sh = G.sh, p = sh.board;
+  if (!p) return;
+  if (!p.cut) { toast('Routing: cut before you box.'); return; }
+  p.state = 'boxed'; sh.boxed++; sh.board = null;
+  sfx('box'); refreshBoard(); refreshBoxes(); refreshLive();
+  if (sh.boxed >= ORDER) endShift(false);
 }
 
-/* ---------- UI: oven ---------- */
-let deckEls = [];
-function renderOven() {
-  const el = $('#decks');
-  el.innerHTML = ''; deckEls = [];
-  S.oven.forEach((p, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'deck'; b.disabled = !p;
-    b.innerHTML = `<canvas></canvas><span class="deck-info"><span class="deck-label">${p ? '' : 'Empty deck'}</span><span class="gauge"><span class="needle"></span></span><span class="deck-hint">${p ? 'Tap to pull it out' : 'Build a pie, then put it in'}</span></span>`;
-    b.addEventListener('click', () => pullFromOven(i));
-    el.appendChild(b);
-    deckEls.push({ b, ctx: setupCanvas(b.querySelector('canvas'), 92), label: b.querySelector('.deck-label'), needle: b.querySelector('.needle'), g: null });
-  });
-  updateOven();
+/* ---------- rendering ---------- */
+function refreshPrep() {
+  const sh = G.sh, p = sh && sh.prep, on = playing();
+  drawPizza(prepCtx, p, 196);
+  $('#peelHint').hidden = !!p;
+  for (const k of ['sauce', 'cheese', 'pep']) {
+    const b = $('#pour-' + k), v = p ? p[k] : 0;
+    b.disabled = !p || !on || (k === 'cheese' && p.sauce < MIN_P) || (k === 'pep' && p.cheese < MIN_P);
+    b.classList.toggle('active', !!sh && sh.pouring === k);
+    b.querySelector('.pgauge i').style.width = clamp(v / MAX_P, 0, 1) * 100 + '%';
+    const s = !p || v === 0 ? '' : v < MIN_P ? 'short' : v <= OK_HI ? 'ok' : 'heavy';
+    b.dataset.s = s;
+    b.querySelector('.state').textContent = s === 'short' ? `${Math.round(v * 100)}%` : s === 'ok' ? 'To standard' : s === 'heavy' ? `Heavy +${money(COST[k] * (v - 1))}` : '';
+  }
+  const ready = !!p && p.sauce >= MIN_P && p.cheese >= MIN_P && p.pep >= MIN_P;
+  $('#btnDough').disabled = !!p || !on;
+  $('#btnOven').disabled = !ready || !on;
+  $('#btnBinPrep').disabled = !p || !on;
 }
-function updateOven() {
+const DECK_LABEL = { under: 'Baking', good: 'Ready. Pull it!', burnt: 'Burning!' };
+function refreshOven() {
+  const sh = G.sh, on = playing();
   deckEls.forEach((d, i) => {
-    const p = S.oven[i];
-    if (!p) { d.ctx.clearRect(0, 0, 92, 92); return; }
-    drawPizza(d.ctx, p, 92);
+    const p = sh && sh.oven[i];
+    if (!p) {
+      if (d.g !== 'empty') { d.ctx.clearRect(0, 0, 70, 70); d.b.disabled = true; d.label.textContent = 'Empty deck'; d.needle.style.left = '0%'; d.b.dataset.g = ''; d.g = 'empty'; }
+      return;
+    }
+    d.b.disabled = !on;
+    drawPizza(d.ctx, p, 70);
     d.needle.style.left = clamp(p.bake / BAKE_MAX, 0, 1) * 100 + '%';
     const g = grade(p.bake);
-    if (g !== d.g) { d.g = g; d.b.dataset.grade = g; d.label.textContent = DECK_LABEL[g]; }
+    if (g !== d.g) { d.g = g; d.b.dataset.g = g; d.label.textContent = DECK_LABEL[g]; }
   });
 }
-function pullFromOven(i) {
-  if (!playing()) return;
-  const p = S.oven[i];
-  if (!p) return;
-  const j = S.pass.indexOf(null);
-  if (j < 0) { toast('The pass is full. Serve or bin a pie first.', 'bad'); return; }
-  S.oven[i] = null; S.pass[j] = p; S.selected = j;
-  sfx('pop'); renderOven(); renderPass();
+function refreshBoard() {
+  const sh = G.sh, p = sh && sh.board, on = playing();
+  drawPizza(boardCtx, p, 136);
+  const st = $('#boardStatus'), g = p ? grade(p.bake) : null;
+  st.className = 'board-status' + (g === 'good' ? ' good' : g ? ' bad' : '');
+  st.textContent = !p ? 'Board is empty' : g === 'under' ? 'Underbaked. Rework it.' : g === 'burnt' ? 'Burnt. Scrap it.' : p.cut ? 'Cut. Ready to box.' : 'Baked to standard';
+  $('#btnCut').disabled = !on || !p || p.cut || g !== 'good';
+  $('#btnRework').disabled = !on || !p || g !== 'under';
+  $('#btnScrapBoard').disabled = !on || !p;
+  $('#btnBox').disabled = !on || !p || !p.cut;
 }
+function refreshBoxes() {
+  const n = G.sh ? G.sh.boxed : 0;
+  document.querySelectorAll('#boxes span').forEach((s, i) => s.classList.toggle('done', i < n));
+  $('#boxN').textContent = n;
+}
+function refreshTop() {
+  const sh = G.sh;
+  if (!sh) return;
+  const m = nowMin(), late = m > sh.promiseMin;
+  $('#stClock').textContent = clock(m);
+  $('#stClockBox').classList.toggle('warn', late);
+  $('#stPromise').textContent = clock(sh.promiseMin);
+  $('#stBoxed').textContent = `${sh.boxed} / ${ORDER}`;
+  const rate = sh.boxed && m > 0 ? sh.boxed / (m / 60) : 0;
+  $('#stRate').textContent = rate ? `${r1(rate)} /hr` : '… /hr';
+  $('#stRateBox').className = 'stat' + (rate ? (rate >= STD_RATE - 0.05 ? ' ok' : ' warn') : '');
+  const proj = sh.boxed ? (m / sh.boxed) * ORDER : 0;
+  $('#stProj').textContent = proj ? clock(proj) : '…';
+  $('#stProjBox').className = 'stat' + (proj ? (proj > sh.promiseMin + 0.5 ? ' warn' : ' ok') : '');
+  const fill = $('#progFill');
+  fill.style.width = clamp(m / Math.max(sh.promiseMin, m, 1), 0, 1) * 100 + '%';
+  fill.style.background = late ? 'var(--red)' : 'var(--sage)';
+}
+function refreshLive() {
+  const sh = G.sh, c = sh ? calc(sh, false) : null, g = c ? c.good : 0;
+  const cell = (act, std) => {
+    if (!g) return '<td>…</td><td>…</td>';
+    const v = act / g, d = v - std;
+    return `<td>${money(v)}</td><td class="${d > 0.005 ? 'over' : d < -0.005 ? 'under' : ''}">${Math.abs(d) < 0.005 ? '$0.00' : signed(d)}</td>`;
+  };
+  $('#liveTbl').innerHTML = `
+    <thead><tr><th>Per boxed pizza</th><th>Standard</th><th>This shift</th><th>Difference</th></tr></thead>
+    <tbody>
+      <tr><td>Ingredients</td><td>$4.50</td>${cell(c ? c.mat : 0, STD_MAT)}</tr>
+      <tr><td>Labor</td><td>$1.00</td>${cell(c ? c.labor : 0, STD_LAB)}</tr>
+      <tr><td>Overhead</td><td>$1.50</td>${cell(c ? c.oh : 0, STD_OH)}</tr>
+      <tr class="total"><td>Cost to make</td><td>$7.00</td>${cell(c ? c.cogs : 0, STD_COST)}</tr>
+    </tbody>`;
+  const f = (label, val) => `<div class="fact"><small>${label}</small><b>${val}</b></div>`;
+  $('#liveFacts').innerHTML = [
+    f('Ingredients used', c ? money(c.mat) : '$0.00'),
+    f('Labor so far', c ? money(c.labor) : '$0.00'),
+    f('Oven and shop overhead', c ? money(c.oh) : '$0.00'),
+    f('Scrapped / reworked', sh ? `${sh.scrapN} / ${sh.reworkN}` : '0 / 0'),
+  ].join('');
+}
+let liveTick = 0;
 
-/* ---------- UI: pass ---------- */
-function renderPass() {
-  const el = $('#plates');
-  el.innerHTML = '';
-  if (S.selected >= 0 && !S.pass[S.selected]) S.selected = -1;
-  S.pass.forEach((p, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'plate' + (S.selected === i ? ' sel' : '');
-    b.disabled = !p;
-    const g = p ? grade(p.bake) : '';
-    if (p) b.dataset.grade = g;
-    b.setAttribute('aria-pressed', S.selected === i ? 'true' : 'false');
-    b.innerHTML = `<canvas></canvas><span class="plate-label">${p ? GRADE_LABEL[g] : 'Empty'}</span>`;
-    const ctx = setupCanvas(b.querySelector('canvas'), 76);
-    if (p) drawPizza(ctx, p, 76);
-    b.addEventListener('click', () => { if (!playing()) return; S.selected = S.selected === i ? -1 : i; renderPass(); });
-    el.appendChild(b);
-  });
-  $('#btnTossPass').disabled = S.selected < 0;
-  document.body.classList.toggle('serving', S.selected >= 0);
-}
-function binPass() {
-  if (!playing() || S.selected < 0) return;
-  S.pass[S.selected] = null; S.selected = -1;
-  sfx('buzz'); renderPass();
-}
-
-/* ---------- UI: rail ---------- */
-let railEls = new Map();
-function faceSVG(o) {
-  return `<svg class="face" viewBox="0 0 40 40" aria-hidden="true">
-    <circle cx="20" cy="22" r="14" fill="${o.skin}"/>
-    <path d="M5.5 17 Q7 5 20 5 Q33 5 34.5 17 Z" fill="${o.hat}"/>
-    <rect x="4" y="15.5" width="32" height="3" rx="1.5" fill="${o.hat}"/>
-    <circle cx="15" cy="23" r="1.8" fill="#2a1d17"/><circle cx="25" cy="23" r="1.8" fill="#2a1d17"/>
-    <path class="brows" d="M12 19.5 L17 21 M28 19.5 L23 21" stroke="#2a1d17" stroke-width="1.8" stroke-linecap="round"/>
-    <path class="mouth" d="${MOUTH.happy}" stroke="#2a1d17" stroke-width="2" fill="none" stroke-linecap="round"/>
-  </svg>`;
-}
-function renderRail() {
-  const el = $('#rail');
-  el.innerHTML = ''; railEls = new Map();
-  if (!S.orders.length) {
-    const msg = S.phase !== 'open' ? 'Tickets show up here when the shop opens.'
-      : S.time >= DAY_LEN ? 'Doors are closed for the night.'
-      : 'No tickets yet. The lunch crowd is on the way.';
-    el.innerHTML = `<p class="rail-empty">${msg}</p>`;
-    return;
-  }
-  for (const o of S.orders) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'ticket';
-    b.style.setProperty('--tilt', ((o.no % 3) - 1) * 0.9 + 'deg');
-    const lines = [`<span>Red sauce</span>`, o.cheese ? `<span>Mozzarella</span>` : `<span class="no">NO CHEESE</span>`,
-      ...o.tops.map((t) => `<span class="add">+ ${TOPPINGS[t].label}</span>`)];
-    b.innerHTML = `<span class="t-top">${faceSVG(o)}<span class="t-who"><span class="t-name">${o.name}</span><span class="t-meta">No. ${String(o.no).padStart(3, '0')} · ${o.placed}</span></span></span>
-      <span class="t-title">${orderTitle(o)}</span>
-      <span class="t-items">${lines.join('')}</span>
-      <span class="t-foot"><span>Pays</span><b>${money(priceOf(o))}</b></span>
-      <span class="patience"><i></i></span>`;
-    b.setAttribute('aria-label', `Serve ${o.name}: ${orderTitle(o)}`);
-    b.addEventListener('click', () => serve(o.id));
-    el.appendChild(b);
-    railEls.set(o.id, { b, bar: b.querySelector('.patience i'), mouth: b.querySelector('.mouth'), mood: null });
-  }
-  updateRail();
-}
-function updateRail() {
-  for (const o of S.orders) {
-    const e = railEls.get(o.id);
-    if (!e) continue;
-    const f = clamp(o.patience / o.max, 0, 1);
-    e.bar.style.width = f * 100 + '%';
-    const mood = f > 0.55 ? 'happy' : f > 0.25 ? 'meh' : 'angry';
-    if (mood !== e.mood) { e.mood = mood; e.b.dataset.mood = mood; e.mouth.setAttribute('d', MOUTH[mood]); }
-  }
-}
-
-/* ---------- serving & rating ---------- */
-function rate(d) {
-  S.rating = clamp(S.rating + d, 0, 5);
-  updateHud();
-  if (S.rating < 1 && S.phase === 'open') gameOver('rating');
-}
-function serve(id) {
-  if (!playing()) return;
-  const o = S.orders.find((x) => x.id === id);
-  if (!o) return;
-  let i = S.selected;
-  if (i < 0 || !S.pass[i]) {
-    const full = S.pass.map((p, j) => (p ? j : -1)).filter((j) => j >= 0);
-    if (full.length === 1) i = full[0];
-    else { toast(full.length ? 'Tap a pie on the pass first, then the ticket.' : 'Nothing on the pass yet. Bake a pie first.'); return; }
-  }
-  const p = S.pass[i];
-  const f = clamp(o.patience / o.max, 0, 1);
-  S.pass[i] = null; S.selected = -1;
-  S.orders = S.orders.filter((x) => x !== o);
-  const miss = mismatch(p, o), g = grade(p.bake);
-  if (miss) {
-    S.stats.wrong++; sfx('buzz');
-    toast(`${o.name}: "${miss}" No sale.`, 'bad');
-    rate(-0.6);
-  } else if (g === 'raw' || g === 'burnt') {
-    S.stats.wrong++; sfx('buzz');
-    toast(`${o.name}: "${g === 'raw' ? 'This is still dough!' : 'This is charcoal!'}" No sale.`, 'bad');
-    rate(-0.5);
-  } else {
-    const price = priceOf(o);
-    let tip = 0;
-    if (g === 'perfect') { tip = Math.round(price * (0.1 + 0.35 * f) * (S.rating / 5) * (S.up.tip ? 1.5 : 1) * 100) / 100; S.stats.perfect++; }
-    S.cash += price + tip; S.stats.revenue += price; S.stats.tips += tip; S.stats.served++; S.served++;
-    sfx('ding'); bumpCash();
-    const remark = g === 'perfect' ? 'Perfect bake.' : g === 'light' ? '"Bit pale."' : '"Bit crispy."';
-    toast(`${o.name} paid ${money(price)}${tip ? ' + ' + money(tip) + ' tip' : ''}. ${remark}`, 'good');
-    rate(g === 'perfect' ? 0.15 : -0.1);
-  }
-  if (S.phase === 'open') { renderPass(); renderRail(); }
-}
-
-/* ---------- game loop ---------- */
+/* ---------- loop ---------- */
 function update(dt) {
-  S.time += dt;
-  if (S.time < DAY_LEN) {
-    S.nextOrderIn -= dt;
-    if (S.nextOrderIn <= 0) {
-      if (S.orders.length < MAX_QUEUE) { S.orders.push(makeOrder()); sfx('bell'); renderRail(); S.nextOrderIn = spawnGap(); }
-      else S.nextOrderIn = 1;
+  const sh = G.sh;
+  sh.t += dt;
+  if (sh.pouring) {
+    const p = sh.prep, k = sh.pouring;
+    if (!p || pourBlock(k)) sh.pouring = null;
+    else {
+      p[k] = Math.min(MAX_P, p[k] + dt / POUR_SEC);
+      if (p[k] >= MAX_P) { sh.pouring = null; toast(`That's ${Math.round(MAX_P * 100)}% of a portion. The customer still pays $12.`, 'bad'); }
     }
-  } else if (!S.closedNotice) {
-    S.closedNotice = true;
-    sfx('close');
-    toast(S.orders.length ? 'Doors closed. Finish the tickets on the rail.' : 'Doors closed for the night.');
-    renderRail();
+    refreshPrep();
   }
-
-  const speed = bakeSpeed();
-  for (const p of S.oven) {
+  for (const p of sh.oven) {
     if (!p) continue;
     const before = p.bake;
-    p.bake = Math.min(p.bake + speed * dt, 2);
-    if (before < 0.88 && p.bake >= 0.88) sfx('ready');
-    if (before < 1.4 && p.bake >= 1.4) { sfx('burn'); toast('Something is burning in the oven!', 'bad'); }
+    p.bake = Math.min(p.bake + dt / BAKE_SEC, 2);
+    if (before < GOOD_LO && p.bake >= GOOD_LO) sfx('ready');
+    if (before < GOOD_HI && p.bake >= GOOD_HI) { sfx('burn'); toast('A pizza is burning in the oven!', 'bad'); }
   }
-
-  let left = false;
-  for (const o of S.orders) {
-    o.patience -= dt;
-    if (o.patience <= 0) { left = true; S.stats.walkouts++; toast(`${o.name} got tired of waiting and walked out.`, 'bad'); sfx('buzz'); }
-  }
-  if (left) {
-    const n = S.orders.filter((o) => o.patience <= 0).length;
-    S.orders = S.orders.filter((o) => o.patience > 0);
-    renderRail();
-    rate(-0.5 * n);
-    if (S.phase !== 'open') return;
-  }
-
-  updateOven(); updateRail(); updateClock();
-  if (S.time >= DAY_LEN && !S.orders.length) endDay();
+  if (!sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promised time. You are on overtime and the customer is waiting.', 'bad'); }
+  refreshOven(); refreshTop();
+  liveTick += dt;
+  if (liveTick > 0.25) { liveTick = 0; refreshLive(); }
+  if (nowMin() >= MAX_MIN) endShift(true);
 }
 let last = 0;
 function frame(t) {
@@ -995,166 +739,260 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 
-/* ---------- days & screens ---------- */
-function startDay() {
-  S.phase = 'open'; S.paused = false;
-  S.time = 0; S.orders = []; S.nextOrderIn = 1.5; S.closedNotice = false;
-  S.prep = null; S.oven = Array(S.up.oven3 ? 3 : 2).fill(null);
-  S.pass = Array(PASS_SIZE).fill(null); S.selected = -1;
-  S.stats = blankStats();
-  hideOverlay();
-  refreshPrep(); renderOven(); renderPass(); renderRail(); updateHud();
-  const fresh = TKEYS.filter((k) => TOPPINGS[k].day === S.day && S.day > 1).map((k) => TOPPINGS[k].label.toLowerCase());
-  toast(fresh.length ? `Day ${S.day}. New on the menu: ${fresh.join(' and ')}.` : `Day ${S.day}. Doors are open.`);
+/* ---------- screens ---------- */
+function show(html, wide) {
+  const s = $('#sheet'); s.className = 'sheet' + (wide ? ' wide' : ''); s.innerHTML = html;
+  $('#overlay').hidden = false; $('#overlay').scrollTop = 0;
+  const cta = s.querySelector('.btn[data-act]'); if (cta) cta.focus({ preventScroll: true });
 }
-function endDay() {
-  sfx('close');
-  const rent = rentFor(S.day);
-  S.stats.rent = rent;
-  S.cash -= rent;
-  if (S.cash < 0) { gameOver('rent'); return; }
-  S.phase = 'summary';
-  saveBest(S.day, S.served);
-  S.closedDay = S.day;
-  S.day++;
-  showSummary();
-}
-function gameOver(reason) {
-  S.phase = 'over';
-  const days = reason === 'rent' || reason === 'rating' ? S.day - 1 : S.day;
-  const best = saveBest(days, S.served);
-  const why = reason === 'rent'
-    ? `The till came up ${money(-S.cash)} short on rent after day ${S.day}. The landlord changed the locks.`
-    : `Word got around. With a rating under one star, Joe came back for the keys on day ${S.day}.`;
-  showOverlay(`
-    <p class="eyebrow">Closed for good</p>
-    <h2>Joe's is shuttered</h2>
-    <p>${why}</p>
-    <table class="ledger"><tbody>
-      <tr><td>Days survived</td><td>${days}</td></tr>
-      <tr><td>Pies served</td><td>${S.served}</td></tr>
-      <tr><td>Best run</td><td>${best.days} day${best.days === 1 ? '' : 's'}, ${best.served} pies</td></tr>
-    </tbody></table>
-    <button class="btn primary" type="button" data-action="restart">Reopen the shop</button>`);
-}
-function ledgerHTML(st) {
-  const net = st.revenue + st.tips - st.rent;
-  return `<table class="ledger"><tbody>
-    <tr><td>Pies served</td><td>${st.served}</td></tr>
-    <tr><td>Perfect bakes</td><td>${st.perfect}</td></tr>
-    <tr><td>Walkouts</td><td>${st.walkouts}</td></tr>
-    <tr><td>Wrong or ruined pies</td><td>${st.wrong}</td></tr>
-    <tr><td>Sales</td><td>${money(st.revenue)}</td></tr>
-    <tr><td>Tips</td><td>${money(st.tips)}</td></tr>
-    <tr><td>Rent</td><td class="neg">${money(-st.rent)}</td></tr>
-    <tr class="total"><td>Net tonight</td><td class="${net < 0 ? 'neg' : ''}">${money(net)}</td></tr>
-    <tr class="total"><td>Cash in the till</td><td>${money(S.cash)}</td></tr>
-  </tbody></table>`;
-}
-function showSummary() {
-  const fresh = TKEYS.filter((k) => TOPPINGS[k].day === S.day).map((k) => TOPPINGS[k].label.toLowerCase());
-  const items = UPGRADES.map((u) => {
-    const owned = u.owned(), ready = !u.ready || u.ready();
-    const can = !owned && ready && S.cash >= u.cost;
-    const label = owned ? (u.ownedLabel || 'Owned') : !ready ? 'Locked' : `Buy ${money(u.cost)}`;
-    return `<div class="item"><div><b>${u.name}</b><span>${u.desc}</span></div><button class="btn" type="button" data-buy="${u.id}" ${can ? '' : 'disabled'}>${label}</button></div>`;
-  }).join('');
-  showOverlay(`
-    <p class="eyebrow">Day ${S.closedDay} · closing time</p>
-    <h2>Lights off, oven cooling</h2>
-    ${ledgerHTML(S.stats)}
-    <div class="shop"><h3>Spend on the shop</h3>${items}</div>
-    <p class="note">Tomorrow's rent is ${money(rentFor(S.day))}.${fresh.length ? ` New topping${fresh.length > 1 ? 's' : ''} tomorrow: ${fresh.join(' and ')}.` : ''}</p>
-    <button class="btn primary" type="button" data-action="next">Open day ${S.day}</button>`);
-}
-function showTitle() {
-  const best = loadBest();
-  showOverlay(`
-    <p class="eyebrow">Slices &amp; whole pies · since 1975</p>
-    <h1>Joe's Pizza</h1>
-    <p>Joe handed you the keys. Make the pies people order, keep the line moving, and cover the rent every night.</p>
-    <ol class="howto">
-      <li><b>Read the ticket.</b> Each customer wants a specific pie.</li>
-      <li><b>Build it.</b> Stretch dough, then add sauce, cheese and toppings.</li>
-      <li><b>Bake it.</b> Pull it out while the needle is in the green.</li>
-      <li><b>Serve it.</b> Tap the pie on the pass, then tap their ticket.</li>
+function hide() { $('#overlay').hidden = true; }
+
+function titleScreen() {
+  G.phase = 'title';
+  show(`
+    <p class="eyebrow">Business 101 · Joe's Pizza</p>
+    <h1>Run Joe's Friday shift</h1>
+    <p class="lead">A caterer just ordered <b>20 pepperoni pizzas at $12 each</b>. You're on the line. Make them to Joe's standard, keep your promise, then see what the shift really earned.</p>
+    <div class="cost-eq" aria-label="Joe's standard cost">
+      <div class="chip m"><b>$4.50</b><small>Ingredients</small></div><span class="op">+</span>
+      <div class="chip r"><b>$1.00</b><small>Labor</small></div><span class="op">+</span>
+      <div class="chip g"><b>$1.50</b><small>Overhead</small></div><span class="op">=</span>
+      <div class="chip total"><b>$7.00</b><small>Standard cost</small></div>
+    </div>
+    <p class="note">Labor is $20 an hour at Joe's standard run rate of 20 pizzas an hour. Overhead is the oven and the shop, about $30 an hour. The customer pays $12, which leaves $5 of gross profit, and $2 after other business costs.</p>
+    <ol class="routing" aria-label="The routing">
+      <li><span class="step">1</span><b>Prepare dough</b><span>Press <kbd>D</kbd></span></li>
+      <li><span class="step">2</span><b>Add toppings</b><span>Hold <kbd>S</kbd> <kbd>C</kbd> <kbd>P</kbd>. Let go in the green: one BOM portion.</span></li>
+      <li><span class="step">3</span><b>Bake</b><span><kbd>O</kbd> to load. Pull with <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> in the green.</span></li>
+      <li><span class="step">4</span><b>Cut</b><span>Press <kbd>K</kbd></span></li>
+      <li><span class="step">5</span><b>Box</b><span>Press <kbd>B</kbd></span></li>
     </ol>
-    <p class="keys">Keys: D dough · S sauce · C cheese · 1 to 8 toppings · B bake · X bin · P pause</p>
-    <button class="btn primary" type="button" data-action="start">Open the shop</button>
-    ${best ? `<p class="note">Best run: ${best.days} day${best.days === 1 ? '' : 's'}, ${best.served} pies served.</p>` : ''}`);
-}
-function showPause() {
-  showOverlay(`
-    <p class="eyebrow">Day ${S.day} · ${clockStr(S.time)}</p>
-    <h2>On a break</h2>
-    <p>The oven and the customers are frozen until you come back.</p>
-    <button class="btn primary" type="button" data-action="resume">Back to work</button>`);
-}
-function showOverlay(html) {
-  $('#panel').innerHTML = html;
-  $('#overlay').hidden = false;
-  const cta = $('#panel [data-action]');
-  if (cta) cta.focus({ preventScroll: true });
-}
-function hideOverlay() { $('#overlay').hidden = true; }
-function togglePause() {
-  if (S.phase !== 'open') return;
-  S.paused = !S.paused;
-  if (S.paused) showPause(); else hideOverlay();
+    <p class="note">Mouse and touch work too: hold a topping button to pour. Two seconds of play is one minute in the kitchen, so the 20-an-hour standard means a pizza every 6 seconds.</p>
+    <div class="cta-row"><button class="btn red" type="button" data-act="promise">Take the order</button></div>`);
 }
 
-$('#panel').addEventListener('click', (e) => {
-  const buy = e.target.closest('[data-buy]');
-  if (buy) {
-    const u = UPGRADES.find((x) => x.id === buy.dataset.buy);
-    if (u && !u.owned() && S.cash >= u.cost) { S.cash -= u.cost; u.buy(); sfx('ding'); updateHud(); showSummary(); }
+function promiseScreen() {
+  G.phase = 'promise';
+  const lastDem = G.hist.length ? G.hist[G.hist.length - 1].dem : 0;
+  const rates = [{ r: STD_RATE, tag: "Joe's standard" }];
+  if (lastDem > 0 && Math.abs(lastDem - STD_RATE) >= 0.05) rates.push({ r: lastDem, tag: 'You demonstrated last shift' });
+  [15, 12].forEach((r) => { if (!rates.some((o) => Math.abs(o.r - r) < 0.05)) rates.push({ r, tag: r === 15 ? 'A cautious guess' : 'A slow night' }); });
+  G.pickRate = lastDem > 0 ? rates.find((o) => Math.abs(o.r - lastDem) < 0.05 || o.r === lastDem)?.r ?? STD_RATE : STD_RATE;
+  const opts = rates.map((o) => {
+    const min = (ORDER / o.r) * 60;
+    return `<button type="button" class="opt" role="radio" aria-checked="${o.r === G.pickRate}" data-rate="${o.r}">
+      <span class="tag">${o.tag}</span><span class="rate">${o.r}<small> pizzas / hr</small></span>
+      <span class="math">20 ÷ ${o.r} = ${dur(min)}</span><span class="ready">Ready ${clock(min)}</span></button>`;
+  }).join('');
+  show(`
+    <p class="eyebrow">Shift ${G.shiftNo + 1} · Order: 20 pizzas · Start: 4:00 PM</p>
+    <p class="quote">"When will it be ready?"</p>
+    <p>Pick the run rate you'll plan with. Joe schedules and pays your hours to match the promise. Finish late and every extra hour is overtime at $30, and the caterer takes 5% off the bill for every 15 minutes they wait, up to 25%.</p>
+    <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
+    <div class="cta-row"><button class="btn red" type="button" data-act="start">Promise it and start</button>
+      <button class="btn light" type="button" data-act="title">Back</button></div>`);
+}
+
+function startShift() {
+  G.sh = newShift(G.pickRate);
+  G.phase = 'play'; G.paused = false;
+  hide();
+  refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshTop(); refreshLive();
+  toast(`Promised for ${clock(G.sh.promiseMin)}. The clock is running.`);
+}
+
+function endShift(early) {
+  const sh = G.sh;
+  if (sh.ended) return;
+  sh.ended = true; sh.pouring = null;
+  if (sh.prep) sh.prep.state = 'scrap';
+  sh.oven.forEach((p) => { if (p) p.state = 'scrap'; });
+  if (sh.board) sh.board.state = 'scrap';
+  G.phase = 'report';
+  sfx('done');
+  const c = calc(sh, true);
+  G.shiftNo++;
+  G.hist.push({ n: G.shiftNo, plan: sh.rate, dem: r1(c.rate), late: Math.round(c.late), op: Math.round(c.op * 100) / 100, good: c.good });
+  saveHist(G.hist);
+  refreshPrep(); refreshOven(); refreshBoard(); refreshLive();
+  reportScreen(c, sh, early);
+}
+
+function barsHTML(rows, hi, lo) {
+  const span = hi - lo || 1, pos = (v) => ((v - lo) / span) * 100, z = pos(0);
+  return rows.map((r) => {
+    const a = pos(Math.min(0, r.v)), w = Math.abs(pos(r.v) - z);
+    const sa = pos(Math.min(0, r.s)), sw = Math.abs(pos(r.s) - z);
+    const lab = `left:calc(${r.v >= 0 ? a + w : z}% + 6px)`;
+    return `<div class="bar-row"><span>${r.label}</span><div class="bar-track">
+      <span class="zero" style="left:${z}%"></span>
+      <i style="left:${a}%;width:${w}%;background:${r.c}"></i>
+      <i class="std" style="left:${sa}%;width:${sw}%"></i>
+      <b style="${lab}">${money(r.v)}</b></div></div>`;
+  }).join('');
+}
+
+function reportScreen(c, sh, early) {
+  const dem = c.rate, per = (v) => money(v / Math.max(1, c.good));
+  const rows = [
+    { label: 'Revenue', v: c.rev, s: c.std.rev, c: '#e6ae47' },
+    { label: 'Cost to make', v: c.cogs, s: c.std.cogs, c: '#c94d3a' },
+    { label: 'Gross profit', v: c.gp, s: c.std.gp, c: '#52765c' },
+    { label: 'Other business costs', v: c.other, s: c.std.other, c: '#a06e58' },
+    { label: 'Operating profit', v: c.op, s: c.std.op, c: '#7fa889' },
+  ];
+  const vals = rows.flatMap((r) => [r.v, r.s, 0]);
+  const hi = Math.max(...vals) * 1.25 || 1, lo = Math.min(...vals) < 0 ? Math.min(...vals) * 1.45 : 0;
+
+  const P = c.parts;
+  const bridge = [
+    ['Heavy portions (more than the BOM)', P.over],
+    [`Scrapped pizzas (${sh.scrapN})`, P.scrap],
+    [`Labor at ${r1(dem)}/hr instead of 20/hr`, P.slow],
+    ['Overtime premium', P.ot],
+    ['Scheduled hours you did not need', P.idle],
+    ['Oven and shop running longer (overhead)', P.oh],
+    [`Late discount (${Math.round(c.discPct * 100)}%)`, P.disc],
+  ].filter(([, v]) => Math.abs(v) >= 0.005);
+  const bridgeRows = bridge.map(([l, v]) => `<tr><td>${l}</td><td class="${v > 0 ? 'over' : 'under'}">${v > 0 ? '-' : '+'}${money(Math.abs(v))}</td></tr>`).join('');
+
+  const lessons = [];
+  if (c.late > 0.5 && sh.rate > dem + 0.2) lessons.push(['Bad assumptions do not stay in the spreadsheet.', `You promised from ${sh.rate}/hr. The kitchen demonstrated ${r1(dem)}/hr. Wrong run rate, wrong capacity, missed promise, overtime, less profit.`]);
+  else if (c.good >= ORDER && c.late <= 0.5 && sh.promiseMin - c.min > 5) lessons.push(['A promise that is too slow costs money too.', `You finished ${dur(sh.promiseMin - c.min)} early, but Joe had already scheduled and paid for those hours. Plan from what the kitchen can repeat.`]);
+  else if (c.good >= ORDER && c.late <= 0.5) lessons.push(['Planning can work with slow. It cannot work with moving.', 'Your promise matched what the kitchen actually did. The customer got an honest time and nobody worked overtime.']);
+  if (dem > 0 && dem < STD_RATE - 0.3) lessons.push(["The pizza didn't change. The process did.", `Same $20 hour. At ${r1(dem)}/hr, labor is ${money(WAGE / dem)} a pizza instead of $1.00, and overhead is ${money(OH_PER_HR / dem)} instead of $1.50.`]);
+  if (sh.scrapN) lessons.push(['Scrap uses everything and sells nothing.', `${sh.scrapN} scrapped pizza${sh.scrapN > 1 ? 's' : ''} used ${money(P.scrap)} of ingredients, plus the labor and oven time it took to make ${sh.scrapN > 1 ? 'them' : 'it'}.`]);
+  if (P.over > 0.75) lessons.push(['The recipe is the BOM.', `Heavy hands added ${money(P.over)} of ingredients that the $12 price never covered. That's ${per(P.over)} a pizza.`]);
+  if (c.good && dem >= STD_RATE - 0.3 && !sh.scrapN && P.over <= 0.75) lessons.push(['That is what a standard looks like.', 'You hit the BOM, the routing and the run rate. This is the $7 pizza the plan assumed.']);
+
+  const histRows = G.hist.slice().reverse().map((h) => `<tr><td>Shift ${h.n}</td><td>${h.plan}/hr</td><td>${h.dem}/hr</td><td>${h.late ? dur(h.late) + ' late' : 'On time'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td></tr>`).join('');
+  const costPer = c.cogs / Math.max(1, c.good);
+
+  show(`
+    <p class="eyebrow">Shift ${G.shiftNo} · ${early ? `Shift ended with ${c.good} of 20 boxed` : 'Order complete'} · ${clock(c.min)}</p>
+    <h2>Did Joe make ${money(c.revGross)}?</h2>
+    <div class="headline">
+      <div><div class="big ${c.op < 0 ? 'neg' : 'pos'}">${money(c.op)}</div><p>operating profit</p></div>
+      <p>${c.good} pizzas in <strong>${dur(c.min)}</strong> at <strong>${r1(dem)}/hr</strong>. Promised <strong>${clock(sh.promiseMin)}</strong>, ready <strong>${clock(c.min)}</strong>${c.late > 0.5 ? `, <strong>${dur(c.late)} late</strong>` : ''}. Joe's standard for ${c.good} pizzas is <strong>${money(c.std.op)}</strong> of operating profit.</p>
+    </div>
+    <div class="rep-grid">
+      <div class="panel-card">
+        <h3>What happened to the customer's money</h3>
+        <div class="bars">${barsHTML(rows, hi, lo)}</div>
+        <p class="legend"><span style="--c:#c94d3a">This shift</span><span style="--c:#bfae94">Joe's standard</span></p>
+      </div>
+      <div class="panel-card">
+        <h3>Cost per pizza</h3>
+        <table class="tbl">
+          <thead><tr><th></th><th>Standard</th><th>This shift</th></tr></thead>
+          <tbody>
+            <tr><td>Ingredients</td><td>$4.50</td><td>${per(c.mat)}</td></tr>
+            <tr><td>Labor</td><td>$1.00</td><td>${per(c.labor)}</td></tr>
+            <tr><td>Overhead</td><td>$1.50</td><td>${per(c.oh)}</td></tr>
+            <tr class="total"><td>Cost to make</td><td>$7.00</td><td class="${costPer > STD_COST + 0.005 ? 'over' : 'under'}">${money(costPer)}</td></tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:10px">Same customer, same pizza, same $12. Every dollar above $7.00 comes out of profit.</p>
+      </div>
+      <div class="panel-card">
+        <h3>From the standard ${money(c.std.op)} to your ${money(c.op)}</h3>
+        <table class="tbl"><tbody>
+          <tr><td>Standard operating profit</td><td>${money(c.std.op)}</td></tr>
+          ${bridgeRows || '<tr><td>No differences from standard</td><td>$0.00</td></tr>'}
+          <tr class="total"><td>This shift</td><td>${money(c.op)}</td></tr>
+        </tbody></table>
+      </div>
+      <div class="panel-card">
+        <h3>Capacity is the run rate stretched across time</h3>
+        <div class="cap">
+          <div class="plan"><small>Plan assumes, 8-hour shift</small><b>160</b><small>20/hr × 8 hr</small></div>
+          <div class="real"><small>You demonstrated</small><b>${Math.round(dem * 8)}</b><small>${r1(dem)}/hr × 8 hr</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="lessons">${lessons.slice(0, 3).map(([h, p]) => `<div class="lesson"><b>${h}</b><p>${p}</p></div>`).join('')}</div>
+    <div class="panel-card scroll-x"><h3>Your shifts</h3>
+      <table class="hist"><thead><tr><th>Shift</th><th>Planned at</th><th>Demonstrated</th><th>Promise</th><th>Operating profit</th></tr></thead><tbody>${histRows}</tbody></table>
+    </div>
+    <div class="cta-row"><button class="btn red" type="button" data-act="promise">Run another shift</button>
+      <button class="btn light" type="button" data-act="clear">Clear shift history</button></div>`, true);
+}
+
+function pauseScreen() {
+  show(`<p class="eyebrow">Paused · ${clock(nowMin())}</p><h2>Break room</h2><p>The oven and the clock are stopped.</p>
+    <div class="cta-row"><button class="btn red" type="button" data-act="resume">Back on the line</button>
+    <button class="btn light" type="button" data-act="quit">End this shift now</button></div>`);
+}
+function togglePause() {
+  if (G.phase !== 'play') return;
+  G.paused = !G.paused;
+  if (G.paused) { stopPour(); pauseScreen(); } else hide();
+  refreshPrep(); refreshBoard(); refreshOven();
+}
+
+$('#sheet').addEventListener('click', (e) => {
+  const opt = e.target.closest('[data-rate]');
+  if (opt) {
+    G.pickRate = parseFloat(opt.dataset.rate);
+    document.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-checked', o === opt ? 'true' : 'false'));
     return;
   }
-  const a = e.target.closest('[data-action]');
+  const a = e.target.closest('[data-act]');
   if (!a) return;
-  switch (a.dataset.action) {
-    case 'start': startDay(); break;
-    case 'next': startDay(); break;
-    case 'resume': togglePause(); break;
-    case 'restart': S = freshState(); startDay(); break;
-  }
+  const act = a.dataset.act;
+  if (act === 'promise') promiseScreen();
+  else if (act === 'title') titleScreen();
+  else if (act === 'start') startShift();
+  else if (act === 'resume') togglePause();
+  else if (act === 'quit') { G.paused = false; endShift(true); }
+  else if (act === 'clear') { G.hist = []; G.shiftNo = 0; saveHist(G.hist); promiseScreen(); }
 });
 
 /* ---------- controls ---------- */
-$('#btnDough').addEventListener('click', newDough);
-$('#btnBake').addEventListener('click', bake);
-$('#btnBin').addEventListener('click', binPrep);
-$('#btnTossPass').addEventListener('click', binPass);
+$('#btnDough').addEventListener('click', dough);
+$('#btnOven').addEventListener('click', toOven);
+$('#btnBinPrep').addEventListener('click', scrapPrep);
+$('#btnCut').addEventListener('click', cut);
+$('#btnRework').addEventListener('click', rework);
+$('#btnScrapBoard').addEventListener('click', scrapBoard);
+$('#btnBox').addEventListener('click', box);
 $('#btnPause').addEventListener('click', togglePause);
 $('#btnMute').addEventListener('click', (e) => {
-  muted = !muted;
-  e.currentTarget.textContent = muted ? 'Sound off' : 'Sound on';
-  e.currentTarget.setAttribute('aria-pressed', muted ? 'true' : 'false');
+  muted = !muted; e.currentTarget.textContent = muted ? 'Sound off' : 'Sound on'; e.currentTarget.setAttribute('aria-pressed', String(muted));
 });
+document.querySelectorAll('.pour').forEach((b) => {
+  const k = b.dataset.k;
+  b.addEventListener('pointerdown', (e) => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } startPour(k); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => b.addEventListener(ev, stopPour));
+  b.addEventListener('contextmenu', (e) => e.preventDefault());
+  b.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startPour(k); } });
+  b.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') stopPour(); });
+});
+const HOLD = { s: 'sauce', c: 'cheese', p: 'pep' };
 document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || S.phase !== 'open') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || G.phase !== 'play') return;
   const k = e.key.toLowerCase();
-  if (k === 'p' || k === 'escape') { togglePause(); e.preventDefault(); return; }
-  if (S.paused) return;
-  if (k === 'd') newDough();
-  else if (k === 's') addIngredient('sauce');
-  else if (k === 'c') addIngredient('cheese');
-  else if (k === 'b') bake();
-  else if (k === 'x') binPrep();
-  else if (/^[1-8]$/.test(k)) addIngredient(TKEYS[+k - 1]);
+  if (k === 'escape') { togglePause(); e.preventDefault(); return; }
+  if (G.paused || e.repeat) return;
+  if (e.target.closest && e.target.closest('.pour')) return;
+  if (HOLD[k]) { startPour(HOLD[k]); e.preventDefault(); }
+  else if (k === 'd') dough();
+  else if (k === 'o') toOven();
+  else if (k === '1' || k === '2' || k === '3') pull(+k - 1);
+  else if (k === 'k') cut();
+  else if (k === 'b') box();
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden && S.phase === 'open' && !S.paused) togglePause(); });
+document.addEventListener('keyup', (e) => { const k = e.key.toLowerCase(); if (HOLD[k] && G.sh && G.sh.pouring === HOLD[k]) stopPour(); });
+window.addEventListener('blur', stopPour);
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.phase === 'play' && !G.paused) togglePause(); });
 
 /* ---------- boot ---------- */
-S = freshState();
-prepCtx = setupCanvas($('#prepCanvas'), 228);
-buildBins();
-refreshPrep(); renderOven(); renderPass(); renderRail(); updateHud();
-showTitle();
+buildDecks(); buildBoxes();
+refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshLive();
+G.shiftNo = G.hist.length ? G.hist[G.hist.length - 1].n : 0;
+titleScreen();
 requestAnimationFrame(frame);
-
-// Small hook for automated tests and the curious.
-window.JoesPizza = { get state() { return S; } };
+window.JoesPizza = { get state() { return G; }, calc };
 })();
 </script>
 </body>
