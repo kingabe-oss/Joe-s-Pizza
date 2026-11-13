@@ -141,8 +141,31 @@ button { font: inherit; color: inherit; }
 .box-count b { color: var(--ink); font-size: 20px; font-weight: 800; }
 
 /* Live standard vs actual */
-.ledger-live { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
-@media (max-width: 820px) { .ledger-live { grid-template-columns: minmax(0, 1fr); } }
+.ledger-live { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 1060px) { .ledger-live { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ledger-live > :first-child { grid-column: 1 / -1; } }
+@media (max-width: 680px) { .ledger-live { grid-template-columns: minmax(0, 1fr); } }
+.coach { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: var(--navy); color: var(--on-dark); border-radius: 12px; padding: 10px 14px; box-shadow: 0 6px 18px rgba(31,40,51,.25); }
+.coach-tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mustard); }
+.coach p { margin: 0; flex: 1 1 260px; font-weight: 600; }
+.coach .ghost { background: transparent; color: var(--on-dark); border-color: #3c4855; }
+.coach-on { outline: 3px solid var(--mustard) !important; outline-offset: 3px; animation: coachPulse 1.2s ease-in-out infinite; }
+@keyframes coachPulse { 50% { outline-color: rgba(230, 174, 71, .2); } }
+.books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.bk { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.bk small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+.bk b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ovenbar { height: 10px; border-radius: 5px; background: #efe4d2; overflow: hidden; margin-top: 10px; }
+.ovenbar i { display: block; height: 100%; background: var(--sage); }
+.books-wrap .note { margin-top: 6px; }
+.funds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .funds { grid-template-columns: minmax(0, 1fr); } }
+.fund { display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.fund .ftag { align-self: flex-start; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--navy); color: #fff; }
+.fund b { font-size: 16px; }
+.fund p { font-size: 13.5px; color: #3c4652; }
+.fund .cons { font-weight: 700; color: var(--red); }
+.fund .btn { margin-top: auto; align-self: flex-start; }
+.paid { background: var(--sage-tint); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
 .panel-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
 .panel-card h3 { margin: 0 0 8px; font-size: 14px; font-weight: 800; }
 .tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
@@ -340,6 +363,7 @@ button { font: inherit; color: inherit; }
     </div>
   </header>
   <div class="progress" aria-hidden="true"><i id="progFill"></i></div>
+  <div class="coach" id="coach" hidden><span class="coach-tag">Practice pizza · no clock, no cost</span><p id="coachText"></p><button class="ghost" id="btnSkipPractice" type="button">Skip practice</button></div>
 
   <main class="line">
     <section class="station" aria-label="Prepare dough and add toppings">
@@ -394,6 +418,10 @@ button { font: inherit; color: inherit; }
       <h3>What the shift has used</h3>
       <div class="facts" id="liveFacts"></div>
     </div>
+    <div class="panel-card books-wrap">
+      <h3>Joe's money</h3>
+      <div id="booksLive"></div>
+    </div>
   </section>
 </div>
 
@@ -421,7 +449,8 @@ const MAX_MIN = 300;         // Joe sends everyone home after 5 hours
 const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
 const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
 const BAKE_SEC = 7, GOOD_LO = 0.9, GOOD_HI = 1.3, BAKE_MAX = 1.6;
-const DECKS = 3;
+const BOOKS_KEY = 'joes-pizza-b101-books';
+const OVEN_COST = 500, BANK_LIMIT = 400, INTEREST = 0.05;
 const HIST_KEY = 'joes-pizza-b101-history';
 const TAU = Math.PI * 2;
 
@@ -452,6 +481,10 @@ function ramp(stops, v) {
   }
   return stops[stops.length - 1][1];
 }
+function freshBooks() { return { savings: 250, ovenFund: 300, loan: 0, decks: 3, ovenBought: false }; }
+function loadBooks() { try { return Object.assign(freshBooks(), JSON.parse(localStorage.getItem(BOOKS_KEY)) || {}); } catch (e) { return freshBooks(); } }
+function saveBooks() { try { localStorage.setItem(BOOKS_KEY, JSON.stringify(G.books)); } catch (e) { /* storage unavailable */ } }
+const shiftsToOven = (fund) => Math.max(0, Math.ceil((OVEN_COST - fund) / (2 * ORDER)));
 function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } }
 function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-12))); } catch (e) { /* storage unavailable */ } }
 
@@ -550,13 +583,13 @@ function drawPizza(ctx, p, size) {
 }
 
 /* ---------- state ---------- */
-const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null, deb: null, goal: null };
+const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null, deb: null, goal: null, books: loadBooks(), practiced: false };
 function newShift(rate) {
-  return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(DECKS).fill(null), board: null,
+  return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(G.books.decks).fill(null), board: null,
     pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [] };
 }
 const nowMin = () => G.sh.t / SEC_PER_MIN;
-const playing = () => G.phase === 'play' && !G.paused;
+const playing = () => (G.phase === 'play' || G.phase === 'practice') && !G.paused;
 const pieMat = (p) => COST.dough + COST.sauce * p.sauce + COST.cheese * p.cheese + COST.pep * p.pep;
 function grade(b) { return b < GOOD_LO ? 'under' : b <= GOOD_HI ? 'good' : 'burnt'; }
 
@@ -592,7 +625,7 @@ const boardCtx = setupCanvas($('#boardCv'), 136);
 let deckEls = [];
 function buildDecks() {
   const el = $('#decks'); el.innerHTML = ''; deckEls = [];
-  for (let i = 0; i < DECKS; i++) {
+  for (let i = 0; i < G.books.decks; i++) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'deck'; b.disabled = true;
     b.innerHTML = `<canvas></canvas><span class="deck-info"><span class="deck-top"><span class="deck-label">Empty deck</span><kbd>${i + 1}</kbd></span><span class="bgauge"><i></i></span></span>`;
@@ -688,7 +721,9 @@ function box() {
   if (!p) return;
   if (!p.cut) { toast('Routing: cut before you box.'); return; }
   p.state = 'boxed'; sh.boxed++; sh.board = null; sh.boxTimes.push(nowMin());
-  sfx('box'); refreshBoard(); refreshBoxes(); refreshLive();
+  sfx('box'); refreshBoard(); refreshBoxes();
+  if (sh.practice) { practiceDone(); return; }
+  refreshLive();
   if (sh.boxed >= ORDER) endShift(false);
 }
 
@@ -746,6 +781,10 @@ function refreshBoxes() {
 function refreshTop() {
   const sh = G.sh;
   if (!sh) return;
+  if (sh.practice) {
+    $('#stClock').textContent = 'Practice'; $('#stPromise').textContent = '…'; $('#stProj').textContent = '…'; $('#stRate').textContent = '… /hr'; $('#stBoxed').textContent = `0 / ${ORDER}`;
+    $('#progFill').style.width = '0%'; return;
+  }
   const m = nowMin(), late = m > sh.promiseMin;
   $('#stClock').textContent = clock(m);
   $('#stClockBox').classList.toggle('warn', late);
@@ -806,8 +845,9 @@ function update(dt) {
     if (before < GOOD_LO && p.bake >= GOOD_LO) sfx('ready');
     if (before < GOOD_HI && p.bake >= GOOD_HI) { sfx('burn'); toast('A pizza is burning in the oven!', 'bad'); }
   }
-  if (!sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promised time. You are on overtime and the customer is waiting.', 'bad'); }
+  if (!sh.practice && !sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promised time. You are on overtime and the customer is waiting.', 'bad'); }
   refreshOven(); refreshTop();
+  if (sh.practice) { coach(); return; }
   liveTick += dt;
   if (liveTick > 0.25) { liveTick = 0; refreshLive(); }
   if (nowMin() >= MAX_MIN) endShift(true);
@@ -850,7 +890,10 @@ function titleScreen() {
       <li><span class="step">5</span><b>Box</b><span>Press <kbd>B</kbd></span></li>
     </ol>
     <p class="note">Mouse and touch work too: hold a topping button to pour. Two seconds of play is one minute in the kitchen, so the 20-an-hour standard means a pizza every 6 seconds.</p>
-    <div class="cta-row"><button class="btn red" type="button" data-act="promise">Take the order</button></div>`);
+    <p>Every shift's profit or loss lands on Joe's books. He has <b>${money(G.books.savings)}</b> in savings and <b>${money(G.books.ovenFund)}</b> saved toward a <b>${money(OVEN_COST)}</b> new oven.</p>
+    <div class="cta-row">${G.practiced
+      ? `<button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button>`
+      : `<button class="btn red" type="button" data-act="practice">Practice one pizza first</button><button class="btn light" type="button" data-act="promise">Skip to the order</button>`}</div>`);
 }
 
 function promiseScreen() {
@@ -872,11 +915,13 @@ function promiseScreen() {
     ${G.goal ? `<p class="goal-banner"><b>Your goal this shift:</b> ${G.goal.label}. The debrief will check it.</p>` : ''}
     <p>Pick the run rate you'll plan with. Joe schedules and pays your hours to match the promise. Finish late and every extra hour is overtime at $30, and the caterer takes 5% off the bill for every 15 minutes they wait, up to 25%.</p>
     <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
+    <div class="panel-card books-wrap"><h3>Joe's money going into this shift</h3>${booksHTML()}</div>
     <div class="cta-row"><button class="btn red" type="button" data-act="start">Promise it and start</button>
       <button class="btn light" type="button" data-act="title">Back</button></div>`);
 }
 
 function startShift() {
+  if (deckEls.length !== G.books.decks) buildDecks();
   G.sh = newShift(G.pickRate);
   G.phase = 'play'; G.paused = false;
   hide();
@@ -893,6 +938,7 @@ function endShift(early) {
   sfx('done');
   const c = calc(sh, true);
   G.shiftNo++;
+  const pay = settle(c);
   const d = c.good ? debData(c, sh) : null;
   const goal = G.goal, res = goal && d ? goalResult(goal, d) : null;
   G.goal = null;
@@ -902,11 +948,13 @@ function endShift(early) {
   refreshPrep(); refreshOven(); refreshBoard(); refreshLive();
   if (!d) {
     G.deb = null;
-    show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, so there's nothing to debrief yet. Joe still paid for the dough and the clock.</p>
+    const auto = autoFund(pay);
+    show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, but Joe still paid for the dough and the clock: ${money(pay.gap)}. ${auto}</p>
+      <div class="panel-card books-wrap"><h3>Joe's money</h3>${booksHTML()}</div>
       <div class="cta-row"><button class="btn red" type="button" data-act="promise">Run another shift</button></div>`);
     return;
   }
-  G.deb = Object.assign(d, { early, goal, res, step: 1, guess: 7, guessed: false, pick: null, locked: false,
+  G.deb = Object.assign(d, { pay, early, goal, res, step: 1, guess: 7, guessed: false, pick: null, locked: false,
     lv: { rate: d.dem, exact: false, noScrap: false, honest: false } });
   debriefScreen();
 }
@@ -1008,7 +1056,7 @@ function reportScreen(c, sh, early) {
       <table class="hist"><thead><tr><th>Shift</th><th>Planned at</th><th>Demonstrated</th><th>Promise</th><th>Goal</th><th>Operating profit</th></tr></thead><tbody>${histRows}</tbody></table>
     </div>
     <div class="cta-row"><button class="btn red" type="button" data-act="deb">Back to the debrief</button>
-      <button class="btn light" type="button" data-act="clear">Clear shift history</button></div>`, true);
+      <button class="btn light" type="button" data-act="clear">Start over: history and Joe's books</button></div>`, true);
 }
 
 
@@ -1080,7 +1128,7 @@ function fixList(d) {
   return { base: b, list: list.slice().sort((x, y) => y.gain - x.gain) };
 }
 function stepper(n) {
-  const names = ['Predict', 'Find the leaks', 'Pick one fix'];
+  const names = ['Predict', 'Find the leaks', 'Payday', 'Pick one fix'];
   return `<ol class="stepper" aria-label="Debrief steps">${names.map((t, i) => `<li class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"><i>${i + 1 < n ? '✓' : i + 1}</i>${t}</li>`).join('')}</ol>`;
 }
 function stackRow(label, mat, lab, oh, scale, guess) {
@@ -1148,9 +1196,11 @@ function debriefScreen(keepScroll) {
       ${lost > 0.005 ? `<p class="insight">Time and promises cost you <b>${money(timeV)}</b>. Ingredients cost <b>${money(matV)}</b>. ${share >= 50
         ? `That's ${share}% of the leak on the clock. Supervisors control the clock: run rate, gaps, and the promise.`
         : `Most of the leak was material this time. Every gram over the BOM and every scrapped pizza is paid for and never sold.`}</p>` : ''}
-      <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="3">Next: pick one fix</button>
+      <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="3">Next: payday</button>
         <button class="btn light" type="button" data-act="step" data-step="1">Back</button>
         <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+  } else if (d.step === 3) {
+    body = paydayHTML(d);
   } else {
     const F = fixList(d), best = F.list[0];
     const lo = Math.max(4, Math.floor(Math.min(d.dem, 20)) - 2);
@@ -1188,13 +1238,13 @@ function debriefScreen(keepScroll) {
       <div class="cta-row">
         ${d.locked ? `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal and plan the next shift</button>`
           : `<button class="btn red" type="button" data-act="lock" ${d.pick ? '' : 'disabled'}>Lock in my pick</button>`}
-        <button class="btn light" type="button" data-act="step" data-step="2">Back</button>
+        <button class="btn light" type="button" data-act="step" data-step="3">Back</button>
         <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
   }
   const scrollY = $('#overlay').scrollTop;
   show(`${stepper(d.step)}${head}${body}`, true);
   if (keepScroll) $('#overlay').scrollTop = scrollY;
-  if (d.step === 3) updateSandbox();
+  if (d.step === 4) updateSandbox();
 }
 function readLevers() {
   const lv = G.deb.lv;
@@ -1211,6 +1261,163 @@ function updateSandbox() {
   const bar = (label, v, col) => `<div class="mbar"><span>${label}</span><span class="mt"><i style="width:${(v / scale) * 100}%;background:${col}"></i></span><b>${money(v)}</b></div>`;
   $('#sbBars').innerHTML = bar("Joe's standard", STD_COST, '#bfae94') + bar(d.early ? 'Your pace, full order' : 'Your shift', base.cost, '#c94d3a') + bar('With these changes', now.cost, '#e6ae47');
   $('#sbOp').innerHTML = `Operating profit on 20 pizzas: <b>${money(now.op)}</b>. ${d.early ? 'At your pace' : 'Your shift'}: ${money(base.op)}. Standard: $40.00.${now.pct ? ` Still late, so the caterer takes ${Math.round(now.pct * 100)}% off.` : ''}`;
+}
+
+/* ---------- practice ---------- */
+let coachKey = '';
+function startPractice() {
+  if (deckEls.length !== G.books.decks) buildDecks();
+  G.sh = newShift(STD_RATE); G.sh.practice = true;
+  G.phase = 'practice'; G.paused = false;
+  hide(); $('#coach').hidden = false;
+  refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshTop(); coach();
+}
+function clearCoach() { document.querySelectorAll('.coach-on').forEach((e) => e.classList.remove('coach-on')); coachKey = ''; }
+function endPractice() {
+  $('#coach').hidden = true; clearCoach();
+  G.sh = null; G.phase = 'title';
+  refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes();
+}
+function practiceDone() {
+  endPractice(); G.practiced = true; sfx('done');
+  show(`<p class="eyebrow">Practice complete</p><h2>That's the routing.</h2>
+    <p>Dough, toppings, bake, cut, box. On the real shift the clock runs and every portion, minute and scrapped pizza costs Joe money. His standard is 20 pizzas an hour: one every 6 seconds of play.</p>
+    <p class="note">Tip: you don't have to wait for the oven. Start the next pizza while one bakes. There are ${G.books.decks} decks.</p>
+    <div class="cta-row"><button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button></div>`);
+}
+function coach() {
+  const sh = G.sh, b = sh.board, ov = sh.oven.findIndex((x) => x);
+  let key, txt, sel;
+  if (b) {
+    const g = grade(b.bake);
+    if (g === 'burnt') { key = 'scrap'; txt = 'That one burned. Nobody pays $12 for it. Press Scrap, then make another.'; sel = '#btnScrapBoard'; }
+    else if (g === 'under') { key = 'rework'; txt = 'Pulled too early: it is still pale. Press Back in oven to rework it.'; sel = '#btnRework'; }
+    else if (!b.cut) { key = 'cut'; txt = 'Step 4: baked to standard. Press K (or Cut).'; sel = '#btnCut'; }
+    else { key = 'box'; txt = 'Step 5: press B (or Box it) to finish the pizza.'; sel = '#btnBox'; }
+  } else if (ov >= 0) {
+    const g = grade(sh.oven[ov].bake);
+    if (g === 'good') { key = 'pull'; txt = `In the green! Press ${ov + 1} (or tap the oven deck) to pull it.`; sel = '#decks'; }
+    else if (g === 'burnt') { key = 'burn'; txt = `It's burning! Pull it with ${ov + 1} anyway and see what happens.`; sel = '#decks'; }
+    else { key = 'wait'; txt = 'Step 3: baking. Watch the needle and pull it when it reaches the green. On the real shift you would start the next pizza now.'; sel = '#decks'; }
+  } else if (sh.prep) {
+    const p = sh.prep;
+    if (p.sauce < MIN_P) { key = 'sauce'; txt = 'Step 2: hold S (or press and hold Sauce). Let go when the bar is in the green: that is one BOM portion.'; sel = '#pour-sauce'; }
+    else if (p.cheese < MIN_P) { key = 'cheese'; txt = 'Now hold C for cheese. Same rule: let go in the green.'; sel = '#pour-cheese'; }
+    else if (p.pep < MIN_P) { key = 'pep'; txt = 'Hold P for pepperoni. Going past the green costs Joe money.'; sel = '#pour-pep'; }
+    else { key = 'oven'; txt = 'Every portion is on. Press O to put it in the oven.'; sel = '#btnOven'; }
+  } else { key = 'dough'; txt = 'Step 1 of the routing: press D (or Stretch dough).'; sel = '#btnDough'; }
+  if (key === coachKey) return;
+  clearCoach(); coachKey = key;
+  $('#coachText').textContent = txt;
+  const el = $(sel); el.classList.add('coach-on');
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+/* ---------- Joe's books ---------- */
+function booksHTML() {
+  const B = G.books, pct = B.ovenBought ? 100 : clamp(B.ovenFund / OVEN_COST, 0, 1) * 100, n = shiftsToOven(B.ovenFund);
+  return `<div class="books">
+    <div class="bk"><small>Savings</small><b>${money(B.savings)}</b></div>
+    <div class="bk"><small>Bank loan</small><b class="${B.loan > 0.005 ? 'over' : ''}">${money(B.loan)}</b></div>
+    <div class="bk"><small>New oven fund</small><b>${B.ovenBought ? 'Bought' : money(B.ovenFund)}</b></div></div>
+    <div class="ovenbar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+    <p class="note">${B.ovenBought ? `New oven bought: ${B.decks} decks in the kitchen.` : `The new oven costs ${money(OVEN_COST)}. At standard profit that's about ${n} more shift${n === 1 ? '' : 's'}.`}${B.loan > 0.005 ? ` Interest due next shift: ${money(B.loan * INTEREST)}.` : ''}</p>`;
+}
+function refreshBooks() { $('#booksLive').innerHTML = booksHTML(); }
+function buyOvenIfReady(pay) {
+  const B = G.books;
+  if (!B.ovenBought && B.ovenFund >= OVEN_COST - 0.005) { B.ovenFund -= OVEN_COST; B.ovenBought = true; B.decks = 4; pay.bought = true; }
+}
+function settle(c) {
+  const B = G.books, interest = Math.round(B.loan * INTEREST * 100) / 100, net = c.op - interest;
+  const pay = { interest, net, gap: Math.max(0, -net), covered: 0, from: { savings: 0, loan: 0, oven: 0 }, repaid: 0, toFund: 0, bought: false };
+  if (net >= 0) {
+    pay.repaid = Math.min(B.loan, net); B.loan -= pay.repaid;
+    pay.toFund = net - pay.repaid; B.ovenFund += pay.toFund;
+    buyOvenIfReady(pay);
+  }
+  saveBooks(); refreshBooks();
+  return pay;
+}
+function available(src) {
+  const B = G.books;
+  return src === 'savings' ? B.savings : src === 'oven' ? B.ovenFund : Math.max(0, BANK_LIMIT - B.loan);
+}
+function fundFrom(src) {
+  const pay = G.deb.pay, B = G.books, amt = Math.min(pay.gap - pay.covered, available(src));
+  if (amt < 0.005) return;
+  if (src === 'savings') B.savings -= amt; else if (src === 'oven') B.ovenFund -= amt; else B.loan += amt;
+  pay.from[src] += amt; pay.covered += amt;
+  sfx('pop'); saveBooks(); refreshBooks();
+}
+function autoFund(pay) {
+  const parts = [];
+  for (const src of ['savings', 'oven', 'loan']) {
+    const amt = Math.min(pay.gap - pay.covered, available(src));
+    if (amt < 0.005) continue;
+    if (src === 'savings') G.books.savings -= amt; else if (src === 'oven') G.books.ovenFund -= amt; else G.books.loan += amt;
+    pay.covered += amt; parts.push(`${money(amt)} from ${src === 'savings' ? 'savings' : src === 'oven' ? 'the oven fund' : 'the bank'}`);
+  }
+  saveBooks(); refreshBooks();
+  return parts.length ? `It came out of ${parts.join(' and ')}.` : '';
+}
+function resetAll() {
+  G.hist = []; G.shiftNo = 0; G.goal = null; G.books = freshBooks();
+  saveHist(G.hist); saveBooks(); buildDecks(); refreshBooks();
+}
+const SRC_NAME = { savings: 'savings', loan: 'a bank loan', oven: 'the new oven fund' };
+function paydayHTML(d) {
+  const c = d.c, pay = d.pay, B = G.books;
+  const remaining = Math.max(0, pay.gap - pay.covered), open = remaining > 0.005;
+  const take = (src) => Math.min(remaining, available(src));
+  const nav = (ok) => `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="4" ${ok ? '' : 'disabled'}>Next: pick one fix</button>
+    <button class="btn light" type="button" data-act="step" data-step="2">Back</button></div>`;
+  if (pay.gap < 0.005) {
+    return `<h2>Payday: the profit funds what's next</h2>
+      <p>Revenue covered every bill this shift. Here's where the profit went.</p>
+      <div class="panel-card"><table class="tbl"><tbody>
+        <tr><td>Operating profit</td><td>${money(c.op)}</td></tr>
+        ${pay.interest ? `<tr><td>Interest on Joe's loan</td><td class="over">-${money(pay.interest)}</td></tr>` : ''}
+        ${pay.repaid ? `<tr><td>Paid back to the bank</td><td>-${money(pay.repaid)}</td></tr>` : ''}
+        <tr class="total"><td>Into the new oven fund</td><td>${money(pay.toFund)}</td></tr>
+      </tbody></table></div>
+      <div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
+      <p class="insight">${pay.bought ? `<b>Joe bought the new oven.</b> Next shift there are ${B.decks} oven decks. That's what profit is for: it funds the next cycle.`
+        : `At standard, this order puts <b>${money(c.std.op)}</b> toward the new oven. You put in <b>${money(pay.toFund)}</b>. ${pay.toFund < c.std.op - 0.005 ? `The ${money(c.std.op - pay.toFund)} difference is the oven arriving later. Revenue pays the bills. Profit funds reinvestment.` : 'Right on plan.'}`}</p>
+      ${nav(true)}`;
+  }
+  const out = c.rev + pay.gap;
+  const n0 = shiftsToOven(B.ovenFund), n1 = shiftsToOven(B.ovenFund - take('oven')), delay = n1 - n0;
+  const opt = (src, chip, title, line, cons) => {
+    const a = take(src);
+    return `<div class="fund"><span class="ftag">${chip}</span><b>${title}</b><p>${line}</p><p class="cons">${cons}</p>
+      <button class="btn" type="button" data-act="fund" data-src="${src}" ${open && a > 0.005 ? '' : 'disabled'}>${a > 0.005 ? `Take ${money(a)}${a < remaining - 0.005 ? ', all there is' : ''}` : src === 'loan' ? 'Bank limit reached' : 'Nothing left here'}</button></div>`;
+  };
+  const cards = open ? `<div class="funds">
+    ${opt('savings', 'Use savings', "Joe's savings", `${money(B.savings)} now, ${money(B.savings - take('savings'))} after.`, 'Less cash remains for the next bad night.')}
+    ${opt('loan', 'Borrow', 'A loan from the bank', `Owed: ${money(B.loan)} now, ${money(B.loan + take('loan'))} after. The bank charges ${Math.round(INTEREST * 100)}% of the balance every shift until it's repaid. Limit ${money(BANK_LIMIT)}.`, 'Debt and interest grow.')}
+    ${opt('oven', 'Redirect investment', 'The new oven fund', `${money(B.ovenFund)} of ${money(OVEN_COST)} now, ${money(B.ovenFund - take('oven'))} after.`,
+      B.ovenBought ? "The oven is bought, but this was Joe's start on the next upgrade." : delay > 0 ? `The new oven is delayed about ${delay} shift${delay > 1 ? 's' : ''}.` : 'The new oven arrives a little later.')}
+  </div>` : '';
+  const used = Object.entries(pay.from).filter(([, v]) => v > 0.005).map(([k, v]) => `${money(v)} from ${SRC_NAME[k]}`);
+  const broke = open && ['savings', 'loan', 'oven'].every((s2) => available(s2) < 0.005);
+  const after = [];
+  if (pay.from.savings > 0.005) after.push("Joe's cushion is thinner for the next bad night.");
+  if (pay.from.loan > 0.005) after.push(`Next shift starts with ${money(B.loan * INTEREST)} of interest to pay before anything goes to the oven.`);
+  if (pay.from.oven > 0.005) after.push('The new oven just got further away.');
+  return `<h2>Payday still comes.</h2>
+    <div class="split">
+      <div class="mat"><small>Cash coming in</small><b>+${money(c.rev)}</b><span>${c.good} pizzas at $12${c.disc ? `, less a ${Math.round(c.discPct * 100)}% late discount` : ''}</span></div>
+      <div class="time"><small>Cash going out</small><b>-${money(out)}</b><span>Ingredients, payroll, oven and shop, other bills${pay.interest ? ', loan interest' : ''}</span></div>
+    </div>
+    <p>Revenue didn't cover the bills. Joe is <b>${money(pay.gap)}</b> short, and payroll, the suppliers and the power company still expect to be paid. ${open ? `<b>${money(remaining)}</b> left to cover. Where does it come from?` : ''}</p>
+    ${cards}
+    ${used.length ? `<p class="paid">Covered with ${used.join(' and ')}.</p>` : ''}
+    ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> Savings are gone, the oven fund is empty and the bank won't lend more. The shop closes.</p>
+      <div class="cta-row"><button class="btn red" type="button" data-act="reset-books">Start Joe's books over</button></div>` : ''}
+    ${!open ? `<div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
+      <p class="insight"><b>Losses consume cash, and they can steal from tomorrow.</b> ${after.join(' ')}</p>` : ''}
+    ${broke ? '' : nav(!open)}`;
 }
 
 function pauseScreen() {
@@ -1240,7 +1447,9 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'start') startShift();
   else if (act === 'resume') togglePause();
   else if (act === 'quit') { G.paused = false; endShift(true); }
-  else if (act === 'clear') { G.hist = []; G.shiftNo = 0; G.goal = null; saveHist(G.hist); promiseScreen(); }
+  else if (act === 'clear' || act === 'reset-books') { resetAll(); if (act === 'clear') promiseScreen(); else titleScreen(); }
+  else if (act === 'practice') startPractice();
+  else if (act === 'fund') { fundFrom(a.dataset.src); debriefScreen(true); }
   else if (act === 'reveal') { G.deb.guess = parseFloat($('#guessIn').value); G.deb.guessed = true; debriefScreen(); }
   else if (act === 'step') { G.deb.step = +a.dataset.step; debriefScreen(); }
   else if (act === 'deb') debriefScreen();
@@ -1267,6 +1476,7 @@ $('#btnRework').addEventListener('click', rework);
 $('#btnScrapBoard').addEventListener('click', scrapBoard);
 $('#btnBox').addEventListener('click', box);
 $('#btnPause').addEventListener('click', togglePause);
+$('#btnSkipPractice').addEventListener('click', () => { endPractice(); G.practiced = true; promiseScreen(); });
 $('#btnMute').addEventListener('click', (e) => {
   muted = !muted; e.currentTarget.textContent = muted ? 'Sound off' : 'Sound on'; e.currentTarget.setAttribute('aria-pressed', String(muted));
 });
@@ -1280,7 +1490,7 @@ document.querySelectorAll('.pour').forEach((b) => {
 });
 const HOLD = { s: 'sauce', c: 'cheese', p: 'pep' };
 document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || G.phase !== 'play') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || !(G.phase === 'play' || G.phase === 'practice')) return;
   const k = e.key.toLowerCase();
   if (k === 'escape') { togglePause(); e.preventDefault(); return; }
   if (G.paused || e.repeat) return;
@@ -1288,7 +1498,7 @@ document.addEventListener('keydown', (e) => {
   if (HOLD[k]) { startPour(HOLD[k]); e.preventDefault(); }
   else if (k === 'd') dough();
   else if (k === 'o') toOven();
-  else if (k === '1' || k === '2' || k === '3') pull(+k - 1);
+  else if (/^[1-4]$/.test(k)) pull(+k - 1);
   else if (k === 'k') cut();
   else if (k === 'b') box();
 });
@@ -1297,7 +1507,7 @@ window.addEventListener('blur', stopPour);
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.phase === 'play' && !G.paused) togglePause(); });
 
 /* ---------- boot ---------- */
-buildDecks(); buildBoxes();
+buildDecks(); buildBoxes(); refreshBooks();
 refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshLive();
 G.shiftNo = G.hist.length ? G.hist[G.hist.length - 1].n : 0;
 titleScreen();

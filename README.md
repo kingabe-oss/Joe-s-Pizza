@@ -23,17 +23,26 @@ The order is 20 pepperoni pizzas, starting at 4:00 PM. At standard, that's $240 
 
 ## How a shift works
 
+0. **A practice pizza.** Before the first shift, players make one pizza with no clock and no cost. A coach bar walks them through each routing step and highlights the control to use. That way shift 1 measures the process, not how fast someone learns the keys. It can be skipped or repeated.
 1. **The promise.** The caterer asks "When will it be ready?" The player picks a planning run rate: Joe's standard 20/hr, 15, 12, or (from shift 2 on) the rate they actually demonstrated last time. Joe schedules and pays labor to match the promise.
 2. **The routing.** Players work the five routing steps: prepare dough, add toppings, bake, cut, box.
    - Toppings are poured by holding a key or button. Letting go in the green is one BOM portion. Pouring heavy costs real money.
    - Pizzas pulled from the oven too early must be reworked. Burnt ones are scrapped.
-3. **The debrief.** When the order is boxed, a three-step debrief walks the player to the lesson instead of handing them a dashboard:
+3. **The debrief.** When the order is boxed, a four-step debrief walks the player to the lesson instead of handing them a dashboard:
    - **Predict.** "Joe's standard pizza costs $7.00 to make. What did one of yours cost?" The player commits to a guess on a slider before seeing the answer. Their pizza is then shown next to Joe's $7 standard, split into ingredients, labor and overhead, with their guess marked. It also says whether the extra came mostly from ingredients or from time (labor and overhead, paid by the hour).
    - **Find the leaks.** Everything between Joe's standard operating profit and theirs, biggest first. Each leak is tagged Time, Promise or Material and tied to something they did: "Burnt at 4:12 PM", "your longest stretch without boxing a pizza was 11 min", "most of the heavy portions were cheese". A closing line says what share of the leak was on the clock.
+   - **Payday.** Joe's money carries over from shift to shift: $250 in savings, $300 saved toward a $500 new oven, and access to a bank loan (up to $400, 5% interest per shift). If a shift's revenue doesn't cover its bills, the player must choose where the shortfall comes from, as on slide 14:
+     - **Use savings:** less cash remains for the next bad night.
+     - **Borrow from the bank:** debt and interest grow, and interest comes out of the next shift's profit.
+     - **Redirect the new oven fund:** the oven is delayed, and the game says by how many shifts.
+
+     If all three are exhausted, Joe can't make payroll and the shop closes. Profitable shifts pay down the loan first and then go into the oven fund. When the fund reaches $500, Joe buys the oven and the kitchen gets a fourth oven deck: profit funds reinvestment.
    - **Pick one fix.** A run-rate slider and switches for honest promise, zero scrap and exact portions show live what each does to cost per pizza and profit on the order. The player picks the one fix they think is worth the most and locks it in. Then the game reveals what each fix was actually worth, ranked. Their pick becomes the goal for the next shift, and the next debrief opens by checking whether they hit it.
    - **See the full numbers** opens the detailed report: profit bars against standard, cost per pizza, the variance bridge, 8-hour capacity, and shift history with goals.
 
 Being late costs overtime at $30/hr plus a 5% discount for every 15 minutes late, up to 25%. Finishing well ahead of a cautious promise still pays for the scheduled hours.
+
+These dollar amounts are scaled to a 20-pizza order. The deck's example uses a $10,000 oven fund for a full night with five people.
 
 ## Using it with the deck
 
