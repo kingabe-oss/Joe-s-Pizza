@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Joe's Pizza</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Courier+Prime:wght@400;700&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: a pizzeria kitchen. Steel order rail on top, then prep counter, oven, and the pass, left to right in the order a pie moves. */
+:root {
+  --wall: #15302a;
+  --wall-line: #1c3c35;
+  --ink: #f6ecd9;
+  --muted: #a7bdb5;
+  --wood: #b07a45;
+  --wood-dark: #84552c;
+  --steel: #2a3034;
+  --steel-hi: #3a4247;
+  --paper: #fbf6ea;
+  --paper-ink: #2a211b;
+  --red: #d2402a;
+  --gold: #f2b33d;
+  --good: #4fae5b;
+  --bad: #e0573f;
+  --display: "Bowlby One", Impact, "Arial Black", sans-serif;
+  --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--ink);
+  background-color: var(--wall);
+  background-image:
+    linear-gradient(var(--wall-line) 2px, transparent 2px),
+    linear-gradient(90deg, var(--wall-line) 2px, transparent 2px);
+  background-size: 34px 34px;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-block: 14px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* HUD */
+.hud { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.brand {
+  font-family: var(--display);
+  font-size: clamp(28px, 4.4vw, 42px);
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 3px 0 var(--red);
+  margin: 0;
+  white-space: nowrap;
+}
+.stats { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.stat {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 78px; padding: 6px 12px;
+  background: rgba(0,0,0,.3); border: 1px solid var(--wall-line); border-radius: 10px;
+}
+.stat small { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.stat b { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat.cash b.bump { animation: bump .5s ease; }
+@keyframes bump { 40% { transform: scale(1.18); color: var(--gold); } }
+.stars { position: relative; display: inline-block; font-size: 17px; letter-spacing: 2px; line-height: 1.2; }
+.stars::before { content: "★★★★★"; color: rgba(255,255,255,.18); }
+.stars span { position: absolute; inset: 0 auto 0 0; overflow: hidden; white-space: nowrap; color: var(--gold); }
+.stars span::before { content: "★★★★★"; }
+.hud-buttons { display: flex; gap: 8px; }
+.icon-btn {
+  border: 1px solid var(--wall-line); background: rgba(0,0,0,.3); border-radius: 10px;
+  padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.icon-btn:hover { background: rgba(0,0,0,.45); }
+.daybar { height: 6px; background: rgba(0,0,0,.35); border-radius: 3px; overflow: hidden; }
+.daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--red)); }
+
+/* Order rail */
+.rail-wrap {
+  background: linear-gradient(#69737a, #434b51 14px, #343a3f);
+  border-radius: 10px;
+  padding: 26px 12px 14px;
+  position: relative;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.25);
+}
+.rail-wrap::before {
+  content: "ORDER RAIL"; position: absolute; top: 6px; left: 14px;
+  font-size: 10px; letter-spacing: .14em; color: #c7cfd4; font-weight: 700;
+}
+.rail { display: flex; gap: 14px; overflow-x: auto; min-height: 196px; align-items: flex-start; padding: 4px 2px 6px; scrollbar-width: thin; }
+.rail-empty { margin: auto; color: #c7cfd4; font-size: 14px; text-align: center; max-width: 34ch; }
+.ticket {
+  flex: 0 0 172px;
+  display: flex; flex-direction: column; gap: 6px;
+  text-align: left; cursor: pointer;
+  background: var(--paper); color: var(--paper-ink);
+  border: 0; border-top: 7px solid #cfd3d6; border-radius: 1px 1px 6px 6px;
+  padding: 10px 12px 10px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.25;
+  transform: rotate(var(--tilt, 0deg));
+  box-shadow: 0 7px 14px rgba(0,0,0,.35);
+  animation: drop .35s cubic-bezier(.2,1.4,.5,1);
+  transition: transform .15s ease, background-color .3s;
+}
+.ticket:hover { transform: rotate(0deg) translateY(3px); }
+@keyframes drop { from { transform: translateY(-30px) rotate(-4deg); opacity: 0; } }
+body.serving .ticket { outline: 2px dashed var(--gold); outline-offset: 3px; }
+.ticket[data-mood="angry"] { background: #fde6dc; }
+.t-top { display: flex; align-items: center; gap: 8px; }
+.face { width: 38px; height: 38px; flex: none; }
+.face .brows { opacity: 0; transition: opacity .2s; }
+.ticket[data-mood="angry"] .face .brows { opacity: 1; }
+.t-who { display: flex; flex-direction: column; min-width: 0; }
+.t-name { font-weight: 700; font-size: 14px; }
+.t-meta { font-size: 11px; color: #6c5f53; }
+.t-title { font-family: var(--body); font-weight: 700; font-size: 14px; border-top: 1px dashed #b9ab98; padding-top: 6px; }
+.t-items { display: flex; flex-direction: column; gap: 1px; }
+.t-items .no { color: var(--red); font-weight: 700; }
+.t-items .add { font-weight: 700; }
+.t-foot { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6c5f53; margin-top: auto; }
+.t-foot b { color: var(--paper-ink); font-size: 14px; }
+.patience { height: 6px; background: #e3d9c6; border-radius: 3px; overflow: hidden; }
+.patience i { display: block; height: 100%; background: var(--good); transition: background-color .3s; }
+.ticket[data-mood="meh"] .patience i { background: var(--gold); }
+.ticket[data-mood="angry"] .patience i { background: var(--bad); }
+
+/* Kitchen */
+.kitchen { display: grid; gap: 14px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) minmax(0, .8fr); align-items: start; }
+@media (max-width: 1000px) { .kitchen { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .prep { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .kitchen { grid-template-columns: minmax(0, 1fr); } }
+.station { border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.station-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.station h2 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 0; letter-spacing: .02em; }
+.station-head small { font-size: 12px; opacity: .8; }
+
+.prep {
+  background-color: var(--wood);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, transparent 2px 46px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 13px);
+  color: #2b1a0c;
+  box-shadow: inset 0 -5px 0 var(--wood-dark);
+}
+.prep-body { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.peel {
+  flex: none; width: 250px; height: 250px; max-width: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #e2b882, #c99257 70%, #a87039);
+  box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(0,0,0,.25);
+  display: grid; place-items: center; position: relative; margin-inline: auto;
+}
+.peel canvas { width: 228px; height: 228px; }
+.peel-hint {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  padding: 50px; font-weight: 500; font-size: 14px; color: #5a3a1c; pointer-events: none;
+}
+.prep-side { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.bins { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+.bin {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 4px 7px; border-radius: 9px; cursor: pointer;
+  background: var(--steel); color: var(--ink); border: 2px solid transparent;
+  font-size: 12px; font-weight: 500; line-height: 1.15; text-align: center;
+  box-shadow: 0 3px 0 #15191b;
+  transition: transform .08s;
+}
+.bin:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #15191b; }
+.bin canvas { width: 40px; height: 40px; }
+.bin kbd { position: absolute; top: 3px; left: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.bin .lock { font-size: 10.5px; color: var(--gold); }
+.bin.on { border-color: var(--good); background: #233a2c; }
+.bin.on::after { content: "✓"; position: absolute; top: 2px; right: 6px; color: var(--good); font-weight: 700; }
+.bin:disabled { opacity: .5; cursor: not-allowed; }
+.bin.locked canvas { filter: grayscale(1) brightness(.6); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  border: 0; border-radius: 9px; padding: 10px 14px; cursor: pointer; font-weight: 700; font-size: 14px;
+  background: var(--steel); color: var(--ink); box-shadow: 0 3px 0 #15191b;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn kbd { font-family: var(--mono); font-size: 11px; opacity: .7; font-weight: 400; }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #15191b; }
+.btn.primary { background: var(--gold); color: #2a1b08; box-shadow: 0 3px 0 #a8741a; }
+.btn.hot { background: var(--red); color: #fff; box-shadow: 0 3px 0 #8e2414; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.oven { background: linear-gradient(#2c3033, #1b1d1f); border: 1px solid #3a3f44; }
+.oven .station-head small { color: var(--muted); }
+.decks { display: flex; flex-direction: column; gap: 10px; }
+.deck {
+  display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px;
+  border-radius: 10px; border: 0; text-align: left; cursor: pointer;
+  background: radial-gradient(ellipse at 25% 50%, rgba(255,128,32,.28), transparent 62%), #111214;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.05);
+}
+.deck:disabled { cursor: default; }
+.deck canvas { width: 92px; height: 92px; flex: none; }
+.deck-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.deck-label { font-weight: 700; font-size: 14px; }
+.deck-hint { font-size: 12px; color: var(--muted); }
+.gauge {
+  position: relative; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, #6b6f73 0 40.6%, #c99a3c 40.6% 55%, #4fae5b 55% 71.9%, #d67a2c 71.9% 87.5%, #b5301c 87.5%);
+}
+.deck:disabled .gauge { opacity: .25; }
+.needle { position: absolute; top: -4px; bottom: -4px; left: 0; width: 4px; margin-left: -2px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px #000; }
+.deck[data-grade="perfect"] { box-shadow: inset 0 0 0 2px var(--good); }
+.deck[data-grade="perfect"] .deck-label { color: #8fe09a; }
+.deck[data-grade="dark"] .deck-label { color: #f0a35e; }
+.deck[data-grade="burnt"] { box-shadow: inset 0 0 0 2px var(--bad); animation: smoke .6s ease-in-out infinite alternate; }
+.deck[data-grade="burnt"] .deck-label { color: var(--bad); }
+@keyframes smoke { to { background-color: #2a1512; } }
+
+.pass {
+  background: linear-gradient(160deg, #d6dbdf, #aab2b8);
+  color: #1d2326;
+  box-shadow: inset 0 -5px 0 #858e95;
+}
+.plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.plate {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px;
+  border-radius: 10px; border: 2px solid transparent; background: transparent; cursor: pointer; color: #1d2326;
+  font-size: 12px; font-weight: 700;
+}
+.plate:disabled { cursor: default; color: #5c666c; font-weight: 500; }
+.plate canvas {
+  width: 76px; height: 76px; max-width: 100%; border-radius: 50%;
+  background: radial-gradient(circle, #fff 58%, #e1e5e8 60%, #fdfdfd 68%, #cfd5d9 71%);
+}
+.plate.sel { border-color: var(--red); background: rgba(255,255,255,.5); }
+.plate[data-grade="perfect"] .plate-label { color: #23753a; }
+.plate[data-grade="raw"] .plate-label, .plate[data-grade="burnt"] .plate-label { color: #b5301c; }
+.pass-hint { font-size: 12.5px; margin: 0; color: #3b4449; line-height: 1.4; }
+.pass .btn { background: #48525a; color: #fff; box-shadow: 0 3px 0 #2c3338; align-self: flex-start; }
+
+/* Overlay panels */
+.overlay {
+  position: fixed; inset: 0; z-index: 30;
+  background: rgba(8, 20, 17, .74);
+  backdrop-filter: blur(3px);
+  display: grid; place-items: center; overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.panel {
+  width: 100%; max-width: 560px;
+  background: var(--paper); color: var(--paper-ink);
+  border-radius: 4px; padding: 28px clamp(18px, 5vw, 34px);
+  box-shadow: 0 20px 50px rgba(0,0,0,.5);
+  display: flex; flex-direction: column; gap: 14px;
+  border-top: 10px solid var(--red);
+}
+.panel h1, .panel h2 { font-family: var(--display); font-weight: 400; margin: 0; line-height: 1.05; text-wrap: balance; }
+.panel h1 { font-size: clamp(40px, 9vw, 60px); color: var(--red); text-shadow: 0 3px 0 var(--gold); }
+.panel h2 { font-size: 30px; color: var(--red); }
+.panel p { margin: 0; line-height: 1.5; }
+.eyebrow { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: #7a6a5b; }
+.howto { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; line-height: 1.45; }
+.keys { font-family: var(--mono); font-size: 12.5px; color: #6c5f53; }
+.panel .btn.primary { align-self: flex-start; font-size: 16px; padding: 12px 20px; }
+.ledger { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+.ledger td { padding: 4px 0; border-bottom: 1px dotted #c9bba6; }
+.ledger td:last-child { text-align: right; }
+.ledger tr.total td { border-bottom: 0; border-top: 2px solid var(--paper-ink); font-weight: 700; padding-top: 7px; }
+.ledger .neg { color: var(--red); }
+.shop { display: flex; flex-direction: column; gap: 8px; }
+.shop h3 { margin: 6px 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: #7a6a5b; }
+.item { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f1e9d8; border-radius: 6px; }
+.item div { min-width: 0; }
+.item b { display: block; }
+.item span { font-size: 13px; color: #6c5f53; }
+.item .btn { flex: none; background: var(--paper-ink); color: var(--paper); box-shadow: 0 3px 0 #000; padding: 8px 12px; }
+.item .btn:disabled { background: #cbbfa9; color: #6c5f53; box-shadow: none; opacity: 1; }
+.note { font-size: 13.5px; color: #6c5f53; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  max-width: min(92vw, 520px); width: max-content;
+  padding: 10px 16px; border-radius: 10px; font-weight: 500; font-size: 14px; line-height: 1.35;
+  background: #101c19; color: var(--ink); border: 1px solid var(--wall-line); box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.good { border-color: var(--good); }
+.toast.bad { border-color: var(--bad); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="hud">
+    <p class="brand">Joe's Pizza</p>
+    <div class="stats">
+      <div class="stat"><small>Day</small><b id="hudDay">1</b></div>
+      <div class="stat"><small>Clock</small><b id="hudClock">11:00 AM</b></div>
+      <div class="stat cash"><small>Cash</small><b id="hudCash">$0.00</b></div>
+      <div class="stat"><small>Rent tonight</small><b id="hudRent">$0.00</b></div>
+      <div class="stat"><small>Rating</small><span class="stars" id="hudStars" role="img" aria-label="5 of 5 stars"><span style="width:100%"></span></span></div>
+    </div>
+    <div class="hud-buttons">
+      <button class="icon-btn" id="btnMute" type="button" aria-pressed="false">Sound on</button>
+      <button class="icon-btn" id="btnPause" type="button">Pause</button>
+    </div>
+  </header>
+  <div class="daybar" aria-hidden="true"><i id="dayFill"></i></div>
+
+  <section class="rail-wrap" aria-label="Order tickets">
+    <div class="rail" id="rail"></div>
+  </section>
+
+  <main class="kitchen">
+    <section class="station prep" aria-label="Prep counter">
+      <div class="station-head"><h2>Prep counter</h2><small>Build the pie on the ticket</small></div>
+      <div class="prep-body">
+        <div class="peel">
+          <canvas id="prepCanvas" aria-label="Pizza being prepared"></canvas>
+          <div class="peel-hint" id="peelHint">Stretch some dough to start a pie</div>
+        </div>
+        <div class="prep-side">
+          <div class="actions">
+            <button class="btn primary" id="btnDough" type="button">Stretch dough <kbd>D</kbd></button>
+            <button class="btn hot" id="btnBake" type="button">Into the oven <kbd>B</kbd></button>
+            <button class="btn" id="btnBin" type="button">Bin it <kbd>X</kbd></button>
+          </div>
+          <div class="bins" id="bins"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station oven" aria-label="Oven">
+      <div class="station-head"><h2>Oven</h2><small>Pull it in the green</small></div>
+      <div class="decks" id="decks"></div>
+    </section>
+
+    <section class="station pass" aria-label="The pass">
+      <div class="station-head"><h2>The pass</h2></div>
+      <div class="plates" id="plates"></div>
+      <p class="pass-hint">Tap a pie, then tap the customer's ticket to serve it.</p>
+      <button class="btn" id="btnTossPass" type="button">Bin selected pie</button>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- constants ---------- */
+const DAY_LEN = 120;          // seconds of real time per shift (11 AM to 9 PM)
+const PASS_SIZE = 3;
+const MAX_QUEUE = 4;
+const BAKE_MAX = 1.6;
+const TAU = Math.PI * 2;
+const BEST_KEY = 'joes-pizza-best';
+
+const TOPPINGS = {
+  pepperoni: { label: 'Pepperoni',    day: 1, n: 7 },
+  mushroom:  { label: 'Mushroom',     day: 1, n: 6 },
+  pepper:    { label: 'Green pepper', day: 2, n: 7 },
+  olive:     { label: 'Black olive',  day: 2, n: 9 },
+  onion:     { label: 'Red onion',    day: 3, n: 7 },
+  sausage:   { label: 'Sausage',      day: 3, n: 10 },
+  basil:     { label: 'Basil',        day: 4, n: 5 },
+  pineapple: { label: 'Pineapple',    day: 4, n: 8 },
+};
+const TKEYS = Object.keys(TOPPINGS);
+
+const NAMES = ['Rosa','Marco','Dee','Tony','Priya','Sal','Mei','Luis','Gina','Omar','Bea','Frankie','Nico','June','Ray','Ada','Vince','Lou','Tess','Kofi','Hana','Carmen','Eddie','Yusuf'];
+const SKINS = ['#f1c9a5','#e0ad85','#c48a5f','#9a6643','#6b432b','#f5d8c2'];
+const HATS  = ['#d2402a','#2f6fb5','#f2b33d','#3d8c55','#6b4aa0','#2a211b','#e07b9a'];
+const MOUTH = {
+  happy: 'M14 28 Q20 34 26 28',
+  meh:   'M14.5 29.5 L25.5 29.5',
+  angry: 'M14 32 Q20 26 26 32',
+};
+
+const GRADE_LABEL = { raw: 'Raw', light: 'Pale', perfect: 'Perfect', dark: 'Well done', burnt: 'Burnt' };
+const DECK_LABEL  = { raw: 'Raw dough', light: 'Nearly there', perfect: 'Golden. Pull it!', dark: 'Getting dark', burnt: 'Burning!' };
+
+const UPGRADES = [
+  { id: 'heat1', name: 'Hotter oven',      desc: 'Pies bake 25% faster.',                     cost: 45, owned: () => S.up.heat >= 1, buy: () => { S.up.heat = 1; } },
+  { id: 'heat2', name: 'Stone deck',       desc: 'Another 25% faster. Needs the hotter oven.', cost: 80, owned: () => S.up.heat >= 2, ready: () => S.up.heat >= 1, buy: () => { S.up.heat = 2; } },
+  { id: 'oven3', name: 'Third oven deck',  desc: 'Bake three pies at once.',                  cost: 70, owned: () => S.up.oven3, buy: () => { S.up.oven3 = true; } },
+  { id: 'juke',  name: 'Jukebox',          desc: 'Customers wait 25% longer.',                cost: 40, owned: () => S.up.juke, buy: () => { S.up.juke = true; } },
+  { id: 'sauce', name: 'Pre-sauced dough', desc: 'Fresh dough comes out already sauced.',     cost: 35, owned: () => S.up.sauce, buy: () => { S.up.sauce = true; } },
+  { id: 'tip',   name: 'Tip jar',          desc: 'Tips are 50% bigger.',                      cost: 30, owned: () => S.up.tip, buy: () => { S.up.tip = true; } },
+  { id: 'sign',  name: 'Neon sign',        desc: 'Good word gets around. Rating up one star.', cost: 50, owned: () => S.rating >= 5, ownedLabel: 'Full', buy: () => { S.rating = Math.min(5, S.rating + 1); } },
+];
+
+/* ---------- state ---------- */
+let S;
+let muted = false;
+let uidN = 1;
+const uid = () => uidN++;
+
+function freshState() {
+  return {
+    phase: 'title', paused: false,
+    day: 1, time: 0, cash: 20, rating: 5,
+    orders: [], nextOrderIn: 1.5, ticketNo: 1,
+    prep: null, oven: [null, null], pass: Array(PASS_SIZE).fill(null), selected: -1,
+    up: { heat: 0, oven3: false, juke: false, sauce: false, tip: false },
+    stats: blankStats(), served: 0, closedNotice: false,
+  };
+}
+function blankStats() { return { served: 0, perfect: 0, walkouts: 0, wrong: 0, revenue: 0, tips: 0, rent: 0 }; }
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const money = (v) => (v < 0 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function rng(seed) {
+  let s = seed | 0;
+  return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function ramp(stops, v) {
+  if (v <= stops[0][0]) return stops[0][1];
+  for (let i = 1; i < stops.length; i++) {
+    if (v <= stops[i][0]) {
+      const [a0, c0] = stops[i - 1], [a1, c1] = stops[i];
+      const t = (v - a0) / (a1 - a0), x = hexRgb(c0), y = hexRgb(c1);
+      return `rgb(${x.map((c, k) => Math.round(c + (y[k] - c) * t)).join(',')})`;
+    }
+  }
+  return stops[stops.length - 1][1];
+}
+function rentFor(day) { return 35 + 20 * (day - 1); }
+function bakeSpeed() { return (1 / 9) * Math.pow(1.25, S.up.heat); }
+function grade(b) {
+  if (b < 0.65) return 'raw';
+  if (b < 0.88) return 'light';
+  if (b <= 1.15) return 'perfect';
+  if (b <= 1.4) return 'dark';
+  return 'burnt';
+}
+function clockStr(t) {
+  const mins = 11 * 60 + Math.floor(clamp(t / DAY_LEN, 0, 1) * 600);
+  const h24 = Math.floor(mins / 60), m = mins % 60;
+  const h12 = ((h24 + 11) % 12) + 1;
+  return `${h12}:${String(m).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
+}
+function loadBest() { try { return JSON.parse(localStorage.getItem(BEST_KEY)) || null; } catch (e) { return null; } }
+function saveBest(days, served) {
+  const best = loadBest();
+  if (best && (best.days > days || (best.days === days && best.served >= served))) return best;
+  const next = { days, served };
+  try { localStorage.setItem(BEST_KEY, JSON.stringify(next)); } catch (e) { /* storage unavailable */ }
+  return next;
+}
+
+/* ---------- audio ---------- */
+let ac = null;
+function sfx(kind) {
+  if (muted) return;
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  if (ac.state === 'suspended') ac.resume();
+  const t0 = ac.currentTime;
+  const tone = (f, dur, type = 'sine', vol = 0.12, delay = 0) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t0 + delay);
+    g.gain.exponentialRampToValueAtTime(0.0008, t0 + delay + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t0 + delay); o.stop(t0 + delay + dur + 0.02);
+  };
+  switch (kind) {
+    case 'pop':   tone(520, 0.06, 'square', 0.04); break;
+    case 'bell':  tone(1320, 0.25, 'triangle', 0.08); tone(990, 0.35, 'triangle', 0.08, 0.12); break;
+    case 'ready': tone(740, 0.12, 'sine', 0.09); tone(988, 0.2, 'sine', 0.09, 0.1); break;
+    case 'ding':  tone(1046, 0.25, 'sine', 0.12); tone(1568, 0.4, 'sine', 0.1, 0.09); break;
+    case 'buzz':  tone(130, 0.35, 'sawtooth', 0.06); break;
+    case 'burn':  tone(200, 0.45, 'square', 0.04); tone(180, 0.45, 'square', 0.04, 0.2); break;
+    case 'close': [784, 659, 523].forEach((f, i) => tone(f, 0.3, 'triangle', 0.09, i * 0.16)); break;
+  }
+}
+
+/* ---------- drawing ---------- */
+const CRUST  = [[0, '#f2ddb0'], [0.6, '#edca8c'], [1, '#d9953f'], [1.3, '#a0602b'], [1.7, '#3a2517']];
+const SAUCE  = [[0, '#cf3b20'], [1, '#b8301a'], [1.4, '#7e2312'], [1.7, '#3d160c']];
+const CHEESE = [[0.25, '#f8e8a8'], [0.9, '#f6d265'], [1.15, '#eab248'], [1.5, '#a8682a']];
+
+function setupCanvas(cv, size) {
+  const d = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(size * d); cv.height = Math.round(size * d);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  return ctx;
+}
+function blob(ctx, r, seed, amp = 0.03, n = 30) {
+  const R = rng(seed), o1 = R() * TAU, o2 = R() * TAU, o3 = R() * TAU;
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * TAU;
+    const k = 1 + amp * (Math.sin(a * 3 + o1) + 0.6 * Math.sin(a * 5 + o2) + 0.3 * Math.sin(a * 7 + o3));
+    const x = Math.cos(a) * r * k, y = Math.sin(a) * r * k;
+    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  }
+  ctx.closePath(); ctx.fill();
+}
+function drawShreds(ctx, R, seed) {
+  const r = rng(seed);
+  for (let i = 0; i < 70; i++) {
+    const a = r() * TAU, d = Math.sqrt(r()) * R;
+    ctx.save();
+    ctx.translate(Math.cos(a) * d, Math.sin(a) * d);
+    ctx.rotate(r() * TAU);
+    ctx.fillStyle = r() < 0.5 ? '#fbeeb8' : '#f3dd8e';
+    ctx.fillRect(-R * 0.09, -R * 0.018, R * 0.18, R * 0.036);
+    ctx.restore();
+  }
+}
+function drawTopping(ctx, type, x, y, r, a) {
+  const s = r * 0.1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(a);
+  ctx.lineCap = 'round';
+  switch (type) {
+    case 'pepperoni':
+      ctx.fillStyle = '#b3301d'; ctx.beginPath(); ctx.arc(0, 0, s * 1.15, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#8a2213'; ctx.lineWidth = s * 0.18; ctx.stroke();
+      ctx.fillStyle = '#e2765f';
+      [[-0.4, -0.3], [0.35, 0.2], [-0.1, 0.5]].forEach(([u, v]) => { ctx.beginPath(); ctx.arc(u * s, v * s, s * 0.13, 0, TAU); ctx.fill(); });
+      break;
+    case 'mushroom':
+      ctx.fillStyle = '#e8dcc4';
+      ctx.fillRect(-s * 0.28, -s * 0.1, s * 0.56, s * 0.9);
+      ctx.fillStyle = '#c9b18c';
+      ctx.beginPath(); ctx.ellipse(0, -s * 0.05, s * 0.95, s * 0.6, 0, Math.PI, TAU); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#8f7553'; ctx.lineWidth = s * 0.12; ctx.stroke();
+      break;
+    case 'pepper':
+      ctx.strokeStyle = '#2f7f2c'; ctx.lineWidth = s * 0.42;
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.85, 0, 2.3); ctx.stroke();
+      ctx.strokeStyle = '#5cb24f'; ctx.lineWidth = s * 0.14;
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.8, 0.2, 2.0); ctx.stroke();
+      break;
+    case 'olive':
+      ctx.strokeStyle = '#1c1a1d'; ctx.lineWidth = s * 0.4;
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.48, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = s * 0.1;
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.55, 3.6, 4.6); ctx.stroke();
+      break;
+    case 'onion':
+      ctx.strokeStyle = '#8e3f86'; ctx.lineWidth = s * 0.22;
+      ctx.beginPath(); ctx.arc(0, 0, s * 1.0, 0, 2.6); ctx.stroke();
+      ctx.strokeStyle = '#ead2e6'; ctx.lineWidth = s * 0.16;
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.72, 0.2, 2.4); ctx.stroke();
+      break;
+    case 'sausage':
+      ctx.fillStyle = '#6f3c1d';
+      [[0, 0, 0.55], [0.45, 0.2, 0.42], [-0.35, 0.3, 0.38], [0.1, -0.4, 0.36]].forEach(([u, v, k]) => { ctx.beginPath(); ctx.arc(u * s, v * s, k * s, 0, TAU); ctx.fill(); });
+      ctx.fillStyle = '#9a5a30';
+      ctx.beginPath(); ctx.arc(-0.1 * s, -0.1 * s, 0.18 * s, 0, TAU); ctx.fill();
+      break;
+    case 'basil':
+      ctx.fillStyle = '#2d7a33';
+      ctx.beginPath(); ctx.ellipse(0, 0, s * 1.15, s * 0.55, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#69b46a'; ctx.lineWidth = s * 0.1;
+      ctx.beginPath(); ctx.moveTo(-s * 1.0, 0); ctx.lineTo(s * 1.0, 0); ctx.stroke();
+      break;
+    case 'pineapple':
+      ctx.fillStyle = '#f5d14a'; ctx.strokeStyle = '#cf9f24'; ctx.lineWidth = s * 0.12;
+      ctx.beginPath(); ctx.moveTo(-s * 0.7, -s * 0.45); ctx.lineTo(s * 0.7, -s * 0.45); ctx.lineTo(s * 0.45, s * 0.5); ctx.lineTo(-s * 0.45, s * 0.5); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      break;
+  }
+  ctx.restore();
+}
+function drawPizza(ctx, p, size) {
+  ctx.clearRect(0, 0, size, size);
+  if (!p) return;
+  const c = size / 2, r = size * 0.46, b = p.bake;
+  ctx.save();
+  ctx.translate(c, c);
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.beginPath(); ctx.ellipse(0, r * 0.05, r, r * 0.98, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = ramp(CRUST, b);
+  blob(ctx, r, p.seed, 0.025);
+  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = r * 0.05;
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.91, Math.PI * 1.08, Math.PI * 1.55); ctx.stroke();
+  if (p.sauce) { ctx.fillStyle = ramp(SAUCE, b); blob(ctx, r * 0.83, p.seed + 1, 0.035); }
+  else { ctx.fillStyle = 'rgba(0,0,0,.05)'; blob(ctx, r * 0.83, p.seed + 1, 0.03); }
+  if (p.cheese) {
+    const melt = clamp((b - 0.25) / 0.6, 0, 1);
+    if (melt < 1) { ctx.globalAlpha = 1 - melt; drawShreds(ctx, r * 0.76, p.seed + 2); ctx.globalAlpha = 1; }
+    if (melt > 0) {
+      ctx.globalAlpha = melt;
+      ctx.fillStyle = ramp(CHEESE, b);
+      blob(ctx, r * 0.79, p.seed + 3, 0.06, 44);
+      const R = rng(p.seed + 4), spots = Math.floor(clamp((b - 0.7) / 0.6, 0, 1) * 16);
+      ctx.fillStyle = 'rgba(170,98,34,.55)';
+      for (let i = 0; i < spots; i++) {
+        const a = R() * TAU, d = Math.sqrt(R()) * r * 0.7;
+        ctx.beginPath(); ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r * (0.03 + R() * 0.04), 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  for (const t of p.tops) for (const pt of t.pts) drawTopping(ctx, t.type, pt.x * r, pt.y * r, r, pt.a);
+  if (b > 1.15) {
+    ctx.fillStyle = `rgba(35,18,8,${clamp((b - 1.15) / 0.55, 0, 1) * 0.78})`;
+    blob(ctx, r * 1.004, p.seed, 0.025);
+  }
+  ctx.restore();
+}
+function drawIcon(cv, k) {
+  const ctx = setupCanvas(cv, 40);
+  ctx.translate(20, 20);
+  if (k === 'sauce') {
+    ctx.fillStyle = '#cf3b20'; blob(ctx, 14, 7, 0.06);
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.arc(-5, -5, 3, 0, TAU); ctx.fill();
+  } else if (k === 'cheese') {
+    drawShreds(ctx, 14, 11);
+  } else {
+    [[-7, -5, 0.4], [7, -3, 2.1], [0, 8, 4.0]].forEach(([x, y, a]) => drawTopping(ctx, k, x, y, 62, a));
+  }
+}
+function scatter(n, seed) {
+  const r = rng(seed), pts = [];
+  let tries = 0;
+  while (pts.length < n && tries < 500) {
+    tries++;
+    const a = r() * TAU, d = Math.sqrt(r()) * 0.66;
+    const x = Math.cos(a) * d, y = Math.sin(a) * d;
+    const minD = tries < 250 ? 0.3 : 0.16;
+    if (pts.every((p) => (p.x - x) ** 2 + (p.y - y) ** 2 > minD * minD)) pts.push({ x, y, a: r() * TAU });
+  }
+  return pts;
+}
+
+/* ---------- orders ---------- */
+function unlocked() { return TKEYS.filter((k) => TOPPINGS[k].day <= S.day); }
+function priceOf(o) { return 9 + 1.5 * o.tops.length; }
+function orderTitle(o) {
+  if (!o.tops.length) return o.cheese ? 'Plain cheese' : 'Marinara';
+  if (o.tops.length === 1 && o.cheese) return TOPPINGS[o.tops[0]].label + ' pie';
+  if (!o.cheese) return 'No-cheese special';
+  return ['', '', 'Two-topper', 'Three-topper'][o.tops.length] || 'Loaded pie';
+}
+function makeOrder() {
+  const d = S.day;
+  const [lo, hi] = d === 1 ? [0, 1] : d === 2 ? [0, 2] : d === 3 ? [1, 2] : d < 6 ? [1, 3] : [2, 3];
+  const n = lo + Math.floor(Math.random() * (hi - lo + 1));
+  const tops = shuffle(unlocked()).slice(0, n);
+  const cheese = !(d >= 2 && Math.random() < 0.12);
+  const max = (Math.max(26, 44 - 2.5 * (d - 1)) + 5 * n) * (S.up.juke ? 1.25 : 1);
+  return {
+    id: uid(), no: S.ticketNo++, name: pick(NAMES), skin: pick(SKINS), hat: pick(HATS),
+    tops, cheese, patience: max, max, placed: clockStr(S.time),
+  };
+}
+function spawnGap() { return Math.max(5.5, 14 - 1.4 * (S.day - 1)) * (0.75 + Math.random() * 0.5); }
+function mismatch(p, o) {
+  if (!p.sauce) return 'Where is the sauce?';
+  if (p.cheese && !o.cheese) return 'I said no cheese.';
+  if (!p.cheese && o.cheese) return 'Where is the cheese?';
+  const types = p.tops.map((t) => t.type);
+  const missing = o.tops.find((t) => !types.includes(t));
+  if (missing) return `You forgot the ${TOPPINGS[missing].label.toLowerCase()}.`;
+  const extra = types.find((t) => !o.tops.includes(t));
+  if (extra) return `I didn't order ${TOPPINGS[extra].label.toLowerCase()}.`;
+  return null;
+}
+
+/* ---------- UI: toast ---------- */
+let toastTimer = 0;
+function toast(msg, kind = '') {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast ' + kind; }, 2400);
+}
+
+/* ---------- UI: HUD ---------- */
+let lastClock = '';
+function updateHud() {
+  $('#hudDay').textContent = S.day;
+  $('#hudCash').textContent = money(S.cash);
+  $('#hudRent').textContent = money(rentFor(S.day));
+  const stars = $('#hudStars');
+  stars.firstElementChild.style.width = (S.rating / 5 * 100) + '%';
+  stars.setAttribute('aria-label', `${S.rating.toFixed(1)} of 5 stars`);
+  updateClock();
+}
+function updateClock() {
+  const txt = S.time >= DAY_LEN ? 'Closed' : clockStr(S.time);
+  if (txt !== lastClock) { $('#hudClock').textContent = txt; lastClock = txt; }
+  $('#dayFill').style.width = clamp(S.time / DAY_LEN, 0, 1) * 100 + '%';
+}
+function bumpCash() {
+  const el = $('#hudCash');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+
+/* ---------- UI: prep ---------- */
+let prepCtx;
+function buildBins() {
+  const el = $('#bins');
+  el.innerHTML = '';
+  const items = [
+    { k: 'sauce', label: 'Red sauce', key: 'S' },
+    { k: 'cheese', label: 'Mozzarella', key: 'C' },
+    ...TKEYS.map((k, i) => ({ k, label: TOPPINGS[k].label, key: String(i + 1) })),
+  ];
+  for (const it of items) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'bin'; b.dataset.k = it.k;
+    b.innerHTML = `<kbd>${it.key}</kbd><canvas width="40" height="40"></canvas><span>${it.label}</span><span class="lock"></span>`;
+    drawIcon(b.querySelector('canvas'), it.k);
+    b.addEventListener('click', () => addIngredient(it.k));
+    el.appendChild(b);
+  }
+}
+function refreshPrep() {
+  const p = S.prep;
+  drawPizza(prepCtx, p, 228);
+  $('#peelHint').hidden = !!p;
+  document.querySelectorAll('.bin').forEach((b) => {
+    const k = b.dataset.k, t = TOPPINGS[k];
+    const locked = !!t && t.day > S.day;
+    const on = !!p && (k === 'sauce' ? p.sauce : k === 'cheese' ? p.cheese : p.tops.some((x) => x.type === k));
+    b.disabled = locked || !p;
+    b.classList.toggle('locked', locked);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.querySelector('.lock').textContent = locked ? `Day ${t.day}` : '';
+  });
+  $('#btnDough').disabled = !!p;
+  $('#btnBake').disabled = !p;
+  $('#btnBin').disabled = !p;
+}
+const playing = () => S.phase === 'open' && !S.paused;
+function newDough() {
+  if (!playing() || S.prep) return;
+  S.prep = { id: uid(), seed: (Math.random() * 1e9) | 0, sauce: S.up.sauce, cheese: false, tops: [], bake: 0 };
+  sfx('pop'); refreshPrep();
+}
+function addIngredient(k) {
+  if (!playing()) return;
+  const p = S.prep;
+  if (!p) { toast('Stretch some dough first.'); return; }
+  if (k === 'sauce') { if (p.sauce) return; p.sauce = true; }
+  else if (k === 'cheese') { if (p.cheese) return; p.cheese = true; }
+  else {
+    const t = TOPPINGS[k];
+    if (!t || t.day > S.day || p.tops.some((x) => x.type === k)) return;
+    p.tops.push({ type: k, pts: scatter(t.n, p.seed + 131 * (p.tops.length + 1)) });
+  }
+  sfx('pop'); refreshPrep();
+}
+function binPrep() {
+  if (!playing() || !S.prep) return;
+  S.prep = null; sfx('buzz'); refreshPrep();
+}
+function bake() {
+  if (!playing() || !S.prep) return;
+  const i = S.oven.indexOf(null);
+  if (i < 0) { toast('The oven is full. Pull a pie out first.', 'bad'); return; }
+  S.oven[i] = S.prep; S.prep = null;
+  sfx('pop'); refreshPrep(); renderOven();
+}
+
+/* ---------- UI: oven ---------- */
+let deckEls = [];
+function renderOven() {
+  const el = $('#decks');
+  el.innerHTML = ''; deckEls = [];
+  S.oven.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'deck'; b.disabled = !p;
+    b.innerHTML = `<canvas></canvas><span class="deck-info"><span class="deck-label">${p ? '' : 'Empty deck'}</span><span class="gauge"><span class="needle"></span></span><span class="deck-hint">${p ? 'Tap to pull it out' : 'Build a pie, then put it in'}</span></span>`;
+    b.addEventListener('click', () => pullFromOven(i));
+    el.appendChild(b);
+    deckEls.push({ b, ctx: setupCanvas(b.querySelector('canvas'), 92), label: b.querySelector('.deck-label'), needle: b.querySelector('.needle'), g: null });
+  });
+  updateOven();
+}
+function updateOven() {
+  deckEls.forEach((d, i) => {
+    const p = S.oven[i];
+    if (!p) { d.ctx.clearRect(0, 0, 92, 92); return; }
+    drawPizza(d.ctx, p, 92);
+    d.needle.style.left = clamp(p.bake / BAKE_MAX, 0, 1) * 100 + '%';
+    const g = grade(p.bake);
+    if (g !== d.g) { d.g = g; d.b.dataset.grade = g; d.label.textContent = DECK_LABEL[g]; }
+  });
+}
+function pullFromOven(i) {
+  if (!playing()) return;
+  const p = S.oven[i];
+  if (!p) return;
+  const j = S.pass.indexOf(null);
+  if (j < 0) { toast('The pass is full. Serve or bin a pie first.', 'bad'); return; }
+  S.oven[i] = null; S.pass[j] = p; S.selected = j;
+  sfx('pop'); renderOven(); renderPass();
+}
+
+/* ---------- UI: pass ---------- */
+function renderPass() {
+  const el = $('#plates');
+  el.innerHTML = '';
+  if (S.selected >= 0 && !S.pass[S.selected]) S.selected = -1;
+  S.pass.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'plate' + (S.selected === i ? ' sel' : '');
+    b.disabled = !p;
+    const g = p ? grade(p.bake) : '';
+    if (p) b.dataset.grade = g;
+    b.setAttribute('aria-pressed', S.selected === i ? 'true' : 'false');
+    b.innerHTML = `<canvas></canvas><span class="plate-label">${p ? GRADE_LABEL[g] : 'Empty'}</span>`;
+    const ctx = setupCanvas(b.querySelector('canvas'), 76);
+    if (p) drawPizza(ctx, p, 76);
+    b.addEventListener('click', () => { if (!playing()) return; S.selected = S.selected === i ? -1 : i; renderPass(); });
+    el.appendChild(b);
+  });
+  $('#btnTossPass').disabled = S.selected < 0;
+  document.body.classList.toggle('serving', S.selected >= 0);
+}
+function binPass() {
+  if (!playing() || S.selected < 0) return;
+  S.pass[S.selected] = null; S.selected = -1;
+  sfx('buzz'); renderPass();
+}
+
+/* ---------- UI: rail ---------- */
+let railEls = new Map();
+function faceSVG(o) {
+  return `<svg class="face" viewBox="0 0 40 40" aria-hidden="true">
+    <circle cx="20" cy="22" r="14" fill="${o.skin}"/>
+    <path d="M5.5 17 Q7 5 20 5 Q33 5 34.5 17 Z" fill="${o.hat}"/>
+    <rect x="4" y="15.5" width="32" height="3" rx="1.5" fill="${o.hat}"/>
+    <circle cx="15" cy="23" r="1.8" fill="#2a1d17"/><circle cx="25" cy="23" r="1.8" fill="#2a1d17"/>
+    <path class="brows" d="M12 19.5 L17 21 M28 19.5 L23 21" stroke="#2a1d17" stroke-width="1.8" stroke-linecap="round"/>
+    <path class="mouth" d="${MOUTH.happy}" stroke="#2a1d17" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+function renderRail() {
+  const el = $('#rail');
+  el.innerHTML = ''; railEls = new Map();
+  if (!S.orders.length) {
+    const msg = S.phase !== 'open' ? 'Tickets show up here when the shop opens.'
+      : S.time >= DAY_LEN ? 'Doors are closed for the night.'
+      : 'No tickets yet. The lunch crowd is on the way.';
+    el.innerHTML = `<p class="rail-empty">${msg}</p>`;
+    return;
+  }
+  for (const o of S.orders) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ticket';
+    b.style.setProperty('--tilt', ((o.no % 3) - 1) * 0.9 + 'deg');
+    const lines = [`<span>Red sauce</span>`, o.cheese ? `<span>Mozzarella</span>` : `<span class="no">NO CHEESE</span>`,
+      ...o.tops.map((t) => `<span class="add">+ ${TOPPINGS[t].label}</span>`)];
+    b.innerHTML = `<span class="t-top">${faceSVG(o)}<span class="t-who"><span class="t-name">${o.name}</span><span class="t-meta">No. ${String(o.no).padStart(3, '0')} · ${o.placed}</span></span></span>
+      <span class="t-title">${orderTitle(o)}</span>
+      <span class="t-items">${lines.join('')}</span>
+      <span class="t-foot"><span>Pays</span><b>${money(priceOf(o))}</b></span>
+      <span class="patience"><i></i></span>`;
+    b.setAttribute('aria-label', `Serve ${o.name}: ${orderTitle(o)}`);
+    b.addEventListener('click', () => serve(o.id));
+    el.appendChild(b);
+    railEls.set(o.id, { b, bar: b.querySelector('.patience i'), mouth: b.querySelector('.mouth'), mood: null });
+  }
+  updateRail();
+}
+function updateRail() {
+  for (const o of S.orders) {
+    const e = railEls.get(o.id);
+    if (!e) continue;
+    const f = clamp(o.patience / o.max, 0, 1);
+    e.bar.style.width = f * 100 + '%';
+    const mood = f > 0.55 ? 'happy' : f > 0.25 ? 'meh' : 'angry';
+    if (mood !== e.mood) { e.mood = mood; e.b.dataset.mood = mood; e.mouth.setAttribute('d', MOUTH[mood]); }
+  }
+}
+
+/* ---------- serving & rating ---------- */
+function rate(d) {
+  S.rating = clamp(S.rating + d, 0, 5);
+  updateHud();
+  if (S.rating < 1 && S.phase === 'open') gameOver('rating');
+}
+function serve(id) {
+  if (!playing()) return;
+  const o = S.orders.find((x) => x.id === id);
+  if (!o) return;
+  let i = S.selected;
+  if (i < 0 || !S.pass[i]) {
+    const full = S.pass.map((p, j) => (p ? j : -1)).filter((j) => j >= 0);
+    if (full.length === 1) i = full[0];
+    else { toast(full.length ? 'Tap a pie on the pass first, then the ticket.' : 'Nothing on the pass yet. Bake a pie first.'); return; }
+  }
+  const p = S.pass[i];
+  const f = clamp(o.patience / o.max, 0, 1);
+  S.pass[i] = null; S.selected = -1;
+  S.orders = S.orders.filter((x) => x !== o);
+  const miss = mismatch(p, o), g = grade(p.bake);
+  if (miss) {
+    S.stats.wrong++; sfx('buzz');
+    toast(`${o.name}: "${miss}" No sale.`, 'bad');
+    rate(-0.6);
+  } else if (g === 'raw' || g === 'burnt') {
+    S.stats.wrong++; sfx('buzz');
+    toast(`${o.name}: "${g === 'raw' ? 'This is still dough!' : 'This is charcoal!'}" No sale.`, 'bad');
+    rate(-0.5);
+  } else {
+    const price = priceOf(o);
+    let tip = 0;
+    if (g === 'perfect') { tip = Math.round(price * (0.1 + 0.35 * f) * (S.rating / 5) * (S.up.tip ? 1.5 : 1) * 100) / 100; S.stats.perfect++; }
+    S.cash += price + tip; S.stats.revenue += price; S.stats.tips += tip; S.stats.served++; S.served++;
+    sfx('ding'); bumpCash();
+    const remark = g === 'perfect' ? 'Perfect bake.' : g === 'light' ? '"Bit pale."' : '"Bit crispy."';
+    toast(`${o.name} paid ${money(price)}${tip ? ' + ' + money(tip) + ' tip' : ''}. ${remark}`, 'good');
+    rate(g === 'perfect' ? 0.15 : -0.1);
+  }
+  if (S.phase === 'open') { renderPass(); renderRail(); }
+}
+
+/* ---------- game loop ---------- */
+function update(dt) {
+  S.time += dt;
+  if (S.time < DAY_LEN) {
+    S.nextOrderIn -= dt;
+    if (S.nextOrderIn <= 0) {
+      if (S.orders.length < MAX_QUEUE) { S.orders.push(makeOrder()); sfx('bell'); renderRail(); S.nextOrderIn = spawnGap(); }
+      else S.nextOrderIn = 1;
+    }
+  } else if (!S.closedNotice) {
+    S.closedNotice = true;
+    sfx('close');
+    toast(S.orders.length ? 'Doors closed. Finish the tickets on the rail.' : 'Doors closed for the night.');
+    renderRail();
+  }
+
+  const speed = bakeSpeed();
+  for (const p of S.oven) {
+    if (!p) continue;
+    const before = p.bake;
+    p.bake = Math.min(p.bake + speed * dt, 2);
+    if (before < 0.88 && p.bake >= 0.88) sfx('ready');
+    if (before < 1.4 && p.bake >= 1.4) { sfx('burn'); toast('Something is burning in the oven!', 'bad'); }
+  }
+
+  let left = false;
+  for (const o of S.orders) {
+    o.patience -= dt;
+    if (o.patience <= 0) { left = true; S.stats.walkouts++; toast(`${o.name} got tired of waiting and walked out.`, 'bad'); sfx('buzz'); }
+  }
+  if (left) {
+    const n = S.orders.filter((o) => o.patience <= 0).length;
+    S.orders = S.orders.filter((o) => o.patience > 0);
+    renderRail();
+    rate(-0.5 * n);
+    if (S.phase !== 'open') return;
+  }
+
+  updateOven(); updateRail(); updateClock();
+  if (S.time >= DAY_LEN && !S.orders.length) endDay();
+}
+let last = 0;
+function frame(t) {
+  const dt = last ? Math.min(0.1, (t - last) / 1000) : 0;
+  last = t;
+  if (playing()) update(dt);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- days & screens ---------- */
+function startDay() {
+  S.phase = 'open'; S.paused = false;
+  S.time = 0; S.orders = []; S.nextOrderIn = 1.5; S.closedNotice = false;
+  S.prep = null; S.oven = Array(S.up.oven3 ? 3 : 2).fill(null);
+  S.pass = Array(PASS_SIZE).fill(null); S.selected = -1;
+  S.stats = blankStats();
+  hideOverlay();
+  refreshPrep(); renderOven(); renderPass(); renderRail(); updateHud();
+  const fresh = TKEYS.filter((k) => TOPPINGS[k].day === S.day && S.day > 1).map((k) => TOPPINGS[k].label.toLowerCase());
+  toast(fresh.length ? `Day ${S.day}. New on the menu: ${fresh.join(' and ')}.` : `Day ${S.day}. Doors are open.`);
+}
+function endDay() {
+  sfx('close');
+  const rent = rentFor(S.day);
+  S.stats.rent = rent;
+  S.cash -= rent;
+  if (S.cash < 0) { gameOver('rent'); return; }
+  S.phase = 'summary';
+  saveBest(S.day, S.served);
+  S.closedDay = S.day;
+  S.day++;
+  showSummary();
+}
+function gameOver(reason) {
+  S.phase = 'over';
+  const days = reason === 'rent' || reason === 'rating' ? S.day - 1 : S.day;
+  const best = saveBest(days, S.served);
+  const why = reason === 'rent'
+    ? `The till came up ${money(-S.cash)} short on rent after day ${S.day}. The landlord changed the locks.`
+    : `Word got around. With a rating under one star, Joe came back for the keys on day ${S.day}.`;
+  showOverlay(`
+    <p class="eyebrow">Closed for good</p>
+    <h2>Joe's is shuttered</h2>
+    <p>${why}</p>
+    <table class="ledger"><tbody>
+      <tr><td>Days survived</td><td>${days}</td></tr>
+      <tr><td>Pies served</td><td>${S.served}</td></tr>
+      <tr><td>Best run</td><td>${best.days} day${best.days === 1 ? '' : 's'}, ${best.served} pies</td></tr>
+    </tbody></table>
+    <button class="btn primary" type="button" data-action="restart">Reopen the shop</button>`);
+}
+function ledgerHTML(st) {
+  const net = st.revenue + st.tips - st.rent;
+  return `<table class="ledger"><tbody>
+    <tr><td>Pies served</td><td>${st.served}</td></tr>
+    <tr><td>Perfect bakes</td><td>${st.perfect}</td></tr>
+    <tr><td>Walkouts</td><td>${st.walkouts}</td></tr>
+    <tr><td>Wrong or ruined pies</td><td>${st.wrong}</td></tr>
+    <tr><td>Sales</td><td>${money(st.revenue)}</td></tr>
+    <tr><td>Tips</td><td>${money(st.tips)}</td></tr>
+    <tr><td>Rent</td><td class="neg">${money(-st.rent)}</td></tr>
+    <tr class="total"><td>Net tonight</td><td class="${net < 0 ? 'neg' : ''}">${money(net)}</td></tr>
+    <tr class="total"><td>Cash in the till</td><td>${money(S.cash)}</td></tr>
+  </tbody></table>`;
+}
+function showSummary() {
+  const fresh = TKEYS.filter((k) => TOPPINGS[k].day === S.day).map((k) => TOPPINGS[k].label.toLowerCase());
+  const items = UPGRADES.map((u) => {
+    const owned = u.owned(), ready = !u.ready || u.ready();
+    const can = !owned && ready && S.cash >= u.cost;
+    const label = owned ? (u.ownedLabel || 'Owned') : !ready ? 'Locked' : `Buy ${money(u.cost)}`;
+    return `<div class="item"><div><b>${u.name}</b><span>${u.desc}</span></div><button class="btn" type="button" data-buy="${u.id}" ${can ? '' : 'disabled'}>${label}</button></div>`;
+  }).join('');
+  showOverlay(`
+    <p class="eyebrow">Day ${S.closedDay} · closing time</p>
+    <h2>Lights off, oven cooling</h2>
+    ${ledgerHTML(S.stats)}
+    <div class="shop"><h3>Spend on the shop</h3>${items}</div>
+    <p class="note">Tomorrow's rent is ${money(rentFor(S.day))}.${fresh.length ? ` New topping${fresh.length > 1 ? 's' : ''} tomorrow: ${fresh.join(' and ')}.` : ''}</p>
+    <button class="btn primary" type="button" data-action="next">Open day ${S.day}</button>`);
+}
+function showTitle() {
+  const best = loadBest();
+  showOverlay(`
+    <p class="eyebrow">Slices &amp; whole pies · since 1975</p>
+    <h1>Joe's Pizza</h1>
+    <p>Joe handed you the keys. Make the pies people order, keep the line moving, and cover the rent every night.</p>
+    <ol class="howto">
+      <li><b>Read the ticket.</b> Each customer wants a specific pie.</li>
+      <li><b>Build it.</b> Stretch dough, then add sauce, cheese and toppings.</li>
+      <li><b>Bake it.</b> Pull it out while the needle is in the green.</li>
+      <li><b>Serve it.</b> Tap the pie on the pass, then tap their ticket.</li>
+    </ol>
+    <p class="keys">Keys: D dough · S sauce · C cheese · 1 to 8 toppings · B bake · X bin · P pause</p>
+    <button class="btn primary" type="button" data-action="start">Open the shop</button>
+    ${best ? `<p class="note">Best run: ${best.days} day${best.days === 1 ? '' : 's'}, ${best.served} pies served.</p>` : ''}`);
+}
+function showPause() {
+  showOverlay(`
+    <p class="eyebrow">Day ${S.day} · ${clockStr(S.time)}</p>
+    <h2>On a break</h2>
+    <p>The oven and the customers are frozen until you come back.</p>
+    <button class="btn primary" type="button" data-action="resume">Back to work</button>`);
+}
+function showOverlay(html) {
+  $('#panel').innerHTML = html;
+  $('#overlay').hidden = false;
+  const cta = $('#panel [data-action]');
+  if (cta) cta.focus({ preventScroll: true });
+}
+function hideOverlay() { $('#overlay').hidden = true; }
+function togglePause() {
+  if (S.phase !== 'open') return;
+  S.paused = !S.paused;
+  if (S.paused) showPause(); else hideOverlay();
+}
+
+$('#panel').addEventListener('click', (e) => {
+  const buy = e.target.closest('[data-buy]');
+  if (buy) {
+    const u = UPGRADES.find((x) => x.id === buy.dataset.buy);
+    if (u && !u.owned() && S.cash >= u.cost) { S.cash -= u.cost; u.buy(); sfx('ding'); updateHud(); showSummary(); }
+    return;
+  }
+  const a = e.target.closest('[data-action]');
+  if (!a) return;
+  switch (a.dataset.action) {
+    case 'start': startDay(); break;
+    case 'next': startDay(); break;
+    case 'resume': togglePause(); break;
+    case 'restart': S = freshState(); startDay(); break;
+  }
+});
+
+/* ---------- controls ---------- */
+$('#btnDough').addEventListener('click', newDough);
+$('#btnBake').addEventListener('click', bake);
+$('#btnBin').addEventListener('click', binPrep);
+$('#btnTossPass').addEventListener('click', binPass);
+$('#btnPause').addEventListener('click', togglePause);
+$('#btnMute').addEventListener('click', (e) => {
+  muted = !muted;
+  e.currentTarget.textContent = muted ? 'Sound off' : 'Sound on';
+  e.currentTarget.setAttribute('aria-pressed', muted ? 'true' : 'false');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || S.phase !== 'open') return;
+  const k = e.key.toLowerCase();
+  if (k === 'p' || k === 'escape') { togglePause(); e.preventDefault(); return; }
+  if (S.paused) return;
+  if (k === 'd') newDough();
+  else if (k === 's') addIngredient('sauce');
+  else if (k === 'c') addIngredient('cheese');
+  else if (k === 'b') bake();
+  else if (k === 'x') binPrep();
+  else if (/^[1-8]$/.test(k)) addIngredient(TKEYS[+k - 1]);
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && S.phase === 'open' && !S.paused) togglePause(); });
+
+/* ---------- boot ---------- */
+S = freshState();
+prepCtx = setupCanvas($('#prepCanvas'), 228);
+buildBins();
+refreshPrep(); renderOven(); renderPass(); renderRail(); updateHud();
+showTitle();
+requestAnimationFrame(frame);
+
+// Small hook for automated tests and the curious.
+window.JoesPizza = { get state() { return S; } };
+})();
+</script>
+</body>
+</html>
