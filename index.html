@@ -237,6 +237,86 @@ button { font: inherit; color: inherit; }
 .toast.bad { background: var(--red); color: #fff; }
 .toast.good { background: var(--sage); color: #fff; }
 
+/* Debrief */
+.stepper { display: flex; gap: 6px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.stepper li { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); padding: 4px 12px 4px 4px; border-radius: 999px; background: #efe4d2; }
+.stepper li i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #cdbfa8; color: #fff; font-style: normal; font-size: 11px; }
+.stepper li.on { background: var(--navy); color: var(--on-dark); }
+.stepper li.on i { background: var(--red); }
+.stepper li.done i { background: var(--sage); }
+.goal-card { display: flex; gap: 12px; align-items: flex-start; border-radius: 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); }
+.goal-card .mark { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; }
+.goal-card.hit .mark { background: var(--sage); }
+.goal-card.miss .mark { background: var(--red); }
+.goal-card p { font-size: 14px; }
+.guess { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.guess input { flex: 1 1 220px; accent-color: var(--red); min-width: 0; }
+.guess output { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 4.2ch; }
+.big-line { font-size: 19px; font-weight: 600; }
+.big-line b { font-weight: 800; }
+.stacks { display: flex; flex-direction: column; gap: 12px; padding-top: 18px; }
+.stack-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 62px; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
+.stack-row > b { text-align: right; font-variant-numeric: tabular-nums; font-size: 15px; }
+.track { position: relative; }
+.stack { display: flex; height: 30px; border-radius: 6px; overflow: hidden; }
+.stack span { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stack .s-mat { background: var(--mustard); color: var(--navy); }
+.stack .s-lab { background: var(--red); }
+.stack .s-oh { background: var(--sage); }
+.gmark { position: absolute; top: -5px; bottom: -5px; width: 0; border-left: 2px dashed var(--navy); }
+.gmark span { position: absolute; bottom: 100%; left: 0; transform: translateX(-50%); font-size: 11px; font-weight: 700; white-space: nowrap; padding-bottom: 2px; }
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.split div { border-radius: 12px; padding: 12px 14px; }
+.split .mat { background: var(--mustard-tint); }
+.split .time { background: var(--red-tint); }
+.split small { display: block; font-size: 12px; font-weight: 700; color: #4b5560; }
+.split b { display: block; font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.split span { font-size: 13px; color: #4b5560; }
+.insight { background: var(--navy); color: var(--on-dark); border-radius: 12px; padding: 14px 16px; font-size: 15px; max-width: none !important; }
+.insight b { color: var(--mustard); }
+.leaks { display: flex; flex-direction: column; gap: 10px; }
+.leak { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 12px; align-items: start; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.leak .tag { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; color: #fff; margin-top: 2px; }
+.tag.t-time { background: var(--navy); }
+.tag.t-promise { background: var(--red); }
+.tag.t-material { background: var(--mustard); color: var(--navy) !important; }
+.leak b { font-size: 15px; }
+.leak p { font-size: 13px; color: #4b5560; margin-top: 2px; }
+.leak .amt { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.leak .lbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #efe4d2; }
+.leak .lbar i { display: block; height: 100%; border-radius: 3px; background: var(--red); }
+.leak.good .amt { color: var(--sage); }
+.leak.good .lbar i { background: var(--sage); }
+.sandbox { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 760px) { .sandbox { grid-template-columns: minmax(0, 1fr); } }
+.levers { display: flex; flex-direction: column; gap: 8px; }
+.lever { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+.lever label { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; cursor: pointer; }
+.lever input[type="range"] { accent-color: var(--red); width: 100%; }
+.lever.switch label { justify-content: flex-start; align-items: center; }
+.lever.switch input { width: 18px; height: 18px; accent-color: var(--red); flex: none; }
+.lever small { color: var(--muted); font-size: 12px; }
+.result { background: var(--navy); color: var(--on-dark); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.result > small { font-size: 12px; font-weight: 700; color: var(--on-dark-muted); text-transform: uppercase; letter-spacing: .08em; }
+.result .rbig { font-size: 44px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.result p { font-size: 13.5px; color: var(--on-dark-muted); }
+.result p b { color: var(--on-dark); }
+.mbars { display: flex; flex-direction: column; gap: 6px; }
+.mbar { display: grid; grid-template-columns: 112px minmax(0, 1fr) 52px; gap: 8px; align-items: center; font-size: 12.5px; }
+.mbar > b { text-align: right; font-variant-numeric: tabular-nums; }
+.mbar .mt { height: 12px; border-radius: 3px; background: #33404d; overflow: hidden; }
+.mbar .mt i { display: block; height: 100%; border-radius: 3px; transition: width .2s; }
+.fixes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.fix { text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+.fix[aria-checked="true"] { border-color: var(--red); background: #fff; box-shadow: 0 0 0 3px var(--red-tint); }
+.fix:disabled { cursor: not-allowed; opacity: .55; }
+.fix b { font-size: 15px; }
+.fix span { font-size: 13px; color: #4b5560; }
+.fix .gain { font-size: 20px; font-weight: 800; color: var(--sage); font-variant-numeric: tabular-nums; }
+.fix .rank { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
+.goal-banner { background: var(--sage-tint); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -470,10 +550,10 @@ function drawPizza(ctx, p, size) {
 }
 
 /* ---------- state ---------- */
-const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null };
+const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null, deb: null, goal: null };
 function newShift(rate) {
   return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(DECKS).fill(null), board: null,
-    pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false };
+    pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [] };
 }
 const nowMin = () => G.sh.t / SEC_PER_MIN;
 const playing = () => G.phase === 'play' && !G.paused;
@@ -567,7 +647,7 @@ function toOven() {
 }
 function scrapPrep() {
   if (!playing() || !G.sh.prep) return;
-  G.sh.prep.state = 'scrap'; G.sh.scrapN++; G.sh.prep = null; G.sh.pouring = null;
+  G.sh.prep.state = 'scrap'; G.sh.scrapN++; G.sh.log.push({ min: nowMin(), why: 'Scrapped at prep' }); G.sh.prep = null; G.sh.pouring = null;
   sfx('bad'); toast('Scrapped. The ingredients are still paid for.', 'bad'); refreshPrep(); refreshLive();
 }
 function pull(i) {
@@ -598,6 +678,7 @@ function rework() {
 }
 function scrapBoard() {
   if (!playing() || !G.sh.board) return;
+  G.sh.log.push({ min: nowMin(), why: grade(G.sh.board.bake) === 'burnt' ? 'Burnt' : 'Underbaked, scrapped' });
   G.sh.board.state = 'scrap'; G.sh.scrapN++; G.sh.board = null;
   sfx('bad'); toast('Scrapped. Ingredients, labor and oven time, all for nothing.', 'bad'); refreshBoard(); refreshLive();
 }
@@ -606,7 +687,7 @@ function box() {
   const sh = G.sh, p = sh.board;
   if (!p) return;
   if (!p.cut) { toast('Routing: cut before you box.'); return; }
-  p.state = 'boxed'; sh.boxed++; sh.board = null;
+  p.state = 'boxed'; sh.boxed++; sh.board = null; sh.boxTimes.push(nowMin());
   sfx('box'); refreshBoard(); refreshBoxes(); refreshLive();
   if (sh.boxed >= ORDER) endShift(false);
 }
@@ -741,6 +822,7 @@ function frame(t) {
 
 /* ---------- screens ---------- */
 function show(html, wide) {
+  clearTimeout(toastT); $('#toast').className = 'toast';
   const s = $('#sheet'); s.className = 'sheet' + (wide ? ' wide' : ''); s.innerHTML = html;
   $('#overlay').hidden = false; $('#overlay').scrollTop = 0;
   const cta = s.querySelector('.btn[data-act]'); if (cta) cta.focus({ preventScroll: true });
@@ -787,6 +869,7 @@ function promiseScreen() {
   show(`
     <p class="eyebrow">Shift ${G.shiftNo + 1} · Order: 20 pizzas · Start: 4:00 PM</p>
     <p class="quote">"When will it be ready?"</p>
+    ${G.goal ? `<p class="goal-banner"><b>Your goal this shift:</b> ${G.goal.label}. The debrief will check it.</p>` : ''}
     <p>Pick the run rate you'll plan with. Joe schedules and pays your hours to match the promise. Finish late and every extra hour is overtime at $30, and the caterer takes 5% off the bill for every 15 minutes they wait, up to 25%.</p>
     <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
     <div class="cta-row"><button class="btn red" type="button" data-act="start">Promise it and start</button>
@@ -805,17 +888,27 @@ function endShift(early) {
   const sh = G.sh;
   if (sh.ended) return;
   sh.ended = true; sh.pouring = null;
-  if (sh.prep) sh.prep.state = 'scrap';
-  sh.oven.forEach((p) => { if (p) p.state = 'scrap'; });
-  if (sh.board) sh.board.state = 'scrap';
+  [sh.prep, sh.board, ...sh.oven].forEach((p) => { if (p) { p.state = 'scrap'; p.leftover = true; } });
   G.phase = 'report';
   sfx('done');
   const c = calc(sh, true);
   G.shiftNo++;
-  G.hist.push({ n: G.shiftNo, plan: sh.rate, dem: r1(c.rate), late: Math.round(c.late), op: Math.round(c.op * 100) / 100, good: c.good });
+  const d = c.good ? debData(c, sh) : null;
+  const goal = G.goal, res = goal && d ? goalResult(goal, d) : null;
+  G.goal = null;
+  G.hist.push({ n: G.shiftNo, plan: sh.rate, dem: r1(c.rate), late: Math.round(c.late), op: Math.round(c.op * 100) / 100, good: c.good,
+    goal: goal ? goal.short : '', hit: res ? res.hit : null });
   saveHist(G.hist);
   refreshPrep(); refreshOven(); refreshBoard(); refreshLive();
-  reportScreen(c, sh, early);
+  if (!d) {
+    G.deb = null;
+    show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, so there's nothing to debrief yet. Joe still paid for the dough and the clock.</p>
+      <div class="cta-row"><button class="btn red" type="button" data-act="promise">Run another shift</button></div>`);
+    return;
+  }
+  G.deb = Object.assign(d, { early, goal, res, step: 1, guess: 7, guessed: false, pick: null, locked: false,
+    lv: { rate: d.dem, exact: false, noScrap: false, honest: false } });
+  debriefScreen();
 }
 
 function barsHTML(rows, hi, lo) {
@@ -865,7 +958,7 @@ function reportScreen(c, sh, early) {
   if (P.over > 0.75) lessons.push(['The recipe is the BOM.', `Heavy hands added ${money(P.over)} of ingredients that the $12 price never covered. That's ${per(P.over)} a pizza.`]);
   if (c.good && dem >= STD_RATE - 0.3 && !sh.scrapN && P.over <= 0.75) lessons.push(['That is what a standard looks like.', 'You hit the BOM, the routing and the run rate. This is the $7 pizza the plan assumed.']);
 
-  const histRows = G.hist.slice().reverse().map((h) => `<tr><td>Shift ${h.n}</td><td>${h.plan}/hr</td><td>${h.dem}/hr</td><td>${h.late ? dur(h.late) + ' late' : 'On time'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td></tr>`).join('');
+  const histRows = G.hist.slice().reverse().map((h) => `<tr><td>Shift ${h.n}</td><td>${h.plan}/hr</td><td>${h.dem}/hr</td><td>${h.late ? dur(h.late) + ' late' : 'On time'}</td><td>${h.goal ? h.goal + (h.hit ? ' ✓' : ' ✗') : ''}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td></tr>`).join('');
   const costPer = c.cogs / Math.max(1, c.good);
 
   show(`
@@ -912,10 +1005,212 @@ function reportScreen(c, sh, early) {
     </div>
     <div class="lessons">${lessons.slice(0, 3).map(([h, p]) => `<div class="lesson"><b>${h}</b><p>${p}</p></div>`).join('')}</div>
     <div class="panel-card scroll-x"><h3>Your shifts</h3>
-      <table class="hist"><thead><tr><th>Shift</th><th>Planned at</th><th>Demonstrated</th><th>Promise</th><th>Operating profit</th></tr></thead><tbody>${histRows}</tbody></table>
+      <table class="hist"><thead><tr><th>Shift</th><th>Planned at</th><th>Demonstrated</th><th>Promise</th><th>Goal</th><th>Operating profit</th></tr></thead><tbody>${histRows}</tbody></table>
     </div>
-    <div class="cta-row"><button class="btn red" type="button" data-act="promise">Run another shift</button>
+    <div class="cta-row"><button class="btn red" type="button" data-act="deb">Back to the debrief</button>
       <button class="btn light" type="button" data-act="clear">Clear shift history</button></div>`, true);
+}
+
+
+/* ---------- debrief ---------- */
+const ING_LABEL = { sauce: 'sauce', cheese: 'cheese', pep: 'pepperoni' };
+const mmss = (min) => { const s = Math.round(min * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+function debData(c, sh) {
+  const good = c.good, P = c.parts;
+  const heavyBy = { sauce: 0, cheese: 0, pep: 0 }; let heavyPies = 0;
+  sh.pies.filter((p) => p.state === 'boxed').forEach((p) => {
+    let h = false;
+    for (const k of ['sauce', 'cheese', 'pep']) { if (p[k] > 1) heavyBy[k] += COST[k] * (p[k] - 1); if (p[k] > 1.05) h = true; }
+    if (h) heavyPies++;
+  });
+  const worst = Object.entries(heavyBy).sort((a, b) => b[1] - a[1])[0];
+  let prev = 0, gap = { len: 0, a: 0, b: 0 };
+  sh.boxTimes.forEach((t) => { if (t - prev > gap.len) gap = { len: t - prev, a: prev, b: t }; prev = t; });
+  return { c, sh, good, dem: c.rate, overPer: P.over / good, scrapPer: P.scrap / good, schedHrs: sh.promiseMin / 60,
+    per: { mat: c.mat / good, lab: c.labor / good, oh: c.oh / good, cost: c.cogs / good },
+    heavyPies, worst, gap, leftovers: sh.pies.filter((p) => p.leftover).length };
+}
+function project(d, L) {
+  const hrs = ORDER / L.rate, sched = L.honest ? hrs : d.schedHrs;
+  const mat = STD_MAT * ORDER + (L.exact ? 0 : d.overPer * ORDER) + (L.noScrap ? 0 : d.scrapPer * ORDER);
+  const ot = Math.max(0, hrs - sched), idle = Math.max(0, sched - hrs);
+  const labor = WAGE * Math.min(hrs, sched) + OT_WAGE * ot + WAGE * idle, oh = OH_PER_HR * hrs;
+  const lateMin = ot * 60, pct = lateMin > 0.5 ? Math.min(0.25, 0.05 * Math.ceil(lateMin / 15)) : 0;
+  const cogs = mat + labor + oh, rev = PRICE * ORDER * (1 - pct);
+  return { cost: cogs / ORDER, op: rev - cogs - OTHER * ORDER, pct };
+}
+function goalResult(goal, d) {
+  const c = d.c;
+  if (goal.id === 'rate') return { hit: d.dem >= goal.target - 0.2, txt: `You ran ${r1(d.dem)}/hr against a goal of ${goal.target}/hr.` };
+  if (goal.id === 'scrap') return { hit: d.sh.scrapN === 0, txt: d.sh.scrapN ? `${d.sh.scrapN} pizza${d.sh.scrapN > 1 ? 's' : ''} scrapped this time.` : 'Not one pizza scrapped.' };
+  if (goal.id === 'exact') return { hit: d.overPer <= 0.05, txt: `Heavy portions cost ${money(Math.max(0, d.overPer))} a pizza this time.` };
+  const early = d.sh.promiseMin - c.min;
+  return { hit: c.late <= 0.5 && early < 5, txt: c.late > 0.5 ? `You finished ${dur(c.late)} late.` : early >= 5 ? `You finished ${dur(early)} early, so Joe paid for hours nobody needed.` : 'You finished within a few minutes of the promise.' };
+}
+function leakList(d) {
+  const c = d.c, P = c.parts, sh = d.sh, L = [];
+  const pace = P.slow + P.oh;
+  L.push({ tag: 'Time', label: pace >= 0 ? 'Slower than 20 an hour' : 'Faster than 20 an hour', v: pace,
+    detail: `At ${r1(d.dem)}/hr each pizza took ${mmss(c.min / d.good)} against the 3:00 standard. Labor and the oven are paid by the hour, not by the pizza.${d.gap.len >= 4 ? ` Your longest stretch without boxing a pizza was ${dur(d.gap.len)} (${clock(d.gap.a)} to ${clock(d.gap.b)}).` : ''}` });
+  if (P.ot + P.disc > 0.004) L.push({ tag: 'Promise', label: 'Missed the promise', v: P.ot + P.disc,
+    detail: `Ready ${dur(c.late)} after ${clock(sh.promiseMin)}. Overtime premium ${money(P.ot)}${P.disc ? `, and the caterer took ${Math.round(c.discPct * 100)}% off the bill (${money(P.disc)})` : ''}.` });
+  if (P.idle > 0.004) L.push({ tag: 'Promise', label: 'Promised slower than you ran', v: P.idle,
+    detail: `Done ${dur(sh.promiseMin - c.min)} early. Joe had already scheduled and paid for those hours.` });
+  if (P.scrap > 0.004) {
+    const items = sh.log.map((e) => `${e.why} at ${clock(e.min)}`);
+    if (d.leftovers) items.push(`${d.leftovers} left unfinished when the shift ended`);
+    L.push({ tag: 'Material', label: 'Scrapped pizzas', v: P.scrap, detail: `${items.join('. ')}. Ingredients you paid for and couldn't sell.` });
+  }
+  if (Math.abs(P.over) > 0.004) L.push({ tag: 'Material', label: P.over > 0 ? 'Heavy portions' : 'Light portions', v: P.over,
+    detail: P.over > 0 ? `${d.heavyPies} of ${d.good} pizzas went over the BOM. Most of it was ${ING_LABEL[d.worst[0]]} (${money(d.worst[1])}).` : 'You poured slightly under the BOM.' });
+  return L.sort((a, b) => b.v - a.v);
+}
+function fixList(d) {
+  const base = { rate: d.dem, exact: false, noScrap: false, honest: false }, b = project(d, base);
+  const tgt = d.dem >= STD_RATE - 0.05 ? null : Math.min(STD_RATE, Math.round(d.dem) + 4);
+  const list = [
+    { id: 'rate', label: tgt ? `Raise the run rate to ${tgt}/hr` : 'Raise the run rate', short: tgt ? `${tgt}/hr` : 'Rate', target: tgt,
+      how: 'Keep a dough ready and the oven loaded so the line never waits.', L: { ...base, rate: tgt || d.dem } },
+    { id: 'honest', label: 'Promise from the rate you actually run', short: 'Honest promise',
+      how: 'Plan with demonstrated capability instead of the standard.', L: { ...base, honest: true } },
+    { id: 'scrap', label: 'Zero scrap', short: 'Zero scrap', how: 'Pull every pizza in the green. Never let a deck burn.', L: { ...base, noScrap: true } },
+    { id: 'exact', label: 'Exact portions', short: 'Exact portions', how: 'Let go in the green on every pour.', L: { ...base, exact: true } },
+  ];
+  list.forEach((f) => { f.gain = project(d, f.L).op - b.op; });
+  return { base: b, list: list.slice().sort((x, y) => y.gain - x.gain) };
+}
+function stepper(n) {
+  const names = ['Predict', 'Find the leaks', 'Pick one fix'];
+  return `<ol class="stepper" aria-label="Debrief steps">${names.map((t, i) => `<li class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"><i>${i + 1 < n ? '✓' : i + 1}</i>${t}</li>`).join('')}</ol>`;
+}
+function stackRow(label, mat, lab, oh, scale, guess) {
+  const w = (v) => (v / scale) * 100;
+  return `<div class="stack-row"><span>${label}</span><div class="track"><div class="stack">
+    <span class="s-mat" style="width:${w(mat)}%">${w(mat) > 11 ? money(mat) : ''}</span>
+    <span class="s-lab" style="width:${w(lab)}%">${w(lab) > 11 ? money(lab) : ''}</span>
+    <span class="s-oh" style="width:${w(oh)}%">${w(oh) > 11 ? money(oh) : ''}</span></div>
+    ${guess != null ? `<span class="gmark" style="left:${w(guess)}%">${label === 'Joe\'s standard' ? '<span>Your guess</span>' : ''}</span>` : ''}</div>
+    <b>${money(mat + lab + oh)}</b></div>`;
+}
+function debriefScreen(keepScroll) {
+  const d = G.deb, c = d.c, sh = d.sh;
+  const head = `<p class="eyebrow">Shift ${G.shiftNo} debrief · ${d.early ? `${c.good} of 20 boxed` : 'Order complete'} · ${clock(c.min)}</p>`;
+  let body = '';
+  if (d.step === 1) {
+    const goalCard = d.goal ? `<div class="goal-card ${d.res.hit ? 'hit' : 'miss'}"><span class="mark">${d.res.hit ? '✓' : '✗'}</span>
+      <p><b>Your goal was: ${d.goal.label}.</b> ${d.res.hit ? 'You hit it.' : 'Not this time.'} ${d.res.txt}</p></div>` : '';
+    const per = d.per;
+    if (!d.guessed) {
+      body = `${goalCard}
+        <h2>Joe's standard pizza costs $7.00 to make. What did one of yours cost?</h2>
+        <p>Count everything it took: ingredients, your time on the line, and the oven. Drag to your guess, then lock it in.</p>
+        <div class="guess"><label for="guessIn" class="note">Your guess</label><input type="range" id="guessIn" min="5" max="15" step="0.25" value="${d.guess}"><output id="guessOut" for="guessIn">${money(d.guess)}</output></div>
+        <div class="cta-row"><button class="btn red" type="button" data-act="reveal">Lock in my guess</button></div>`;
+    } else {
+      const matD = per.mat - STD_MAT, timeD = per.lab - STD_LAB + per.oh - STD_OH, diff = per.cost - STD_COST;
+      const scale = Math.max(per.cost, STD_COST, d.guess) * 1.06;
+      const off = d.guess - per.cost;
+      const fb = Math.abs(off) <= 0.3 ? 'Spot on. You counted the clock as well as the ingredients.'
+        : off < 0 ? `You guessed ${money(-off)} low. Most people do: they price what's on the pizza and forget what the clock costs.`
+        : `You guessed ${money(off)} high. Your shift ran closer to standard than you thought.`;
+      const most = diff <= 0.05 ? `That's Joe's standard. The BOM, the routing and the run rate all held, so the $12 left the $5 the plan promised.`
+        : timeD >= matD ? `Most of the extra came from <b>time</b>. The pizza didn't change, the process did: the same $20 hour and the same oven, spread over fewer pizzas.`
+        : `Most of the extra came from <b>ingredients</b>: heavy portions and scrap. The recipe is the BOM, and the $12 price only covers one portion.`;
+      body = `${goalCard}
+        <h2>What one of your pizzas cost</h2>
+        <p class="big-line">You guessed <b>${money(d.guess)}</b>. Each pizza you boxed cost <b class="${diff > 0.05 ? 'over' : 'under'}">${money(per.cost)}</b> to make.</p>
+        <div class="stacks">
+          ${stackRow("Joe's standard", STD_MAT, STD_LAB, STD_OH, scale, d.guess)}
+          ${stackRow('Your shift', per.mat, per.lab, per.oh, scale, d.guess)}
+        </div>
+        <p class="legend"><span style="--c:var(--mustard)">Ingredients</span><span style="--c:var(--red)">Labor</span><span style="--c:var(--sage)">Overhead</span><span style="--c:transparent;border-left:2px dashed var(--navy);padding-left:4px">Your guess</span></p>
+        <p>${fb}</p>
+        <div class="split">
+          <div class="mat"><small>Ingredients · what's on the pizza</small><b>${signed(matD)}</b><span>a pizza against the $4.50 BOM</span></div>
+          <div class="time"><small>Labor + overhead · paid by the hour</small><b>${signed(timeD)}</b><span>a pizza against $2.50 at 20/hr</span></div>
+        </div>
+        <p class="insight">The customer still paid $12. Gross profit per pizza went from $5.00 to <b>${money(PRICE - per.cost)}</b>. ${most}</p>
+        <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="2">Next: find the leaks</button>
+          <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+    }
+  } else if (d.step === 2) {
+    const L = leakList(d), maxV = Math.max(...L.map((x) => Math.abs(x.v)), 0.01);
+    const lost = c.std.op - c.op;
+    const timeV = L.filter((x) => x.tag !== 'Material' && x.v > 0).reduce((s, x) => s + x.v, 0);
+    const matV = L.filter((x) => x.tag === 'Material' && x.v > 0).reduce((s, x) => s + x.v, 0);
+    const share = timeV + matV > 0 ? Math.round((timeV / (timeV + matV)) * 100) : 0;
+    const rows = L.map((x) => `<div class="leak ${x.v < 0 ? 'good' : ''}"><span class="tag t-${x.tag.toLowerCase()}">${x.tag}</span>
+      <div><b>${x.label}</b><p>${x.detail}</p></div><span class="amt">${x.v < 0 ? '+' : '-'}${money(Math.abs(x.v))}</span>
+      <span class="lbar"><i style="width:${(Math.abs(x.v) / maxV) * 100}%"></i></span></div>`).join('');
+    body = `<h2>Where did the money go?</h2>
+      <p>Joe's standard for ${c.good} pizzas is <b>${money(c.std.op)}</b> of operating profit. ${c.op < 0 ? 'You ended at' : 'You kept'} <b>${money(c.op)}</b>. ${lost > 0.005 ? `Here's where the other <b>${money(lost)}</b> went, biggest first.` : 'You beat the standard.'}</p>
+      <div class="leaks">${rows}</div>
+      ${lost > 0.005 ? `<p class="insight">Time and promises cost you <b>${money(timeV)}</b>. Ingredients cost <b>${money(matV)}</b>. ${share >= 50
+        ? `That's ${share}% of the leak on the clock. Supervisors control the clock: run rate, gaps, and the promise.`
+        : `Most of the leak was material this time. Every gram over the BOM and every scrapped pizza is paid for and never sold.`}</p>` : ''}
+      <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="3">Next: pick one fix</button>
+        <button class="btn light" type="button" data-act="step" data-step="1">Back</button>
+        <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+  } else {
+    const F = fixList(d), best = F.list[0];
+    const lo = Math.max(4, Math.floor(Math.min(d.dem, 20)) - 2);
+    const lv = d.lv;
+    const cards = ['rate', 'honest', 'scrap', 'exact'].map((id) => {
+      const f = F.list.find((x) => x.id === id), rank = F.list.indexOf(f) + 1, none = f.gain < 0.01;
+      return `<button type="button" class="fix" role="radio" aria-checked="${d.pick === id}" data-act="pick" data-id="${id}" ${none ? 'disabled' : ''}>
+        ${d.locked && !none ? `<span class="rank">${rank === 1 ? 'Biggest lever' : `#${rank}`}</span>` : ''}
+        <b>${f.label}</b><span>${none ? 'Nothing to win here this shift.' : f.how}</span>
+        ${d.locked && !none ? `<span class="gain">+${money(f.gain)}</span><span>more operating profit on this order</span>` : ''}</button>`;
+    }).join('');
+    const picked = F.list.find((x) => x.id === d.pick);
+    const verdict = d.locked && picked ? (picked.id === best.id
+      ? `<p class="insight"><b>Best call.</b> ${picked.label} is worth ${money(picked.gain)} on this order, more than any other single fix.</p>`
+      : `<p class="insight">${picked.label} is worth ${money(picked.gain)}. <b>${best.label}</b> was worth ${money(best.gain)}. You can switch, or keep your pick: the next shift will check it.</p>`) : '';
+    body = `<h2>You're the supervisor. Pick one fix for the next shift.</h2>
+      <p>Try the levers first and watch what each one does to the cost of a pizza and to Joe's profit on a 20-pizza order.${d.early ? ' You ended early, so these numbers project your pace across the full order.' : ''}</p>
+      <div class="sandbox">
+        <div class="levers">
+          <div class="lever"><label for="lvRate">Run rate <span id="lvRateOut">${r1(lv.rate)}/hr</span></label>
+            <input type="range" id="lvRate" min="${lo}" max="24" step="0.1" value="${r1(lv.rate)}"><small>You ran ${r1(d.dem)}/hr. Joe's standard is 20.</small></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvHonest" ${lv.honest ? 'checked' : ''}> Promise from the rate you run</label><small>You promised from ${sh.rate}/hr.</small></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvScrap" ${lv.noScrap ? 'checked' : ''}> Zero scrap</label><small>${sh.scrapN} scrapped this shift.</small></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvExact" ${lv.exact ? 'checked' : ''}> Exact portions</label><small>Heavy portions cost ${money(Math.max(0, d.overPer))} a pizza.</small></div>
+        </div>
+        <div class="result" aria-live="polite">
+          <small>Cost to make one pizza</small><div class="rbig" id="sbCost">$0.00</div>
+          <div class="mbars" id="sbBars"></div>
+          <p id="sbOp"></p>
+        </div>
+      </div>
+      <h3 style="margin:4px 0 0;font-size:16px">Which one fix is worth the most? Pick yours.</h3>
+      <div class="fixes" role="radiogroup" aria-label="One fix for the next shift">${cards}</div>
+      ${verdict}
+      <div class="cta-row">
+        ${d.locked ? `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal and plan the next shift</button>`
+          : `<button class="btn red" type="button" data-act="lock" ${d.pick ? '' : 'disabled'}>Lock in my pick</button>`}
+        <button class="btn light" type="button" data-act="step" data-step="2">Back</button>
+        <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+  }
+  const scrollY = $('#overlay').scrollTop;
+  show(`${stepper(d.step)}${head}${body}`, true);
+  if (keepScroll) $('#overlay').scrollTop = scrollY;
+  if (d.step === 3) updateSandbox();
+}
+function readLevers() {
+  const lv = G.deb.lv;
+  lv.rate = parseFloat($('#lvRate').value);
+  lv.honest = $('#lvHonest').checked; lv.noScrap = $('#lvScrap').checked; lv.exact = $('#lvExact').checked;
+  updateSandbox();
+}
+function updateSandbox() {
+  const d = G.deb, lv = d.lv;
+  const now = project(d, lv), base = project(d, { rate: d.dem, exact: false, noScrap: false, honest: false });
+  $('#lvRateOut').textContent = `${r1(lv.rate)}/hr`;
+  $('#sbCost').textContent = money(now.cost);
+  const scale = Math.max(now.cost, base.cost, STD_COST) * 1.05;
+  const bar = (label, v, col) => `<div class="mbar"><span>${label}</span><span class="mt"><i style="width:${(v / scale) * 100}%;background:${col}"></i></span><b>${money(v)}</b></div>`;
+  $('#sbBars').innerHTML = bar("Joe's standard", STD_COST, '#bfae94') + bar(d.early ? 'Your pace, full order' : 'Your shift', base.cost, '#c94d3a') + bar('With these changes', now.cost, '#e6ae47');
+  $('#sbOp').innerHTML = `Operating profit on 20 pizzas: <b>${money(now.op)}</b>. ${d.early ? 'At your pace' : 'Your shift'}: ${money(base.op)}. Standard: $40.00.${now.pct ? ` Still late, so the caterer takes ${Math.round(now.pct * 100)}% off.` : ''}`;
 }
 
 function pauseScreen() {
@@ -945,7 +1240,22 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'start') startShift();
   else if (act === 'resume') togglePause();
   else if (act === 'quit') { G.paused = false; endShift(true); }
-  else if (act === 'clear') { G.hist = []; G.shiftNo = 0; saveHist(G.hist); promiseScreen(); }
+  else if (act === 'clear') { G.hist = []; G.shiftNo = 0; G.goal = null; saveHist(G.hist); promiseScreen(); }
+  else if (act === 'reveal') { G.deb.guess = parseFloat($('#guessIn').value); G.deb.guessed = true; debriefScreen(); }
+  else if (act === 'step') { G.deb.step = +a.dataset.step; debriefScreen(); }
+  else if (act === 'deb') debriefScreen();
+  else if (act === 'full') reportScreen(G.deb.c, G.deb.sh, G.deb.early);
+  else if (act === 'pick') { G.deb.pick = a.dataset.id; debriefScreen(true); }
+  else if (act === 'lock') { G.deb.locked = true; debriefScreen(true); }
+  else if (act === 'commit') {
+    const f = fixList(G.deb).list.find((x) => x.id === G.deb.pick);
+    G.goal = { id: f.id, label: f.label, short: f.short, target: f.target };
+    promiseScreen();
+  }
+});
+$('#sheet').addEventListener('input', (e) => {
+  if (e.target.id === 'guessIn') $('#guessOut').textContent = money(parseFloat(e.target.value));
+  else if (e.target.closest('.levers')) readLevers();
 });
 
 /* ---------- controls ---------- */

@@ -27,13 +27,11 @@ The order is 20 pepperoni pizzas, starting at 4:00 PM. At standard, that's $240 
 2. **The routing.** Players work the five routing steps: prepare dough, add toppings, bake, cut, box.
    - Toppings are poured by holding a key or button. Letting go in the green is one BOM portion. Pouring heavy costs real money.
    - Pizzas pulled from the oven too early must be reworked. Burnt ones are scrapped.
-3. **The report.** When the order is boxed, the player gets:
-   - The deck's revenue to operating profit bars, this shift against the standard.
-   - Cost per pizza: standard $7.00 against actual.
-   - A bridge from standard operating profit to actual: heavy portions, scrap, slower run rate, overtime premium, unneeded scheduled hours, extra overhead, and the late discount.
-   - Capacity on an 8-hour shift: 160 planned against what they demonstrated.
-   - Two or three lessons in the deck's own language, chosen by what happened in the shift.
-   - A history of their shifts, so the second promise can be built on demonstrated capability.
+3. **The debrief.** When the order is boxed, a three-step debrief walks the player to the lesson instead of handing them a dashboard:
+   - **Predict.** "Joe's standard pizza costs $7.00 to make. What did one of yours cost?" The player commits to a guess on a slider before seeing the answer. Their pizza is then shown next to Joe's $7 standard, split into ingredients, labor and overhead, with their guess marked. It also says whether the extra came mostly from ingredients or from time (labor and overhead, paid by the hour).
+   - **Find the leaks.** Everything between Joe's standard operating profit and theirs, biggest first. Each leak is tagged Time, Promise or Material and tied to something they did: "Burnt at 4:12 PM", "your longest stretch without boxing a pizza was 11 min", "most of the heavy portions were cheese". A closing line says what share of the leak was on the clock.
+   - **Pick one fix.** A run-rate slider and switches for honest promise, zero scrap and exact portions show live what each does to cost per pizza and profit on the order. The player picks the one fix they think is worth the most and locks it in. Then the game reveals what each fix was actually worth, ranked. Their pick becomes the goal for the next shift, and the next debrief opens by checking whether they hit it.
+   - **See the full numbers** opens the detailed report: profit bars against standard, cost per pizza, the variance bridge, 8-hour capacity, and shift history with goals.
 
 Being late costs overtime at $30/hr plus a 5% discount for every 15 minutes late, up to 25%. Finishing well ahead of a cautious promise still pays for the scheduled hours.
 
