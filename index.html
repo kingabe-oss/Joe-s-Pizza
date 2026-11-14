@@ -165,6 +165,22 @@ button { font: inherit; color: inherit; }
 .fund p { font-size: 13.5px; color: #3c4652; }
 .fund .cons { font-weight: 700; color: var(--red); }
 .fund .btn { margin-top: auto; align-self: flex-start; }
+.calc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .calc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.calc label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.calc input { font: inherit; font-size: 16px; font-weight: 600; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.calc-out { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+@media (max-width: 640px) { .calc-out { grid-template-columns: minmax(0, 1fr); } }
+.calc-out div { border-radius: 10px; padding: 10px 12px; background: var(--mustard-tint); }
+.calc-out div:nth-child(2) { background: var(--red-tint); }
+.calc-out div:nth-child(3) { background: var(--sage-tint); }
+.calc-out small { display: block; font-size: 12px; font-weight: 700; color: #4b5560; }
+.calc-out b { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.calc-out span { font-size: 12.5px; color: #4b5560; }
+.closing { background: var(--navy); color: var(--on-dark); border-radius: 14px; padding: clamp(18px, 4vw, 28px); display: flex; flex-direction: column; gap: 8px; }
+.closing p { font-size: clamp(22px, 4.2vw, 32px); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; text-wrap: balance; color: var(--on-dark); }
+.closing p span { color: var(--mustard); }
+.closing small { font-size: 14px; color: var(--on-dark-muted); }
 .paid { background: var(--sage-tint); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
 .panel-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
 .panel-card h3 { margin: 0 0 8px; font-size: 14px; font-weight: 800; }
@@ -184,7 +200,8 @@ button { font: inherit; color: inherit; }
 /* Overlay */
 .overlay { position: fixed; inset: 0; z-index: 30; background: rgba(31, 40, 51, .62); backdrop-filter: blur(3px); overflow-y: auto; display: grid; place-items: center;
   padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
-.sheet { width: 100%; max-width: 780px; background: var(--cream); border-radius: 16px; padding: clamp(18px, 4vw, 32px); box-shadow: 0 24px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 16px; }
+.overlay { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.sheet { min-width: 0; width: 100%; max-width: 780px; background: var(--cream); border-radius: 16px; padding: clamp(18px, 4vw, 32px); box-shadow: 0 24px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 16px; }
 .sheet.wide { max-width: 1000px; }
 .sheet h1, .sheet h2 { margin: 0; font-weight: 800; letter-spacing: -.015em; line-height: 1.1; text-wrap: balance; }
 .sheet h1 { font-size: clamp(30px, 6vw, 44px); }
@@ -253,6 +270,7 @@ button { font: inherit; color: inherit; }
 .hist td { text-align: right; padding: 5px 0 5px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
 .hist th:first-child, .hist td:first-child { text-align: left; padding-left: 0; }
 .scroll-x { overflow-x: auto; }
+.xlate th, .xlate td { text-align: left !important; white-space: normal; }
 
 .toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
   width: max-content; max-width: min(92vw, 520px); padding: 10px 16px; border-radius: 10px; background: var(--navy); color: var(--on-dark); font-weight: 600; font-size: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.3); transition: opacity .2s, transform .2s; }
@@ -355,7 +373,7 @@ button { font: inherit; color: inherit; }
       <div class="stat"><small>Promised</small><b id="stPromise">5:00 PM</b></div>
       <div class="stat" id="stProjBox"><small>On pace for</small><b id="stProj">…</b></div>
       <div class="stat" id="stRateBox"><small>Run rate</small><b id="stRate">… /hr</b></div>
-      <div class="stat"><small>Boxed</small><b id="stBoxed">0 / 20</b></div>
+      <div class="stat"><small>Boxed</small><b id="stBoxed">0 / 10</b></div>
     </div>
     <div class="tools">
       <button class="ghost" id="btnMute" type="button" aria-pressed="false">Sound on</button>
@@ -404,7 +422,7 @@ button { font: inherit; color: inherit; }
     <section class="station" aria-label="Box">
       <div class="st-head"><span class="steps"><span class="step">5</span></span><h2>Box</h2><small>The order</small></div>
       <div class="boxes" id="boxes"></div>
-      <p class="box-count"><b id="boxN">0</b> of 20 boxed</p>
+      <p class="box-count"><b id="boxN">0</b> of 10 boxed</p>
       <div class="btns"><button class="btn red" id="btnBox" type="button">Box it <kbd>B</kbd></button></div>
     </section>
   </main>
@@ -433,7 +451,8 @@ button { font: inherit; color: inherit; }
 'use strict';
 
 /* ---------- The deck's numbers ---------- */
-const ORDER = 20;            // pizzas in the catering order
+const ORDER = 10;            // pizzas in the catering order
+const RUN_SHIFTS = 3;        // a run is three Fridays
 const PRICE = 12;            // customer pays per pizza
 const OTHER = 3;             // other business costs, per pizza equivalent
 const WAGE = 20, OT_WAGE = 30;
@@ -445,19 +464,19 @@ const STD_MAT = 4.50, STD_LAB = 1.00, STD_OH = 1.50, STD_COST = 7.00;
 /* ---------- Pace of play ---------- */
 const SEC_PER_MIN = 2;       // 2 real seconds = 1 kitchen minute, so 20/hr is one pizza every 6 seconds
 const START = 16 * 60;       // 4:00 PM
-const MAX_MIN = 300;         // Joe sends everyone home after 5 hours
+const MAX_MIN = 180;         // Joe sends everyone home after 3 hours
 const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
 const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
 const BAKE_SEC = 7, GOOD_LO = 0.9, GOOD_HI = 1.3, BAKE_MAX = 1.6;
 const BOOKS_KEY = 'joes-pizza-b101-books';
-const OVEN_COST = 500, BANK_LIMIT = 400, INTEREST = 0.05;
+const OVEN_COST = 200, BANK_LIMIT = 150, INTEREST = 0.05;
 const HIST_KEY = 'joes-pizza-b101-history';
 const TAU = Math.PI * 2;
 
 /* ---------- helpers ---------- */
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const money = (v) => (v < -0.004 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
+const money = (v) => (v < -0.004 ? '-' : '') + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const signed = (v) => (v > 0.004 ? '+' : v < -0.004 ? '-' : '') + '$' + Math.abs(v).toFixed(2);
 const r1 = (v) => Math.round(v * 10) / 10;
 function clock(min) {
@@ -481,12 +500,12 @@ function ramp(stops, v) {
   }
   return stops[stops.length - 1][1];
 }
-function freshBooks() { return { savings: 250, ovenFund: 300, loan: 0, decks: 3, ovenBought: false }; }
+function freshBooks() { return { savings: 100, ovenFund: 150, loan: 0, decks: 3, ovenBought: false }; }
 function loadBooks() { try { return Object.assign(freshBooks(), JSON.parse(localStorage.getItem(BOOKS_KEY)) || {}); } catch (e) { return freshBooks(); } }
 function saveBooks() { try { localStorage.setItem(BOOKS_KEY, JSON.stringify(G.books)); } catch (e) { /* storage unavailable */ } }
 const shiftsToOven = (fund) => Math.max(0, Math.ceil((OVEN_COST - fund) / (2 * ORDER)));
 function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } }
-function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-12))); } catch (e) { /* storage unavailable */ } }
+function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-RUN_SHIFTS))); } catch (e) { /* storage unavailable */ } }
 
 /* ---------- audio ---------- */
 let ac = null, muted = false;
@@ -874,7 +893,7 @@ function titleScreen() {
   show(`
     <p class="eyebrow">Business 101 · Joe's Pizza</p>
     <h1>Run Joe's Friday shift</h1>
-    <p class="lead">A caterer just ordered <b>20 pepperoni pizzas at $12 each</b>. You're on the line. Make them to Joe's standard, keep your promise, then see what the shift really earned.</p>
+    <p class="lead">A caterer just ordered <b>${ORDER} pepperoni pizzas at $12 each</b>. You're on the line. Make them to Joe's standard, keep your promise, then see what the shift really earned.</p>
     <div class="cost-eq" aria-label="Joe's standard cost">
       <div class="chip m"><b>$4.50</b><small>Ingredients</small></div><span class="op">+</span>
       <div class="chip r"><b>$1.00</b><small>Labor</small></div><span class="op">+</span>
@@ -891,12 +910,23 @@ function titleScreen() {
     </ol>
     <p class="note">Mouse and touch work too: hold a topping button to pour. Two seconds of play is one minute in the kitchen, so the 20-an-hour standard means a pizza every 6 seconds.</p>
     <p>Every shift's profit or loss lands on Joe's books. He has <b>${money(G.books.savings)}</b> in savings and <b>${money(G.books.ovenFund)}</b> saved toward a <b>${money(OVEN_COST)}</b> new oven.</p>
-    <div class="cta-row">${G.practiced
+    <p class="note">A run is three Fridays. Then Joe closes the books and you see what it all adds up to.</p>
+    <div class="cta-row">${G.hist.length >= RUN_SHIFTS || G.books.closed
+      ? `<button class="btn red" type="button" data-act="newrun">Start a new run</button><button class="btn light" type="button" data-act="closeout">See the last close-out</button>`
+      : G.hist.length
+      ? `<button class="btn red" type="button" data-act="promise">Continue: Friday ${G.hist.length + 1} of ${RUN_SHIFTS}</button><button class="btn light" type="button" data-act="practice">Practice a pizza</button>`
+      : G.practiced
       ? `<button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button>`
       : `<button class="btn red" type="button" data-act="practice">Practice one pizza first</button><button class="btn light" type="button" data-act="promise">Skip to the order</button>`}</div>`);
 }
 
+const FRAMES = [
+  "Joe's plan assumes 20 pizzas an hour. That's the number the business built its costs on.",
+  'Now you know what the kitchen actually did last Friday. Which number will you promise from?',
+  'Last Friday of the run. If you really got faster, you can promise faster. Can you prove it?',
+];
 function promiseScreen() {
+  if (G.shiftNo >= RUN_SHIFTS || G.books.closed) { closeoutScreen(); return; }
   G.phase = 'promise';
   const lastDem = G.hist.length ? G.hist[G.hist.length - 1].dem : 0;
   const rates = [{ r: STD_RATE, tag: "Joe's standard" }];
@@ -907,11 +937,12 @@ function promiseScreen() {
     const min = (ORDER / o.r) * 60;
     return `<button type="button" class="opt" role="radio" aria-checked="${o.r === G.pickRate}" data-rate="${o.r}">
       <span class="tag">${o.tag}</span><span class="rate">${o.r}<small> pizzas / hr</small></span>
-      <span class="math">20 ÷ ${o.r} = ${dur(min)}</span><span class="ready">Ready ${clock(min)}</span></button>`;
+      <span class="math">${ORDER} ÷ ${o.r} = ${dur(min)}</span><span class="ready">Ready ${clock(min)}</span></button>`;
   }).join('');
   show(`
-    <p class="eyebrow">Shift ${G.shiftNo + 1} · Order: 20 pizzas · Start: 4:00 PM</p>
+    <p class="eyebrow">Friday ${G.shiftNo + 1} of ${RUN_SHIFTS} · Order: ${ORDER} pizzas · Start: 4:00 PM</p>
     <p class="quote">"When will it be ready?"</p>
+    <p>${FRAMES[G.shiftNo] || ''}</p>
     ${G.goal ? `<p class="goal-banner"><b>Your goal this shift:</b> ${G.goal.label}. The debrief will check it.</p>` : ''}
     <p>Pick the run rate you'll plan with. Joe schedules and pays your hours to match the promise. Finish late and every extra hour is overtime at $30, and the caterer takes 5% off the bill for every 15 minutes they wait, up to 25%.</p>
     <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
@@ -943,7 +974,10 @@ function endShift(early) {
   const goal = G.goal, res = goal && d ? goalResult(goal, d) : null;
   G.goal = null;
   G.hist.push({ n: G.shiftNo, plan: sh.rate, dem: r1(c.rate), late: Math.round(c.late), op: Math.round(c.op * 100) / 100, good: c.good,
-    goal: goal ? goal.short : '', hit: res ? res.hit : null });
+    goal: goal ? goal.short : '', hit: res ? res.hit : null,
+    rev: c.rev, cogs: c.cogs, other: c.other, cost: c.good ? c.cogs / c.good : null,
+    lab: c.good ? c.labor / c.good : null, oh: c.good ? c.oh / c.good : null,
+    overPer: c.good ? c.parts.over / c.good : 0, scrap: sh.scrapN, rework: sh.reworkN, books: null });
   saveHist(G.hist);
   refreshPrep(); refreshOven(); refreshBoard(); refreshLive();
   if (!d) {
@@ -951,7 +985,8 @@ function endShift(early) {
     const auto = autoFund(pay);
     show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, but Joe still paid for the dough and the clock: ${money(pay.gap)}. ${auto}</p>
       <div class="panel-card books-wrap"><h3>Joe's money</h3>${booksHTML()}</div>
-      <div class="cta-row"><button class="btn red" type="button" data-act="promise">Run another shift</button></div>`);
+      <div class="cta-row">${G.shiftNo >= RUN_SHIFTS ? '<button class="btn red" type="button" data-act="closeout">Close out the run</button>' : '<button class="btn red" type="button" data-act="promise">Next Friday</button>'}</div>`);
+    snapBooks();
     return;
   }
   G.deb = Object.assign(d, { pay, early, goal, res, step: 1, guess: 7, guessed: false, pick: null, locked: false,
@@ -1010,7 +1045,7 @@ function reportScreen(c, sh, early) {
   const costPer = c.cogs / Math.max(1, c.good);
 
   show(`
-    <p class="eyebrow">Shift ${G.shiftNo} · ${early ? `Shift ended with ${c.good} of 20 boxed` : 'Order complete'} · ${clock(c.min)}</p>
+    <p class="eyebrow">Shift ${G.shiftNo} · ${early ? `Shift ended with ${c.good} of ${ORDER} boxed` : 'Order complete'} · ${clock(c.min)}</p>
     <h2>Did Joe make ${money(c.revGross)}?</h2>
     <div class="headline">
       <div><div class="big ${c.op < 0 ? 'neg' : 'pos'}">${money(c.op)}</div><p>operating profit</p></div>
@@ -1056,7 +1091,7 @@ function reportScreen(c, sh, early) {
       <table class="hist"><thead><tr><th>Shift</th><th>Planned at</th><th>Demonstrated</th><th>Promise</th><th>Goal</th><th>Operating profit</th></tr></thead><tbody>${histRows}</tbody></table>
     </div>
     <div class="cta-row"><button class="btn red" type="button" data-act="deb">Back to the debrief</button>
-      <button class="btn light" type="button" data-act="clear">Start over: history and Joe's books</button></div>`, true);
+      <button class="btn light" type="button" data-act="newrun">Start a new run</button></div>`, true);
 }
 
 
@@ -1142,7 +1177,7 @@ function stackRow(label, mat, lab, oh, scale, guess) {
 }
 function debriefScreen(keepScroll) {
   const d = G.deb, c = d.c, sh = d.sh;
-  const head = `<p class="eyebrow">Shift ${G.shiftNo} debrief · ${d.early ? `${c.good} of 20 boxed` : 'Order complete'} · ${clock(c.min)}</p>`;
+  const head = `<p class="eyebrow">Shift ${G.shiftNo} debrief · ${d.early ? `${c.good} of ${ORDER} boxed` : 'Order complete'} · ${clock(c.min)}</p>`;
   let body = '';
   if (d.step === 1) {
     const goalCard = d.goal ? `<div class="goal-card ${d.res.hit ? 'hit' : 'miss'}"><span class="mark">${d.res.hit ? '✓' : '✗'}</span>
@@ -1215,9 +1250,10 @@ function debriefScreen(keepScroll) {
     const picked = F.list.find((x) => x.id === d.pick);
     const verdict = d.locked && picked ? (picked.id === best.id
       ? `<p class="insight"><b>Best call.</b> ${picked.label} is worth ${money(picked.gain)} on this order, more than any other single fix.</p>`
-      : `<p class="insight">${picked.label} is worth ${money(picked.gain)}. <b>${best.label}</b> was worth ${money(best.gain)}. You can switch, or keep your pick: the next shift will check it.</p>`) : '';
-    body = `<h2>You're the supervisor. Pick one fix for the next shift.</h2>
-      <p>Try the levers first and watch what each one does to the cost of a pizza and to Joe's profit on a 20-pizza order.${d.early ? ' You ended early, so these numbers project your pace across the full order.' : ''}</p>
+      : `<p class="insight">${picked.label} is worth ${money(picked.gain)}. <b>${best.label}</b> was worth ${money(best.gain)}.${G.shiftNo >= RUN_SHIFTS ? '' : ' You can switch, or keep your pick: the next shift will check it.'}</p>`) : '';
+    const final = G.shiftNo >= RUN_SHIFTS;
+    body = `<h2>${final ? "Last Friday's done. If there were one more, which fix would you make?" : "You're the supervisor. Pick one fix for the next shift."}</h2>
+      <p>Try the levers first and watch what each one does to the cost of a pizza and to Joe's profit on a ${ORDER}-pizza order.${d.early ? ' You ended early, so these numbers project your pace across the full order.' : ''}</p>
       <div class="sandbox">
         <div class="levers">
           <div class="lever"><label for="lvRate">Run rate <span id="lvRateOut">${r1(lv.rate)}/hr</span></label>
@@ -1236,7 +1272,8 @@ function debriefScreen(keepScroll) {
       <div class="fixes" role="radiogroup" aria-label="One fix for the next shift">${cards}</div>
       ${verdict}
       <div class="cta-row">
-        ${d.locked ? `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal and plan the next shift</button>`
+        ${d.locked ? (final ? '<button class="btn red" type="button" data-act="closeout">Close out the run</button>'
+          : `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal and plan the next shift</button>`)
           : `<button class="btn red" type="button" data-act="lock" ${d.pick ? '' : 'disabled'}>Lock in my pick</button>`}
         <button class="btn light" type="button" data-act="step" data-step="3">Back</button>
         <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
@@ -1260,7 +1297,7 @@ function updateSandbox() {
   const scale = Math.max(now.cost, base.cost, STD_COST) * 1.05;
   const bar = (label, v, col) => `<div class="mbar"><span>${label}</span><span class="mt"><i style="width:${(v / scale) * 100}%;background:${col}"></i></span><b>${money(v)}</b></div>`;
   $('#sbBars').innerHTML = bar("Joe's standard", STD_COST, '#bfae94') + bar(d.early ? 'Your pace, full order' : 'Your shift', base.cost, '#c94d3a') + bar('With these changes', now.cost, '#e6ae47');
-  $('#sbOp').innerHTML = `Operating profit on 20 pizzas: <b>${money(now.op)}</b>. ${d.early ? 'At your pace' : 'Your shift'}: ${money(base.op)}. Standard: $40.00.${now.pct ? ` Still late, so the caterer takes ${Math.round(now.pct * 100)}% off.` : ''}`;
+  $('#sbOp').innerHTML = `Operating profit on ${ORDER} pizzas: <b>${money(now.op)}</b>. ${d.early ? 'At your pace' : 'Your shift'}: ${money(base.op)}. Standard: ${money(2 * ORDER)}.${now.pct ? ` Still late, so the caterer takes ${Math.round(now.pct * 100)}% off.` : ''}`;
 }
 
 /* ---------- practice ---------- */
@@ -1414,10 +1451,105 @@ function paydayHTML(d) {
     ${cards}
     ${used.length ? `<p class="paid">Covered with ${used.join(' and ')}.</p>` : ''}
     ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> Savings are gone, the oven fund is empty and the bank won't lend more. The shop closes.</p>
-      <div class="cta-row"><button class="btn red" type="button" data-act="reset-books">Start Joe's books over</button></div>` : ''}
+      <div class="cta-row"><button class="btn red" type="button" data-act="closeout" data-broke="1">Close out the run</button></div>` : ''}
     ${!open ? `<div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
       <p class="insight"><b>Losses consume cash, and they can steal from tomorrow.</b> ${after.join(' ')}</p>` : ''}
     ${broke ? '' : nav(!open)}`;
+}
+
+/* ---------- close-out ---------- */
+function snapBooks() {
+  const h = G.hist[G.hist.length - 1];
+  if (h) { h.books = { savings: G.books.savings, loan: G.books.loan, ovenFund: G.books.ovenFund, ovenBought: G.books.ovenBought }; saveHist(G.hist); }
+}
+function closeoutScreen() {
+  G.phase = 'closeout';
+  const H = G.hist, played = H.filter((h) => h.good > 0), last = played[played.length - 1], first = played[0];
+  const broke = G.endReason === 'broke' || !!G.books.closed;
+  const kept = H.filter((h) => !h.late && h.good >= ORDER).length;
+  const sum = (k) => H.reduce((s2, h) => s2 + (h[k] || 0), 0);
+  let wf = '';
+  if (last) {
+    const g = last.good;
+    const rows = [
+      { label: 'Customer pays', v: last.rev / g, s: 12, c: '#e6ae47' },
+      { label: 'Cost to make', v: last.cogs / g, s: 7, c: '#c94d3a' },
+      { label: 'Gross profit', v: (last.rev - last.cogs) / g, s: 5, c: '#52765c' },
+      { label: 'Other business costs', v: last.other / g, s: 3, c: '#a06e58' },
+      { label: 'Operating profit', v: last.op / g, s: 2, c: '#7fa889' },
+    ];
+    const vals = rows.flatMap((r) => [r.v, r.s, 0]);
+    wf = barsHTML(rows, Math.max(...vals) * 1.25, Math.min(...vals) < 0 ? Math.min(...vals) * 1.45 : 0);
+  }
+  const fri = H.map((h) => {
+    const b = h.books || G.books;
+    return `<tr><td>Friday ${h.n}</td><td>${h.plan}/hr</td><td>${h.dem}/hr</td><td>${h.good < ORDER ? `${h.good} of ${ORDER}` : h.late ? dur(h.late) + ' late' : 'On time'}</td>
+      <td class="${h.cost > STD_COST + 0.005 ? 'over' : ''}">${h.cost ? money(h.cost) : '…'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td>
+      <td>${money(b.savings)}</td><td class="${b.loan > 0.005 ? 'over' : ''}">${money(b.loan)}</td><td>${b.ovenBought ? 'Bought' : money(b.ovenFund)}</td></tr>`;
+  }).join('');
+  const trend = first && last && first !== last
+    ? `Your run rate went from <b>${first.dem}/hr</b> to <b>${last.dem}/hr</b>, and the cost of a pizza from <b>${money(first.cost)}</b> to <b>${money(last.cost)}</b>. ${last.cost < first.cost - 0.05 ? 'Same pizza, same $12. The improvement is all yours.' : 'The process did not get cheaper yet. That is what a fourth Friday would be for.'}`
+    : '';
+  const B = G.books;
+  const money3 = B.ovenBought ? 'Joe bought the new oven. Profit funded the next cycle.'
+    : broke ? 'Joe ran out of savings, oven fund and credit. Losses consumed the cash, then the future.'
+    : `Joe ends with ${money(B.savings)} in savings, ${money(B.loan)} owed to the bank and ${money(B.ovenFund)} of ${money(OVEN_COST)} toward the new oven.`;
+  const xl = last ? [
+    ['Pizza recipe', 'BOM', last.overPer > 0.02 ? `${money(last.overPer)} a pizza over the recipe` : 'On the recipe'],
+    ['Pizza-making steps', 'Routing', `${sum('scrap')} scrapped, ${sum('rework')} reworked over ${H.length} Friday${H.length > 1 ? 's' : ''}`],
+    ['Pizzas per hour', 'Run rate', `Standard 20/hr. You ran ${H.map((h) => h.dem).join(' → ')}`],
+    ['Your promise', 'Planning rate', `${H.map((h) => h.plan).join(' → ')}/hr, ${kept} of ${H.length} kept`],
+    ['Pizza maker', 'Direct labor', `${money(last.lab)} a pizza vs. $1.00`],
+    ['Oven + shop costs', 'Manufacturing overhead', `${money(last.oh)} a pizza vs. $1.50`],
+    ['Expected $7 pizza', 'Standard cost', `Your last Friday: ${money(last.cost)}`],
+    ["Customer's $12", 'Revenue', `${money(sum('rev'))} over the run`],
+    ['$5 after manufacturing cost', 'Gross profit', `${money((last.rev - last.cogs) / last.good)} a pizza on your last Friday`],
+  ].map(([a, b, c]) => `<tr><td>${a}</td><td><b>${b}</b></td><td>${c}</td></tr>`).join('') : '';
+  show(`
+    <p class="eyebrow">${broke ? `Joe's closed after Friday ${H.length}` : `Three Fridays at Joe's · Close-out`}</p>
+    <h2>One last time: did Joe make $12?</h2>
+    ${last ? `<div class="rep-grid">
+      <div class="panel-card"><h3>Every $12 on your last Friday</h3><div class="bars">${wf}</div>
+        <p class="legend"><span style="--c:#c94d3a">Your pizza</span><span style="--c:#bfae94">Joe's standard</span></p></div>
+      <div class="panel-card"><h3>Where the run left Joe</h3><p>${money3}</p>${booksHTML()}</div>
+    </div>` : ''}
+    <div class="panel-card scroll-x"><h3>Your Fridays</h3>
+      <table class="hist"><thead><tr><th>Shift</th><th>Promised at</th><th>Ran</th><th>Promise</th><th>Cost / pizza</th><th>Op. profit</th><th>Savings</th><th>Loan</th><th>Oven fund</th></tr></thead><tbody>${fri}</tbody></table>
+      ${trend ? `<p style="margin-top:10px">${trend}</p>` : ''}
+    </div>
+    ${last ? `<div class="panel-card scroll-x"><h3>Joe's Pizza is a small factory</h3>
+      <table class="hist xlate"><thead><tr><th>Joe's Pizza</th><th>Manufacturing</th><th>Your run</th></tr></thead><tbody>${xl}</tbody></table></div>` : ''}
+    <div class="panel-card calc"><h3>A factory is a much bigger pizza shop</h3>
+      <p class="note">Try it on a product from your own line. These are example numbers: replace them with yours.</p>
+      <div class="calc-grid" style="margin-top:10px">
+        <label for="cStd">Standard rate (units/hr)<input id="cStd" type="number" min="0" step="any" value="100" inputmode="decimal"></label>
+        <label for="cAct">Demonstrated rate (units/hr)<input id="cAct" type="number" min="0" step="any" value="80" inputmode="decimal"></label>
+        <label for="cHrs">Shift length (hours)<input id="cHrs" type="number" min="0" step="any" value="8" inputmode="decimal"></label>
+        <label for="cCrew">Crew on the line<input id="cCrew" type="number" min="0" step="any" value="4" inputmode="decimal"></label>
+        <label for="cWage">Labor rate ($/hr)<input id="cWage" type="number" min="0" step="any" value="22" inputmode="decimal"></label>
+        <label for="cOh">Overhead ($/hr)<input id="cOh" type="number" min="0" step="any" value="60" inputmode="decimal"></label>
+      </div>
+      <div class="calc-out" id="calcOut" aria-live="polite"></div>
+      <p class="note" id="calcNote" style="margin-top:10px"></p>
+    </div>
+    <div class="closing"><p>Revenue is earned by the customer. <span>Profit is protected by execution.</span></p>
+      <small>That's why costing, capacity, planning and production performance matter.</small></div>
+    <div class="cta-row"><button class="btn red" type="button" data-act="newrun">Start a new run</button>
+      ${G.deb ? '<button class="btn light" type="button" data-act="full">Last Friday in full</button>' : ''}</div>`, true);
+  updateCalc();
+}
+function updateCalc() {
+  const v = (id) => Math.max(0, parseFloat($('#' + id).value) || 0);
+  const std = v('cStd'), act = v('cAct'), hrs = v('cHrs'), conv = v('cCrew') * v('cWage') + v('cOh');
+  if (!std || !act || !conv) { $('#calcOut').innerHTML = ''; $('#calcNote').textContent = 'Enter a standard rate, a demonstrated rate and at least one cost per hour.'; return; }
+  const su = conv / std, au = conv / act, lost = (std - act) * hrs, gap = conv * hrs * (1 - act / std);
+  $('#calcOut').innerHTML = `
+    <div><small>Labor + overhead per unit</small><b>${money(au)}</b><span>vs. ${money(su)} at standard</span></div>
+    <div><small>Capacity ${lost >= 0 ? 'given up' : 'gained'} per shift</small><b>${Math.round(Math.abs(lost)).toLocaleString()} units</b><span>${Math.round(std * hrs).toLocaleString()} planned, ${Math.round(act * hrs).toLocaleString()} demonstrated</span></div>
+    <div><small>Cost of the gap</small><b>${money(Math.abs(gap))}</b><span>a shift. ${money(Math.abs(gap) * 5)} a week, ${money(Math.abs(gap) * 250)} a year</span></div>`;
+  $('#calcNote').textContent = act < std
+    ? `Same crew, same hour, same product. At ${act} an hour instead of ${std}, every unit carries ${money(au - su)} more labor and overhead. The product didn't change. The process did.`
+    : `You're at or above standard. The question for planning: is it a rate the line can repeat every shift?`;
 }
 
 function pauseScreen() {
@@ -1456,7 +1588,10 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'full') reportScreen(G.deb.c, G.deb.sh, G.deb.early);
   else if (act === 'pick') { G.deb.pick = a.dataset.id; debriefScreen(true); }
   else if (act === 'lock') { G.deb.locked = true; debriefScreen(true); }
+  else if (act === 'newrun') { resetAll(); G.endReason = null; promiseScreen(); }
+  else if (act === 'closeout') { snapBooks(); if (a.dataset.broke) { G.endReason = 'broke'; G.books.closed = true; saveBooks(); } closeoutScreen(); }
   else if (act === 'commit') {
+    snapBooks();
     const f = fixList(G.deb).list.find((x) => x.id === G.deb.pick);
     G.goal = { id: f.id, label: f.label, short: f.short, target: f.target };
     promiseScreen();
@@ -1465,6 +1600,7 @@ $('#sheet').addEventListener('click', (e) => {
 $('#sheet').addEventListener('input', (e) => {
   if (e.target.id === 'guessIn') $('#guessOut').textContent = money(parseFloat(e.target.value));
   else if (e.target.closest('.levers')) readLevers();
+  else if (e.target.closest('.calc')) updateCalc();
 });
 
 /* ---------- controls ---------- */
@@ -1509,7 +1645,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && G.p
 /* ---------- boot ---------- */
 buildDecks(); buildBoxes(); refreshBooks();
 refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshLive();
-G.shiftNo = G.hist.length ? G.hist[G.hist.length - 1].n : 0;
+if (G.hist.some((h) => h.cost === undefined)) { G.hist = []; G.books = freshBooks(); saveHist(G.hist); saveBooks(); buildDecks(); refreshBooks(); }
+G.shiftNo = G.hist.length;
 titleScreen();
 requestAnimationFrame(frame);
 window.JoesPizza = { get state() { return G; }, calc };
