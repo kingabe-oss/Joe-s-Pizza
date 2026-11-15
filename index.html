@@ -909,7 +909,7 @@ function titleScreen() {
       <li><span class="step">5</span><b>Box</b><span>Press <kbd>B</kbd></span></li>
     </ol>
     <p class="note">Mouse and touch work too: hold a topping button to pour. Two seconds of play is one minute in the kitchen, so the 20-an-hour standard means a pizza every 6 seconds.</p>
-    <p>Every shift's profit or loss lands on Joe's books. He has <b>${money(G.books.savings)}</b> in savings and <b>${money(G.books.ovenFund)}</b> saved toward a <b>${money(OVEN_COST)}</b> new oven.</p>
+    <p>Every shift's profit or loss lands on Joe's books. He has <b>${money(G.books.savings)}</b> in savings and <b>${money(G.books.ovenFund)}</b> saved toward a <b>${money(OVEN_COST)}</b> new oven. His plan puts each Friday's standard profit, ${ORDER} × $2 = ${money(2 * ORDER)}, toward it.</p>
     <p class="note">A run is three Fridays. Then Joe closes the books and you see what it all adds up to.</p>
     <div class="cta-row">${G.hist.length >= RUN_SHIFTS || G.books.closed
       ? `<button class="btn red" type="button" data-act="newrun">Start a new run</button><button class="btn light" type="button" data-act="closeout">See the last close-out</button>`
@@ -983,7 +983,7 @@ function endShift(early) {
   if (!d) {
     G.deb = null;
     const auto = autoFund(pay);
-    show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, but Joe still paid for the dough and the clock: ${money(pay.gap)}. ${auto}</p>
+    show(`<p class="eyebrow">Shift ${G.shiftNo}</p><h2>No pizzas boxed</h2><p>Nothing went out the door, but Joe still paid for the dough and the clock: ${money(pay.billsGap)}. ${auto}</p>
       <div class="panel-card books-wrap"><h3>Joe's money</h3>${booksHTML()}</div>
       <div class="cta-row">${G.shiftNo >= RUN_SHIFTS ? '<button class="btn red" type="button" data-act="closeout">Close out the run</button>' : '<button class="btn red" type="button" data-act="promise">Next Friday</button>'}</div>`);
     snapBooks();
@@ -1366,13 +1366,15 @@ function buyOvenIfReady(pay) {
   if (!B.ovenBought && B.ovenFund >= OVEN_COST - 0.005) { B.ovenFund -= OVEN_COST; B.ovenBought = true; B.decks = 4; pay.bought = true; }
 }
 function settle(c) {
-  const B = G.books, interest = Math.round(B.loan * INTEREST * 100) / 100, net = c.op - interest;
-  const pay = { interest, net, gap: Math.max(0, -net), covered: 0, from: { savings: 0, loan: 0, oven: 0 }, repaid: 0, toFund: 0, bought: false };
-  if (net >= 0) {
-    pay.repaid = Math.min(B.loan, net); B.loan -= pay.repaid;
-    pay.toFund = net - pay.repaid; B.ovenFund += pay.toFund;
-    buyOvenIfReady(pay);
-  }
+  // Joe's plan: every Friday's standard profit (10 pizzas x $2) goes into the new-oven fund.
+  const B = G.books, plan = 2 * ORDER;
+  const interest = Math.round(B.loan * INTEREST * 100) / 100, net = c.op - interest;
+  const deposit = clamp(net, 0, plan), surplus = Math.max(0, net - plan);
+  const pay = { interest, net, plan, deposit, billsGap: Math.max(0, -net), covered: 0, from: { savings: 0, loan: 0, oven: 0 },
+    short: plan - deposit, topUp: { savings: 0, loan: 0 }, delayed: 0, decided: plan - deposit < 0.005, repaid: 0, extra: 0, bought: false };
+  B.ovenFund += deposit;
+  if (surplus > 0) { pay.repaid = Math.min(B.loan, surplus); B.loan -= pay.repaid; pay.extra = surplus - pay.repaid; B.ovenFund += pay.extra; }
+  buyOvenIfReady(pay);
   saveBooks(); refreshBooks();
   return pay;
 }
@@ -1380,81 +1382,137 @@ function available(src) {
   const B = G.books;
   return src === 'savings' ? B.savings : src === 'oven' ? B.ovenFund : Math.max(0, BANK_LIMIT - B.loan);
 }
+const shortLeft = (pay) => Math.max(0, pay.short - pay.topUp.savings - pay.topUp.loan - pay.delayed);
 function fundFrom(src) {
-  const pay = G.deb.pay, B = G.books, amt = Math.min(pay.gap - pay.covered, available(src));
+  const pay = G.deb.pay, B = G.books, amt = Math.min(pay.billsGap - pay.covered, available(src));
   if (amt < 0.005) return;
   if (src === 'savings') B.savings -= amt; else if (src === 'oven') B.ovenFund -= amt; else B.loan += amt;
   pay.from[src] += amt; pay.covered += amt;
   sfx('pop'); saveBooks(); refreshBooks();
 }
+function planFrom(src) {
+  const pay = G.deb.pay, B = G.books, left = shortLeft(pay);
+  if (pay.decided || left < 0.005) return;
+  if (src === 'delay') { pay.delayed += left; pay.decided = true; }
+  else {
+    const amt = Math.min(left, available(src));
+    if (amt < 0.005) return;
+    if (src === 'savings') B.savings -= amt; else B.loan += amt;
+    B.ovenFund += amt; pay.topUp[src] += amt;
+    if (shortLeft(pay) < 0.005) pay.decided = true;
+    buyOvenIfReady(pay);
+  }
+  sfx('pop'); saveBooks(); refreshBooks();
+}
 function autoFund(pay) {
   const parts = [];
   for (const src of ['savings', 'oven', 'loan']) {
-    const amt = Math.min(pay.gap - pay.covered, available(src));
+    const amt = Math.min(pay.billsGap - pay.covered, available(src));
     if (amt < 0.005) continue;
     if (src === 'savings') G.books.savings -= amt; else if (src === 'oven') G.books.ovenFund -= amt; else G.books.loan += amt;
     pay.covered += amt; parts.push(`${money(amt)} from ${src === 'savings' ? 'savings' : src === 'oven' ? 'the oven fund' : 'the bank'}`);
   }
+  pay.delayed = shortLeft(pay); pay.decided = true;
   saveBooks(); refreshBooks();
-  return parts.length ? `It came out of ${parts.join(' and ')}.` : '';
+  return `${parts.length ? `The bills came out of ${parts.join(' and ')}. ` : ''}Nothing went toward the new oven, so it slips another Friday.`;
 }
 function resetAll() {
   G.hist = []; G.shiftNo = 0; G.goal = null; G.books = freshBooks();
   saveHist(G.hist); saveBooks(); buildDecks(); refreshBooks();
 }
-const SRC_NAME = { savings: 'savings', loan: 'a bank loan', oven: 'the new oven fund' };
+const SRC_NAME = { savings: "Joe's savings", loan: 'the bank', oven: 'the new oven fund' };
 function paydayHTML(d) {
-  const c = d.c, pay = d.pay, B = G.books;
-  const remaining = Math.max(0, pay.gap - pay.covered), open = remaining > 0.005;
-  const take = (src) => Math.min(remaining, available(src));
-  const nav = (ok) => `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="4" ${ok ? '' : 'disabled'}>Next: pick one fix</button>
+  const c = d.c, pay = d.pay, B = G.books, plan = pay.plan;
+  const billsLeft = Math.max(0, pay.billsGap - pay.covered), billsOpen = billsLeft > 0.005;
+  const left = shortLeft(pay), planOpen = !pay.decided && left > 0.005;
+  const broke = billsOpen && ['savings', 'loan', 'oven'].every((x) => available(x) < 0.005);
+  const done = !billsOpen && !planOpen;
+  const nav = `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="4" ${done ? '' : 'disabled'}>Next: pick one fix</button>
     <button class="btn light" type="button" data-act="step" data-step="2">Back</button></div>`;
-  if (pay.gap < 0.005) {
+  const card = (act, src, chip, title, line, cons, label, ok) => `<div class="fund"><span class="ftag">${chip}</span><b>${title}</b><p>${line}</p><p class="cons">${cons}</p>
+    <button class="btn" type="button" data-act="${act}" data-src="${src}" ${ok ? '' : 'disabled'}>${label}</button></div>`;
+  const takeLabel = (a, rem, none) => (a > 0.005 ? `Take ${money(a)}${a < rem - 0.005 ? ', all there is' : ''}` : none);
+
+  // Profit at or above plan: nothing to decide.
+  if (pay.short < 0.005 && pay.billsGap < 0.005) {
     return `<h2>Payday: the profit funds what's next</h2>
-      <p>Revenue covered every bill this shift. Here's where the profit went.</p>
+      <p>Joe's plan puts each Friday's standard profit, ${ORDER} pizzas × $2 = <b>${money(plan)}</b>, into the new-oven fund. This Friday delivered.</p>
       <div class="panel-card"><table class="tbl"><tbody>
         <tr><td>Operating profit</td><td>${money(c.op)}</td></tr>
         ${pay.interest ? `<tr><td>Interest on Joe's loan</td><td class="over">-${money(pay.interest)}</td></tr>` : ''}
-        ${pay.repaid ? `<tr><td>Paid back to the bank</td><td>-${money(pay.repaid)}</td></tr>` : ''}
-        <tr class="total"><td>Into the new oven fund</td><td>${money(pay.toFund)}</td></tr>
+        <tr><td>Planned deposit to the oven fund</td><td>-${money(pay.deposit)}</td></tr>
+        ${pay.repaid ? `<tr><td>Extra, paid back to the bank</td><td>-${money(pay.repaid)}</td></tr>` : ''}
+        ${pay.extra > 0.005 ? `<tr><td>Extra, also into the oven fund</td><td>-${money(pay.extra)}</td></tr>` : ''}
+        <tr class="total"><td>Left over</td><td>$0.00</td></tr>
       </tbody></table></div>
       <div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
-      <p class="insight">${pay.bought ? `<b>Joe bought the new oven.</b> Next shift there are ${B.decks} oven decks. That's what profit is for: it funds the next cycle.`
-        : `At standard, this order puts <b>${money(c.std.op)}</b> toward the new oven. You put in <b>${money(pay.toFund)}</b>. ${pay.toFund < c.std.op - 0.005 ? `The ${money(c.std.op - pay.toFund)} difference is the oven arriving later. Revenue pays the bills. Profit funds reinvestment.` : 'Right on plan.'}`}</p>
-      ${nav(true)}`;
+      <p class="insight">${pay.bought ? `<b>Joe bought the new oven.</b> Next shift there are ${B.decks} oven decks. That's what profit is for: it funds the next cycle.` : '<b>Revenue pays the bills. Profit funds reinvestment.</b> Running to standard is what keeps the new oven on schedule.'}</p>
+      ${nav}`;
   }
-  const out = c.rev + pay.gap;
-  const n0 = shiftsToOven(B.ovenFund), n1 = shiftsToOven(B.ovenFund - take('oven')), delay = n1 - n0;
-  const opt = (src, chip, title, line, cons) => {
-    const a = take(src);
-    return `<div class="fund"><span class="ftag">${chip}</span><b>${title}</b><p>${line}</p><p class="cons">${cons}</p>
-      <button class="btn" type="button" data-act="fund" data-src="${src}" ${open && a > 0.005 ? '' : 'disabled'}>${a > 0.005 ? `Take ${money(a)}${a < remaining - 0.005 ? ', all there is' : ''}` : src === 'loan' ? 'Bank limit reached' : 'Nothing left here'}</button></div>`;
-  };
-  const cards = open ? `<div class="funds">
-    ${opt('savings', 'Use savings', "Joe's savings", `${money(B.savings)} now, ${money(B.savings - take('savings'))} after.`, 'Less cash remains for the next bad night.')}
-    ${opt('loan', 'Borrow', 'A loan from the bank', `Owed: ${money(B.loan)} now, ${money(B.loan + take('loan'))} after. The bank charges ${Math.round(INTEREST * 100)}% of the balance every shift until it's repaid. Limit ${money(BANK_LIMIT)}.`, 'Debt and interest grow.')}
-    ${opt('oven', 'Redirect investment', 'The new oven fund', `${money(B.ovenFund)} of ${money(OVEN_COST)} now, ${money(B.ovenFund - take('oven'))} after.`,
-      B.ovenBought ? "The oven is bought, but this was Joe's start on the next upgrade." : delay > 0 ? `The new oven is delayed about ${delay} shift${delay > 1 ? 's' : ''}.` : 'The new oven arrives a little later.')}
-  </div>` : '';
-  const used = Object.entries(pay.from).filter(([, v]) => v > 0.005).map(([k, v]) => `${money(v)} from ${SRC_NAME[k]}`);
-  const broke = open && ['savings', 'loan', 'oven'].every((s2) => available(s2) < 0.005);
-  const after = [];
-  if (pay.from.savings > 0.005) after.push("Joe's cushion is thinner for the next bad night.");
-  if (pay.from.loan > 0.005) after.push(`Next shift starts with ${money(B.loan * INTEREST)} of interest to pay before anything goes to the oven.`);
-  if (pay.from.oven > 0.005) after.push('The new oven just got further away.');
-  return `<h2>Payday still comes.</h2>
-    <div class="split">
-      <div class="mat"><small>Cash coming in</small><b>+${money(c.rev)}</b><span>${c.good} pizzas at $12${c.disc ? `, less a ${Math.round(c.discPct * 100)}% late discount` : ''}</span></div>
-      <div class="time"><small>Cash going out</small><b>-${money(out)}</b><span>Ingredients, payroll, oven and shop, other bills${pay.interest ? ', loan interest' : ''}</span></div>
-    </div>
-    <p>Revenue didn't cover the bills. Joe is <b>${money(pay.gap)}</b> short, and payroll, the suppliers and the power company still expect to be paid. ${open ? `<b>${money(remaining)}</b> left to cover. Where does it come from?` : ''}</p>
-    ${cards}
-    ${used.length ? `<p class="paid">Covered with ${used.join(' and ')}.</p>` : ''}
-    ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> Savings are gone, the oven fund is empty and the bank won't lend more. The shop closes.</p>
-      <div class="cta-row"><button class="btn red" type="button" data-act="closeout" data-broke="1">Close out the run</button></div>` : ''}
-    ${!open ? `<div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
-      <p class="insight"><b>Losses consume cash, and they can steal from tomorrow.</b> ${after.join(' ')}</p>` : ''}
-    ${broke ? '' : nav(!open)}`;
+
+  // Part 1: the bills (only when the shift lost money).
+  let part1 = '';
+  if (pay.billsGap > 0.005) {
+    const out = c.rev + pay.billsGap;
+    const take = (x) => Math.min(billsLeft, available(x));
+    const n0 = shiftsToOven(B.ovenFund), n1 = shiftsToOven(B.ovenFund - take('oven')), delay = n1 - n0;
+    const used = Object.entries(pay.from).filter(([, v]) => v > 0.005).map(([k, v]) => `${money(v)} from ${SRC_NAME[k]}`);
+    part1 = `<div class="split">
+        <div class="mat"><small>Cash coming in</small><b>+${money(c.rev)}</b><span>${c.good} pizzas at $12${c.disc ? `, less a ${Math.round(c.discPct * 100)}% late discount` : ''}</span></div>
+        <div class="time"><small>Cash going out</small><b>-${money(out)}</b><span>Ingredients, payroll, oven and shop, other bills${pay.interest ? ', loan interest' : ''}</span></div>
+      </div>
+      <p><b>1. The bills.</b> Revenue didn't cover them. Joe is <b>${money(pay.billsGap)}</b> short, and payroll, the suppliers and the power company still expect to be paid.${billsOpen ? ` <b>${money(billsLeft)}</b> left to cover.` : ''}</p>
+      ${billsOpen ? `<div class="funds">
+        ${card('fund', 'savings', 'Use savings', "Joe's savings", `${money(B.savings)} now, ${money(B.savings - take('savings'))} after.`, 'Less cash remains for the next bad night.', takeLabel(take('savings'), billsLeft, 'Nothing left here'), take('savings') > 0.005)}
+        ${card('fund', 'loan', 'Borrow', 'A loan from the bank', `Owed: ${money(B.loan)} now, ${money(B.loan + take('loan'))} after. ${Math.round(INTEREST * 100)}% of the balance is due every Friday until it's repaid. Limit ${money(BANK_LIMIT)}.`, 'Debt and interest grow.', takeLabel(take('loan'), billsLeft, 'Bank limit reached'), take('loan') > 0.005)}
+        ${card('fund', 'oven', 'Redirect investment', 'The new oven fund', `${money(B.ovenFund)} of ${money(OVEN_COST)} now, ${money(B.ovenFund - take('oven'))} after.`, delay > 0 ? `The new oven is delayed about ${delay} Friday${delay > 1 ? 's' : ''}.` : 'The new oven arrives later.', takeLabel(take('oven'), billsLeft, 'Nothing left here'), take('oven') > 0.005)}
+      </div>` : ''}
+      ${used.length ? `<p class="paid">Bills covered with ${used.join(' and ')}.</p>` : ''}
+      ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> Savings are gone, the oven fund is empty and the bank won't lend more. The shop closes.</p>
+        <div class="cta-row"><button class="btn red" type="button" data-act="closeout" data-broke="1">Close out the run</button></div>` : ''}`;
+  }
+
+  // Part 2: the plan for the new oven, reconciled to the leaks.
+  let part2 = '';
+  if (!billsOpen && pay.short > 0.005) {
+    const why = leakList(d).filter((x) => Math.abs(x.v) >= 0.005).map((x) => [x.label, x.v]);
+    if (c.good < ORDER) why.push([`${ORDER - c.good} pizza${ORDER - c.good > 1 ? 's' : ''} never delivered ($2 each)`, 2 * (ORDER - c.good)]);
+    if (pay.interest) why.push(["Interest on Joe's loan", pay.interest]);
+    if (pay.net < 0) why.push(['Less: the loss already covered above', pay.net]);
+    const rows = why.map(([l, v]) => `<tr><td>${l}</td><td class="${v > 0 ? 'over' : 'under'}">${v > 0 ? '' : '-'}${money(Math.abs(v))}</td></tr>`).join('');
+    const take = (x) => Math.min(left, available(x));
+    const n0 = shiftsToOven(B.ovenFund), n1 = shiftsToOven(B.ovenFund + left), delay = n0 - n1;
+    const choices = [];
+    if (pay.topUp.savings > 0.005) choices.push(`${money(pay.topUp.savings)} topped up from Joe's savings`);
+    if (pay.topUp.loan > 0.005) choices.push(`${money(pay.topUp.loan)} borrowed from the bank`);
+    if (pay.delayed > 0.005) choices.push(`${money(pay.delayed)} left out, so the oven arrives later`);
+    part2 = `<div class="panel-card">
+        <h3>${pay.billsGap > 0.005 ? '2. ' : ''}Joe's plan for the new oven is ${money(pay.short)} short</h3>
+        <p>Joe built his plan on standard: ${ORDER} pizzas × $2 = <b>${money(plan)}</b> into the new-oven fund every Friday. This Friday put in <b>${money(pay.deposit)}</b>. The gap is exactly what you found in the leaks:</p>
+        <table class="tbl" style="margin-top:8px"><tbody>${rows}
+          <tr class="total"><td>Short of plan</td><td class="over">${money(pay.short)}</td></tr></tbody></table>
+      </div>
+      ${planOpen ? `<p>Every unnecessary dollar of cost has to come from somewhere. <b>${money(left)}</b> to decide. What does Joe do?</p>
+      <div class="funds">
+        ${card('plan', 'savings', 'Use savings', 'Top up from savings', `${money(B.savings)} now, ${money(B.savings - take('savings'))} after. The oven stays on schedule.`, 'Less cash remains for the next bad night.', takeLabel(take('savings'), left, 'Nothing left here'), take('savings') > 0.005)}
+        ${card('plan', 'loan', 'Borrow', 'Borrow to stay on schedule', `Owed: ${money(B.loan)} now, ${money(B.loan + take('loan'))} after, at ${Math.round(INTEREST * 100)}% a Friday.`, 'Debt and interest grow.', takeLabel(take('loan'), left, 'Bank limit reached'), take('loan') > 0.005)}
+        ${card('plan', 'delay', 'Delay investment', 'Accept the delay', `The oven fund grows by ${money(pay.deposit + pay.topUp.savings + pay.topUp.loan)} this Friday instead of ${money(plan)}.`, B.ovenBought ? 'The next upgrade arrives later.' : delay > 0 ? `The new oven arrives about ${delay} Friday${delay > 1 ? 's' : ''} later.` : 'The new oven arrives later.', 'Accept the delay', true)}
+      </div>` : `<p class="paid">Decided: ${choices.join(' and ')}.</p>`}`;
+  }
+
+  const head = pay.billsGap > 0.005 ? 'Payday still comes.' : 'Payday: every dollar has to come from somewhere';
+  const srcs = [];
+  const tot = (k) => (pay.from[k] || 0) + (pay.topUp[k] || 0);
+  if (tot('savings') > 0.005) srcs.push(`Joe's savings (${money(tot('savings'))})`);
+  if (tot('loan') > 0.005) srcs.push(`the bank (${money(tot('loan'))})`);
+  if (pay.from.oven > 0.005) srcs.push(`money saved for the oven (${money(pay.from.oven)})`);
+  if (pay.delayed > 0.005) srcs.push(`the oven's schedule (${money(pay.delayed)})`);
+  const total = pay.billsGap + pay.short;
+  return `<h2>${head}</h2>
+    ${part1}${part2}
+    ${done ? `<div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
+      <p class="insight">This Friday came up <b>${money(total)}</b> short of Joe's plan. It came out of ${srcs.join(', ')}. <b>Losses and leaks consume cash, and they can steal from tomorrow.</b></p>` : ''}
+    ${broke ? '' : nav}`;
 }
 
 /* ---------- close-out ---------- */
@@ -1582,6 +1640,7 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'clear' || act === 'reset-books') { resetAll(); if (act === 'clear') promiseScreen(); else titleScreen(); }
   else if (act === 'practice') startPractice();
   else if (act === 'fund') { fundFrom(a.dataset.src); debriefScreen(true); }
+  else if (act === 'plan') { planFrom(a.dataset.src); debriefScreen(true); }
   else if (act === 'reveal') { G.deb.guess = parseFloat($('#guessIn').value); G.deb.guessed = true; debriefScreen(); }
   else if (act === 'step') { G.deb.step = +a.dataset.step; debriefScreen(); }
   else if (act === 'deb') debriefScreen();
