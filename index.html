@@ -444,7 +444,7 @@ details.math[open] summary { margin-bottom: 10px; }
       <div class="stat" id="stStdBox"><small>Standard by now</small><b id="stStd">0</b></div>
     </div>
     <div class="tools">
-      <button class="ghost" id="btnMute" type="button" aria-pressed="false">Sound on</button>
+      <button class="ghost" id="btnMute" type="button" aria-pressed="true">Sound off</button>
       <button class="ghost" id="btnPause" type="button">Pause</button>
     </div>
   </header>
@@ -573,7 +573,7 @@ function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) ||
 function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-RUN_SHIFTS))); } catch (e) { /* storage unavailable */ } }
 
 /* ---------- audio ---------- */
-let ac = null, muted = false;
+let ac = null, muted = true;
 function sfx(kind) {
   if (muted) return;
   try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
@@ -997,11 +997,11 @@ function titleScreen() {
       <li><span class="step">4</span><b>Cut</b><span><kbd>K</kbd></span></li>
       <li><span class="step">5</span><b>Box</b><span><kbd>B</kbd></span></li>
     </ol>
-    <p class="note">Three Fridays. Then Joe closes the books.</p>
+    <p class="note">Three Fridays. Then Joe closes the books. Best on a laptop with a keyboard. Sound is off; turn it on at the top.</p>
     <div class="cta-row">${G.hist.length >= RUN_SHIFTS || G.books.closed
       ? `<button class="btn red" type="button" data-act="newrun">Start a new run</button><button class="btn light" type="button" data-act="closeout">See the last close-out</button>`
       : G.hist.length
-      ? `<button class="btn red" type="button" data-act="promise">Continue: Friday ${G.hist.length + 1}</button><button class="btn light" type="button" data-act="practice">Practice a pizza</button>`
+      ? `<button class="btn red" type="button" data-act="promise">Continue: Friday ${G.hist.length + 1}</button><button class="btn light" type="button" data-act="practice">Practice a pizza</button><button class="btn link" type="button" data-act="confirm-new">Start a new run</button>`
       : G.practiced
       ? `<button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button>`
       : `<button class="btn red" type="button" data-act="practice">Practice one pizza</button><button class="btn light" type="button" data-act="promise">Skip practice</button>`}</div>`);
@@ -1034,7 +1034,7 @@ function promiseScreen() {
     <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
     <p class="note">Late means overtime and a discount.</p>
     <div class="cta-row"><button class="btn red" type="button" data-act="start">Promise it and start</button>
-      <button class="btn light" type="button" data-act="title">Back</button></div>`);
+      <button class="btn light" type="button" data-act="title">${G.hist.length ? 'Save and exit to menu' : 'Back'}</button></div>`);
 }
 
 function startShift() {
@@ -1061,7 +1061,7 @@ function endShift(early) {
   const pay = settle(c);
   const d = c.good ? debData(c, sh) : null;
   const goal = G.goal, res = goal && d ? goalResult(goal, d) : null;
-  G.goal = null;
+  G.goal = null; G.books.goal = null; saveBooks();
   G.hist.push({ n: G.shiftNo, plan: sh.rate, dem: r1(c.rate), late: Math.round(c.late), op: Math.round(c.op * 100) / 100, good: c.good,
     goal: goal ? goal.short : '', hit: res ? res.hit : null,
     rev: c.rev, cogs: c.cogs, other: c.other, cost: c.good ? c.cogs / c.good : null,
@@ -1555,7 +1555,7 @@ function debriefScreen(keepScroll) {
       ${verdict}
       <div class="cta-row">
         ${d.locked ? (final ? '<button class="btn red" type="button" data-act="closeout">Close out the run</button>'
-          : `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal</button>`)
+          : `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal</button><button class="btn light" type="button" data-act="commit-exit" ${d.pick ? '' : 'disabled'}>Make it my goal, save and exit</button>`)
           : `<button class="btn red" type="button" data-act="lock" ${d.pick ? '' : 'disabled'}>Lock in my pick</button>`}
         <button class="btn link" type="button" data-act="full">Full numbers</button></div>`;
   }
@@ -1950,11 +1950,17 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'lock') { G.deb.locked = true; debriefScreen(true); }
   else if (act === 'newrun') { resetAll(); G.endReason = null; promiseScreen(); }
   else if (act === 'closeout') { snapBooks(); if (a.dataset.broke) { G.endReason = 'broke'; G.books.closed = true; saveBooks(); } closeoutScreen(); }
-  else if (act === 'commit') {
+  else if (act === 'commit' || act === 'commit-exit') {
     snapBooks();
     const f = fixList(G.deb).list.find((x) => x.id === G.deb.pick);
     G.goal = { id: f.id, label: f.label, short: f.short, target: f.target };
-    promiseScreen();
+    G.books.goal = G.goal; saveBooks();
+    if (act === 'commit-exit') titleScreen(); else promiseScreen();
+  }
+  else if (act === 'confirm-new') {
+    show(`<p class="eyebrow">Start over</p><h2>Erase your run?</h2>
+      <p class="sub">This clears your ${G.hist.length} Friday${G.hist.length === 1 ? '' : 's'} and resets Joe's money.</p>
+      <div class="cta-row"><button class="btn red" type="button" data-act="newrun">Yes, start a new run</button><button class="btn light" type="button" data-act="title">Keep my run</button></div>`);
   }
 });
 $('#sheet').addEventListener('input', (e) => {
@@ -2007,6 +2013,7 @@ buildDecks(); buildBoxes(); refreshBooks();
 refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshLive();
 if (G.hist.some((h) => h.cost === undefined)) { G.hist = []; G.books = freshBooks(); saveHist(G.hist); saveBooks(); buildDecks(); refreshBooks(); }
 G.shiftNo = G.hist.length;
+G.goal = G.books.goal || null;
 titleScreen();
 requestAnimationFrame(frame);
 window.JoesPizza = { get state() { return G; }, calc };

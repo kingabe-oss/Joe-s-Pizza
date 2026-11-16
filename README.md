@@ -4,7 +4,13 @@ A hands-on companion game for the **Business 101: How Joe's Pizza costs a produc
 
 ## Play
 
-Open `index.html` in a modern browser. There is no build step and nothing to install. It also works as-is on GitHub Pages.
+**▶ Play in your browser: https://kingabe-oss.github.io/Joe-s-Pozza/**
+
+Running a session? Start with the **[Facilitator Guide](FACILITATOR.md)**.
+
+Best on a laptop with a keyboard. Sound starts off. Progress saves in your own browser, so you can "Save and exit to menu" between Fridays and pick up later. Nothing is sent anywhere.
+
+To run it locally instead, open `index.html` in a modern browser. There is no build step and nothing to install.
 
 ## The setup (straight from the deck)
 
@@ -93,6 +99,10 @@ The clock pauses and the supervisor chooses:
 
 The event shows in the debrief as its own step in the profit bridge and as a shaded band on the production chart, with the takeaway: **"Bad news early is cheaper than bad news late."**
 
+## Leaving and coming back
+
+Between Fridays, players can choose **"Make it my goal, save and exit"** at the end of a debrief, or **"Save and exit to menu"** on the next Friday's promise screen. The menu then offers **"Continue: Friday N"**. The goal they picked comes back with them. **"Start a new run"** asks for confirmation before erasing anything. There's no exit in the middle of a Friday (pause offers "End this shift now", which counts the shift) or in the middle of Payday, so Joe's books are never left half-updated.
+
 ## Using it with the deck
 
 - **Before slide 22 ("Now break the assumption"):** play Friday 1. Most people promise from 20/hr, run well under it, and see the slide 29 chain in their own numbers.
@@ -106,7 +116,7 @@ The event shows in the debrief as its own step in the profit bridge and as a sha
 | D | Stretch dough |
 | Hold S / C / P | Pour sauce / cheese / pepperoni |
 | O | Into the oven |
-| 1, 2, 3 | Pull from that oven deck |
+| 1, 2 | Pull from that oven deck |
 | K | Cut |
 | B | Box |
 | Esc | Pause |
