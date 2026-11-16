@@ -4,7 +4,7 @@ A hands-on companion game for the **Business 101: How Joe's Pizza costs a produc
 
 ## Play
 
-**▶ Play in your browser: https://kingabe-oss.github.io/Joe-s-Pozza/**
+**▶ Play in your browser: https://kingabe-oss.github.io/Joe-s-Pizza/**
 
 Running a session? Start with the **[Facilitator Guide](FACILITATOR.md)**.
 
