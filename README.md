@@ -57,12 +57,29 @@ The promise screen frames each Friday: Friday 1 starts from Joe's 20/hr plan, Fr
 
 Four charts carry the lesson. Each has hover tooltips and its numbers available in a table:
 
-- **Pizzas boxed vs. the clock** (live during play, and again in the debrief): your boxing line against Joe's standard pace and your promise. In the debrief, the longest gap is shaded. This is run rate, capacity and the promise in one picture.
+- **Pizzas boxed vs. the clock** (in the debrief; during play a "Standard by now" count in the top bar keeps the pace): your boxing line against Joe's standard pace and your promise. In the debrief, the longest gap is shaded. This is run rate, capacity and the promise in one picture.
 - **Profit bridge** (Find the leaks): standard profit, each leak stepping it down, your profit.
 - **Cost per pizza vs. run rate** (Pick one fix): cost = ingredients + $50 an hour ÷ pizzas per hour. Your dot moves along the curve as you try the levers. The curve is steep when slow and flat near standard.
 - **Your three Fridays** (close-out): run rate and cost per pizza against standard, and Joe's savings, oven fund and loan by Friday.
 
 Series colors were checked with a color-vision-deficiency validator: red for you, blue, teal, and neutral gray for Joe's standard.
+
+## Floor events
+
+Fridays 2 and 3 each bring one event. They're fixed, so everyone in a class gets the same experience and results can be compared:
+
+- **Friday 2, machine downtime:** about 8 minutes in, an oven deck goes down for 15 minutes.
+- **Friday 3, a callout:** before the shift, the prep cook calls out, so every dough has to be stretched by hand (about 1 extra minute a pizza).
+
+The clock pauses and the supervisor chooses:
+
+| Choice | Effect | Cost |
+|---|---|---|
+| Call the customer now | The promise moves out by the expected delay. | 5% off the order |
+| Push on | Keep the original promise. | Overtime and the late discount if you miss |
+| Expedite / call someone in | Emergency repair (deck back in 5 min) or a replacement cook on overtime | $25, or $30 an hour |
+
+The event shows in the debrief as its own step in the profit bridge and as a shaded band on the production chart, with the takeaway: **"Bad news early is cheaper than bad news late."**
 
 ## Using it with the deck
 

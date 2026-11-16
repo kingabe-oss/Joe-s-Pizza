@@ -126,6 +126,8 @@ button { font: inherit; color: inherit; }
 .deck[data-g="good"] .deck-label { color: #a8e0b3; }
 .deck[data-g="burnt"] { box-shadow: inset 0 0 0 2px var(--red); }
 .deck[data-g="burnt"] .deck-label { color: #ff8f7a; }
+.deck[data-g="down"] { opacity: .55; background: repeating-linear-gradient(45deg, #151b22 0 10px, #222a33 10px 20px); }
+.deck[data-g="down"] .deck-label { color: #ffb4a6; }
 
 .board { width: 150px; height: 150px; margin-inline: auto; border-radius: 12px; background: repeating-linear-gradient(90deg, #d9b68a 0 14px, #d1ad7f 14px 15px); box-shadow: 0 4px 0 #b48b5c; display: grid; place-items: center; }
 .board canvas { width: 136px; height: 136px; }
@@ -393,8 +395,6 @@ details.math[open] summary { margin-bottom: 10px; }
 .ckey span::before { content: ""; display: inline-block; width: 14px; height: 0; border-top: 2px solid var(--c); vertical-align: middle; margin-right: 6px; }
 .ckey span.dot::before { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--c); }
 .ctip { position: fixed; z-index: 60; pointer-events: none; background: var(--navy); color: var(--on-dark); font-size: 12.5px; font-weight: 600; line-height: 1.35; padding: 6px 9px; border-radius: 8px; max-width: 260px; box-shadow: 0 6px 18px rgba(0,0,0,.25); white-space: pre-line; }
-.strip-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important; align-items: stretch; }
-@media (max-width: 820px) { .strip-row { grid-template-columns: minmax(0, 1fr) !important; } }
 .strip-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .strip-col .strip-item { flex: 1; }
 .wf { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
@@ -431,6 +431,7 @@ details.math[open] summary { margin-bottom: 10px; }
       <div class="stat" id="stProjBox"><small>On pace for</small><b id="stProj">…</b></div>
       <div class="stat" id="stRateBox"><small>Run rate</small><b id="stRate">… /hr</b></div>
       <div class="stat"><small>Boxed</small><b id="stBoxed">0 / 10</b></div>
+      <div class="stat" id="stStdBox"><small>Standard by now</small><b id="stStd">0</b></div>
     </div>
     <div class="tools">
       <button class="ghost" id="btnMute" type="button" aria-pressed="false">Sound on</button>
@@ -485,13 +486,8 @@ details.math[open] summary { margin-bottom: 10px; }
   </main>
 
   <section class="strip-row" aria-label="This shift">
-    <div class="chart-card"><h3>Pizzas boxed vs. the clock</h3>
-      <p class="ckey"><span style="--c:#c94d3a">You</span><span style="--c:#9aa0a6">Standard, 20 an hour</span><span style="--c:#2f6fb5">Your promise</span></p>
-      <div class="xchart" id="liveProd"></div></div>
-    <div class="strip-col">
-      <div class="strip-item"><small>Your cost per pizza</small><b id="liveCost">…</b><span>Standard $7.00</span></div>
-      <div class="strip-item"><small>Joe's money</small><span id="booksMini"></span></div>
-    </div>
+    <div class="strip-item"><small>Your cost per pizza</small><b id="liveCost">…</b><span>Standard $7.00</span></div>
+    <div class="strip-item"><small>Joe's money</small><span id="booksMini"></span></div>
   </section>
 </div>
 
@@ -521,6 +517,10 @@ const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
 const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
 const BAKE_SEC = 7, GOOD_LO = 0.9, GOOD_HI = 1.3, BAKE_MAX = 1.6;
 const BOOKS_KEY = 'joes-pizza-b101-books';
+// Floor events, fixed by Friday so a class shares the same experience.
+const EVENTS = { 2: { id: 'oven', at: 8, down: 15, fast: 5 }, 3: { id: 'callout', at: 0 } };
+const REPROMISE_OFF = 0.05, EXPEDITE_COST = 25, COVER_WAGE = 30, HAND_STRETCH_SEC = 2;
+const QUOTE = 'Bad news early is cheaper than bad news late.';
 const OVEN_COST = 200, BANK_LIMIT = 150, INTEREST = 0.05;
 const HIST_KEY = 'joes-pizza-b101-history';
 const TAU = Math.PI * 2;
@@ -657,9 +657,12 @@ function drawPizza(ctx, p, size) {
 const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRate: STD_RATE, sh: null, deb: null, goal: null, books: loadBooks(), practiced: false };
 function newShift(rate) {
   return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(G.books.decks).fill(null), board: null,
-    pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [] };
+    pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [],
+    event: null, down: null, handDough: false, stretch: 0, cover: false, expedite: false, repromise: false };
 }
 const nowMin = () => G.sh.t / SEC_PER_MIN;
+const isDown = (i) => !!(G.sh && G.sh.down && G.sh.down.i === i && nowMin() < G.sh.down.until);
+const freeDeck = () => G.sh.oven.findIndex((p, i) => !p && !isDown(i));
 const playing = () => (G.phase === 'play' || G.phase === 'practice') && !G.paused;
 const pieMat = (p) => COST.dough + COST.sauce * p.sauce + COST.cheese * p.cheese + COST.pep * p.pep;
 function grade(b) { return b < GOOD_LO ? 'under' : b <= GOOD_HI ? 'good' : 'burnt'; }
@@ -671,11 +674,13 @@ function calc(sh, final) {
   const goodMat = sh.pies.filter((p) => p.state === 'boxed').reduce((s, p) => s + pieMat(p), 0);
   const otHrs = Math.max(0, hrs - sched);
   const idleHrs = final && good >= ORDER ? Math.max(0, sched - hrs) : 0;
-  const labor = WAGE * Math.min(hrs, sched) + OT_WAGE * otHrs + WAGE * idleHrs;
-  const oh = OH_PER_HR * hrs;
+  const cover = sh.cover ? COVER_WAGE * hrs : 0, expedite = sh.expedite ? EXPEDITE_COST : 0;
+  const labor = WAGE * Math.min(hrs, sched) + OT_WAGE * otHrs + WAGE * idleHrs + cover;
+  const oh = OH_PER_HR * hrs + expedite;
   const late = Math.max(0, min - sh.promiseMin);
   const discPct = final && late > 0.5 ? Math.min(0.25, 0.05 * Math.ceil(late / 15)) : 0;
-  const revGross = PRICE * good, disc = revGross * discPct, rev = revGross - disc;
+  const revGross = PRICE * good, disc = revGross * discPct, repDisc = sh.repromise ? revGross * REPROMISE_OFF : 0;
+  const rev = revGross - disc - repDisc;
   const cogs = mat + labor + oh, gp = rev - cogs, other = OTHER * good, op = gp - other;
   const parts = {
     over: goodMat - STD_MAT * good,
@@ -683,10 +688,11 @@ function calc(sh, final) {
     slow: WAGE * hrs - STD_LAB * good,
     ot: (OT_WAGE - WAGE) * otHrs,
     idle: WAGE * idleHrs,
-    oh: oh - STD_OH * good,
+    oh: OH_PER_HR * hrs - STD_OH * good,
     disc,
+    event: cover + expedite + repDisc,
   };
-  return { min, hrs, good, mat, goodMat, labor, oh, late, discPct, revGross, disc, rev, cogs, gp, other, op, parts,
+  return { min, hrs, good, mat, goodMat, labor, oh, late, discPct, revGross, disc, repDisc, evCost: cover + expedite, rev, cogs, gp, other, op, parts,
     rate: hrs > 0 ? good / hrs : 0, std: { rev: PRICE * good, cogs: STD_COST * good, gp: 5 * good, other: OTHER * good, op: 2 * good } };
 }
 
@@ -719,6 +725,9 @@ function dough() {
   if (!playing()) return;
   const sh = G.sh;
   if (sh.prep) { toast('Finish the pizza on the counter first.'); return; }
+  if (sh.stretch > 0) return;
+  if (sh.handDough && !sh.stretchDone) { sh.stretch = HAND_STRETCH_SEC; refreshPrep(); return; }
+  sh.stretchDone = false;
   const seed = (Math.random() * 1e9) | 0;
   sh.prep = { seed, sauce: 0, cheese: 0, pep: 0, bake: 0, cut: false, pts: scatter(20, seed + 9), state: 'wip' };
   sh.pies.push(sh.prep);
@@ -744,8 +753,8 @@ function toOven() {
   const sh = G.sh, p = sh.prep;
   if (!p) return;
   if (p.sauce < MIN_P || p.cheese < MIN_P || p.pep < MIN_P) { toast('Not to standard yet. Every ingredient needs a full portion.'); return; }
-  const i = sh.oven.indexOf(null);
-  if (i < 0) { toast('All three decks are full. Pull a pizza first.', 'bad'); return; }
+  const i = freeDeck();
+  if (i < 0) { toast('No free deck. Pull a pizza first.', 'bad'); return; }
   sh.oven[i] = p; sh.prep = null; sh.pouring = null;
   sfx('pop'); refreshPrep(); refreshOven();
 }
@@ -775,7 +784,7 @@ function rework() {
   if (!playing()) return;
   const sh = G.sh, p = sh.board;
   if (!p || grade(p.bake) !== 'under') return;
-  const i = sh.oven.indexOf(null);
+  const i = freeDeck();
   if (i < 0) { toast('No free deck. Pull something out first.', 'bad'); return; }
   sh.oven[i] = p; sh.board = null; sh.reworkN++;
   sfx('pop'); refreshBoard(); refreshOven();
@@ -803,6 +812,7 @@ function refreshPrep() {
   const sh = G.sh, p = sh && sh.prep, on = playing();
   drawPizza(prepCtx, p, 196);
   $('#peelHint').hidden = !!p;
+  $('#peelHint').textContent = sh && sh.stretch > 0 ? 'Stretching by hand…' : 'Press D';
   for (const k of ['sauce', 'cheese', 'pep']) {
     const b = $('#pour-' + k), v = p ? p[k] : 0;
     b.disabled = !p || !on || (k === 'cheese' && p.sauce < MIN_P) || (k === 'pep' && p.cheese < MIN_P);
@@ -813,7 +823,7 @@ function refreshPrep() {
     b.querySelector('.state').textContent = s === 'short' ? `${Math.round(v * 100)}%` : s === 'ok' ? 'To standard' : s === 'heavy' ? `Heavy +${money(COST[k] * (v - 1))}` : '';
   }
   const ready = !!p && p.sauce >= MIN_P && p.cheese >= MIN_P && p.pep >= MIN_P;
-  $('#btnDough').disabled = !!p || !on;
+  $('#btnDough').disabled = !!p || !on || !!(sh && sh.stretch > 0);
   $('#btnOven').disabled = !ready || !on;
   $('#btnBinPrep').disabled = !p || !on;
 }
@@ -822,6 +832,11 @@ function refreshOven() {
   const sh = G.sh, on = playing();
   deckEls.forEach((d, i) => {
     const p = sh && sh.oven[i];
+    if (!p && isDown(i)) {
+      const lbl = `Down · back ${clock(sh.down.until)}`;
+      if (d.g !== 'down' || d.label.textContent !== lbl) { d.ctx.clearRect(0, 0, 70, 70); d.b.disabled = true; d.label.textContent = lbl; d.needle.style.left = '0%'; d.b.dataset.g = 'down'; d.g = 'down'; }
+      return;
+    }
     if (!p) {
       if (d.g !== 'empty') { d.ctx.clearRect(0, 0, 70, 70); d.b.disabled = true; d.label.textContent = 'Empty deck'; d.needle.style.left = '0%'; d.b.dataset.g = ''; d.g = 'empty'; }
       return;
@@ -853,7 +868,7 @@ function refreshTop() {
   const sh = G.sh;
   if (!sh) return;
   if (sh.practice) {
-    $('#stClock').textContent = 'Practice'; $('#stPromise').textContent = '…'; $('#stProj').textContent = '…'; $('#stRate').textContent = '… /hr'; $('#stBoxed').textContent = `0 / ${ORDER}`;
+    $('#stClock').textContent = 'Practice'; $('#stPromise').textContent = '…'; $('#stProj').textContent = '…'; $('#stRate').textContent = '… /hr'; $('#stBoxed').textContent = `0 / ${ORDER}`; $('#stStd').textContent = '…';
     $('#progFill').style.width = '0%'; return;
   }
   const m = nowMin(), late = m > sh.promiseMin;
@@ -861,6 +876,9 @@ function refreshTop() {
   $('#stClockBox').classList.toggle('warn', late);
   $('#stPromise').textContent = clock(sh.promiseMin);
   $('#stBoxed').textContent = `${sh.boxed} / ${ORDER}`;
+  const stdNow = Math.min(ORDER, Math.floor(m / 3));
+  $('#stStd').textContent = stdNow;
+  $('#stStdBox').className = 'stat' + (sh.boxed < stdNow ? ' warn' : sh.boxed > 0 ? ' ok' : '');
   const rate = sh.boxed && m > 0 ? sh.boxed / (m / 60) : 0;
   $('#stRate').textContent = rate ? `${r1(rate)} /hr` : '… /hr';
   $('#stRateBox').className = 'stat' + (rate ? (rate >= STD_RATE - 0.05 ? ' ok' : ' warn') : '');
@@ -873,7 +891,6 @@ function refreshTop() {
 }
 function refreshLive() {
   const sh = G.sh, live = sh && !sh.practice;
-  prodChart($('#liveProd'), live ? { times: sh.boxTimes, promise: sh.promiseMin, now: nowMin(), h: 170 } : { times: [], promise: (ORDER / G.pickRate) * 60, now: 0, h: 170 });
   const c = live ? calc(sh, false) : null, el = $('#liveCost');
   if (!c || !c.good) { el.textContent = '…'; el.className = ''; return; }
   const v = c.cogs / c.good;
@@ -887,6 +904,12 @@ let liveTick = 0;
 function update(dt) {
   const sh = G.sh;
   sh.t += dt;
+  if (sh.stretch > 0) { sh.stretch -= dt; if (sh.stretch <= 0) { sh.stretch = 0; sh.stretchDone = true; dough(); } }
+  const ev = sh.event;
+  if (ev && ev.id === 'oven' && !ev.fired && nowMin() >= ev.at) {
+    let i = -1; for (let k = sh.oven.length - 1; k >= 0; k--) if (!sh.oven[k]) { i = k; break; }
+    if (i >= 0) { ev.fired = true; ev.deck = i; ev.a = nowMin(); sh.down = { i, until: ev.a + ev.down }; ev.b = sh.down.until; stopPour(); G.paused = true; eventScreen(); return; }
+  }
   if (sh.pouring) {
     const p = sh.prep, k = sh.pouring;
     if (!p || pourBlock(k)) sh.pouring = null;
@@ -991,8 +1014,11 @@ function startShift() {
   if (deckEls.length !== G.books.decks) buildDecks();
   G.sh = newShift(G.pickRate);
   G.phase = 'play'; G.paused = false;
+  const E = EVENTS[G.shiftNo + 1];
+  if (E) G.sh.event = { ...E, fired: E.id === 'callout', choice: null, a: 0 };
   hide();
   refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshTop(); refreshLive();
+  if (G.sh.event && G.sh.event.id === 'callout') { G.paused = true; eventScreen(); return; }
   toast(`Promised ${clock(G.sh.promiseMin)}. Go!`);
 }
 
@@ -1071,7 +1097,7 @@ function reportScreen(c, sh, early) {
   const lessons = [];
   if (c.late > 0.5 && sh.rate > dem + 0.2) lessons.push(['Bad assumptions do not stay in the spreadsheet.', `You promised from ${sh.rate}/hr. The kitchen demonstrated ${r1(dem)}/hr. Wrong run rate, wrong capacity, missed promise, overtime, less profit.`]);
   else if (c.good >= ORDER && c.late <= 0.5 && sh.promiseMin - c.min > 5) lessons.push(['A promise that is too slow costs money too.', `You finished ${dur(sh.promiseMin - c.min)} early, but Joe had already scheduled and paid for those hours. Plan from what the kitchen can repeat.`]);
-  else if (c.good >= ORDER && c.late <= 0.5) lessons.push(['Planning can work with slow. It cannot work with moving.', 'Your promise matched what the kitchen actually did. The customer got an honest time and nobody worked overtime.']);
+  else if (c.good >= ORDER && c.late <= 0.5) lessons.push([QUOTE, 'Your promise matched what the kitchen actually did. The customer got an honest time and nobody worked overtime.']);
   if (dem > 0 && dem < STD_RATE - 0.3) lessons.push(["The pizza didn't change. The process did.", `Same $20 hour. At ${r1(dem)}/hr, labor is ${money(WAGE / dem)} a pizza instead of $1.00, and overhead is ${money(OH_PER_HR / dem)} instead of $1.50.`]);
   if (sh.scrapN) lessons.push(['Scrap uses everything and sells nothing.', `${sh.scrapN} scrapped pizza${sh.scrapN > 1 ? 's' : ''} used ${money(P.scrap)} of ingredients, plus the labor and oven time it took to make ${sh.scrapN > 1 ? 'them' : 'it'}.`]);
   if (P.over > 0.75) lessons.push(['The recipe is the BOM.', `Heavy hands added ${money(P.over)} of ingredients that the $12 price never covered. That's ${per(P.over)} a pizza.`]);
@@ -1189,6 +1215,10 @@ function prodChart(el, o) {
     g += `<rect x="${xs(o.gap.a)}" y="${t}" width="${Math.max(2, xs(o.gap.b) - xs(o.gap.a))}" height="${h - t - b}" fill="${CC.you}" opacity=".09"/>
       <text class="ink" x="${(xs(o.gap.a) + xs(o.gap.b)) / 2}" y="${t - 5}" text-anchor="middle">${dur(o.gap.len)} gap</text>`;
   }
+  if (o.event && o.event.b > o.event.a) {
+    g += `<rect x="${xs(o.event.a)}" y="${t}" width="${Math.max(2, xs(o.event.b) - xs(o.event.a))}" height="${h - t - b}" fill="${CC.ink}" opacity=".07"/>
+      <text class="ink" x="${xs(o.event.a) + 4}" y="${t + 12}">${o.event.label}</text>`;
+  } else if (o.event) g += `<text class="ink" x="${l + 6}" y="${t + 12}">${o.event.label}</text>`;
   g += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(stdEnd)}" y2="${ys(ORDER)}" stroke="${CC.std}" stroke-width="2" stroke-linecap="round"/>`;
   const px = xs(o.promise), right = px > w - 70;
   g += `<line x1="${px}" x2="${px}" y1="${t}" y2="${h - b}" stroke="${CC.blue}" stroke-width="2"/>
@@ -1231,7 +1261,9 @@ function costChart(el, d, lv) {
 
 // 3. Profit bridge: standard profit, each leak, your profit.
 function bridgeHTML(d) {
-  const c = d.c, L = leakList(d), steps = [];
+  const c = d.c, raw = leakList(d), steps = [];
+  const rr = roundRows(raw.map((x) => [x.label, x.v]), c.std.op - c.op);
+  const L = raw.map((x, i) => ({ ...x, v: rr[i][1] }));
   let run = c.std.op;
   steps.push({ label: 'Standard profit', a: 0, b: run, kind: 'total', val: money(run), tip: `Joe's standard for ${c.good} pizzas` });
   for (const x of L) {
@@ -1239,7 +1271,8 @@ function bridgeHTML(d) {
     steps.push({ label: x.label, clue: x.clue, a: Math.min(run, nb), b: Math.max(run, nb), kind: x.v > 0 ? 'loss' : 'gain', val: `${x.v > 0 ? '-' : '+'}${money(Math.abs(x.v))}`, tip: `${x.label}: ${x.clue}` });
     run = nb;
   }
-  steps.push({ label: 'Your profit', a: Math.min(0, c.op), b: Math.max(0, c.op), kind: 'total', val: money(c.op), tip: `What this Friday kept` });
+  const opR = Math.round((c.std.op - L.reduce((a, x) => a + x.v, 0)) * 100) / 100;
+  steps.push({ label: 'Your profit', a: Math.min(0, opR), b: Math.max(0, opR), kind: 'total', val: money(opR), tip: `What this Friday kept` });
   const lo = Math.min(0, ...steps.map((x) => x.a)), hi = Math.max(...steps.map((x) => x.b));
   const span = (hi - lo) * 1.3 || 1, pos = (v) => ((v - lo) / span) * 100, z = pos(0);
   return `<div class="wf">${steps.map((x) => `<div class="wf-row"><span class="wf-label">${x.label}${x.clue ? `<small>${x.clue}</small>` : ''}</span>
@@ -1276,7 +1309,11 @@ function renderCharts() {
   const sheet = $('#sheet');
   sheet.querySelectorAll('[data-chart]').forEach((el) => {
     const kind = el.dataset.chart;
-    if (kind === 'prod' && G.deb) prodChart(el, { times: G.deb.sh.boxTimes, promise: G.deb.sh.promiseMin, now: G.deb.c.min, gap: G.deb.gap, h: 180 });
+    if (kind === 'prod' && G.deb) {
+      const ev = G.deb.sh.event;
+      const evo = ev && ev.choice ? (ev.id === 'oven' ? { a: ev.a, b: ev.b, label: 'Deck down' } : { a: 0, b: 0, label: 'Prep cook out' }) : null;
+      prodChart(el, { times: G.deb.sh.boxTimes, promise: G.deb.sh.promiseMin, now: G.deb.c.min, gap: G.deb.gap, h: 180, event: evo });
+    }
     else if (kind === 'cost' && G.deb) costChart(el, G.deb, G.deb.lv);
     else if (kind.startsWith('t-')) {
       const H = G.hist.filter((x) => x.good > 0), cats = H.map((x) => `Friday ${x.n}`);
@@ -1310,7 +1347,7 @@ function debData(c, sh) {
   const worst = Object.entries(heavyBy).sort((a, b) => b[1] - a[1])[0];
   let prev = 0, gap = { len: 0, a: 0, b: 0 };
   sh.boxTimes.forEach((t) => { if (t - prev > gap.len) gap = { len: t - prev, a: prev, b: t }; prev = t; });
-  return { c, sh, good, dem: c.rate, overPer: P.over / good, scrapPer: P.scrap / good, schedHrs: sh.promiseMin / 60,
+  return { c, sh, good, dem: c.rate, overPer: P.over / good, scrapPer: P.scrap / good, schedHrs: sh.promiseMin / 60, evPer: P.event / good,
     per: { mat: c.mat / good, lab: c.labor / good, oh: c.oh / good, cost: c.cogs / good },
     heavyPies, worst, gap, leftovers: sh.pies.filter((p) => p.leftover).length };
 }
@@ -1320,7 +1357,8 @@ function project(d, L) {
   const ot = Math.max(0, hrs - sched), idle = Math.max(0, sched - hrs);
   const labor = WAGE * Math.min(hrs, sched) + OT_WAGE * ot + WAGE * idle, oh = OH_PER_HR * hrs;
   const lateMin = ot * 60, pct = lateMin > 0.5 ? Math.min(0.25, 0.05 * Math.ceil(lateMin / 15)) : 0;
-  const cogs = mat + labor + oh, rev = PRICE * ORDER * (1 - pct);
+  const ev = (d.evPer || 0) * ORDER;
+  const cogs = mat + labor + oh + ev, rev = PRICE * ORDER * (1 - pct);
   return { cost: cogs / ORDER, op: rev - cogs - OTHER * ORDER, pct };
 }
 function goalResult(goal, d) {
@@ -1343,6 +1381,12 @@ function leakList(d) {
     const items = sh.log.map((e) => `${e.why.toLowerCase()} ${clock(e.min)}`);
     if (d.leftovers) items.push(`${d.leftovers} unfinished`);
     L.push({ tag: 'Material', label: 'Scrapped pizzas', v: P.scrap, clue: items.join(' · ') });
+  }
+  const ev = sh.event;
+  if (ev && ev.choice && P.event > 0.004) {
+    const what = ev.id === 'oven' ? 'Oven down' : 'Callout';
+    const clue = ev.choice === 'call' ? `called the customer: ${Math.round(REPROMISE_OFF * 100)}% off` : ev.choice === 'expedite' ? `emergency repair $${EXPEDITE_COST}` : `replacement on overtime`;
+    L.push({ tag: 'Event', label: what, v: P.event, clue });
   }
   if (Math.abs(P.over) > 0.004) L.push({ tag: 'Material', label: P.over > 0 ? 'Heavy portions' : 'Light portions', v: P.over, clue: P.over > 0 ? `mostly ${ING_LABEL[d.worst[0]]}` : 'slightly under' });
   return L.sort((a, b) => b.v - a.v);
@@ -1419,6 +1463,7 @@ function debriefScreen(keepScroll) {
       <div class="chart-card"><h3>Standard profit ${money(c.std.op)} → yours ${money(c.op)}</h3>
         <p class="ckey"><span class="dot" style="--c:#c94d3a">Cost you</span>${L.some((x) => x.v < 0) ? '<span class="dot" style="--c:#2f6fb5">Saved you</span>' : ''}</p>
         ${bridgeHTML(d)}</div>
+      ${eventLesson(d)}
       ${next(3, 'Next: payday')}`;
   } else if (d.step === 3) {
     body = paydayHTML(d);
@@ -1762,6 +1807,54 @@ function updateCalc() {
   $('#calcNote').textContent = act < std ? "The product didn't change. The process did." : 'At standard. Can the line repeat it every shift?';
 }
 
+/* ---------- floor events ---------- */
+function eventScreen() {
+  const sh = G.sh, ev = sh.event, fri = G.shiftNo + 1;
+  const card = (choice, title, line, cons) => `<div class="fund"><b>${title}</b><p class="fline">${line}</p><p class="cons">${cons}</p>
+    <button class="btn" type="button" data-act="event" data-choice="${choice}" aria-label="${title}">Choose</button></div>`;
+  if (ev.id === 'oven') {
+    show(`<p class="eyebrow">Friday ${fri} · ${clock(ev.a)}</p>
+      <h2>Oven deck ${ev.deck + 1} just went down.</h2>
+      <p class="sub">Maintenance says ${ev.down} minutes. You promised <b>${clock(sh.promiseMin)}</b>.</p>
+      <div class="funds">
+        ${card('call', 'Call the customer now', `New time: ${clock(sh.promiseMin + ev.down)}`, `${Math.round(REPROMISE_OFF * 100)}% off for the change`)}
+        ${card('push', 'Push on', `Keep ${clock(sh.promiseMin)} on ${sh.oven.length - 1} decks`, 'If late: overtime + a bigger discount')}
+        ${card('expedite', 'Expedite the repair', `Back in ${ev.fast} minutes`, `$${EXPEDITE_COST} emergency call-out`)}
+      </div>`);
+  } else {
+    const add = ORDER * (HAND_STRETCH_SEC / SEC_PER_MIN);
+    ev.add = add;
+    show(`<p class="eyebrow">Friday ${fri} · before the shift</p>
+      <h2>Your prep cook called out.</h2>
+      <p class="sub">They pre-stretch the dough. Without them, every dough takes you about ${HAND_STRETCH_SEC / SEC_PER_MIN} more minute. You promised <b>${clock(sh.promiseMin)}</b>.</p>
+      <div class="funds">
+        ${card('call', 'Call the customer now', `New time: ${clock(sh.promiseMin + add)}`, `${Math.round(REPROMISE_OFF * 100)}% off for the change`)}
+        ${card('push', 'Push on', `Keep ${clock(sh.promiseMin)}, stretch by hand`, 'If late: overtime + a bigger discount')}
+        ${card('cover', 'Call someone in', 'Dough stays fast', `$${COVER_WAGE} an hour, overtime`)}
+      </div>`);
+  }
+}
+function chooseEvent(choice) {
+  const sh = G.sh, ev = sh.event;
+  if (!ev || ev.choice) return;
+  ev.choice = choice;
+  if (choice === 'call') { sh.repromise = true; sh.promiseMin += ev.id === 'oven' ? ev.down : ev.add; }
+  if (ev.id === 'oven' && choice === 'expedite') { sh.expedite = true; sh.down.until = ev.a + ev.fast; ev.b = sh.down.until; }
+  if (ev.id === 'callout') { if (choice === 'cover') sh.cover = true; else sh.handDough = true; }
+  G.paused = false; hide();
+  refreshPrep(); refreshOven(); refreshBoard(); refreshTop();
+  toast(choice === 'call' ? `New promise: ${clock(sh.promiseMin)}.` : choice === 'push' ? `Holding ${clock(sh.promiseMin)}.` : choice === 'expedite' ? 'Repair crew on the way.' : 'Replacement on the way.');
+}
+function eventLesson(d) {
+  const ev = d.sh.event, c = d.c;
+  if (!ev || !ev.choice) return '';
+  const what = ev.id === 'oven' ? 'The oven went down' : 'A cook called out';
+  const txt = ev.choice === 'call' ? `${what}. You told the customer early and paid ${money(c.repDisc)}.`
+    : ev.choice === 'push' ? (c.late > 0.5 ? `${what}. You pushed on and missed by ${dur(c.late)}: ${money(c.parts.ot + c.parts.disc)} in overtime and discount.` : `${what}. You pushed on and made it. This time.`)
+    : `${what}. You paid ${money(c.evCost)} to protect the promise.`;
+  return `<p class="insight">${txt} <b>${QUOTE}</b></p>`;
+}
+
 function pauseScreen() {
   show(`<p class="eyebrow">Paused · ${clock(nowMin())}</p><h2>Break room</h2><p>The oven and the clock are stopped.</p>
     <div class="cta-row"><button class="btn red" type="button" data-act="resume">Back on the line</button>
@@ -1769,6 +1862,8 @@ function pauseScreen() {
 }
 function togglePause() {
   if (G.phase !== 'play') return;
+  const ev = G.sh && G.sh.event;
+  if (ev && ev.fired && !ev.choice) return;
   G.paused = !G.paused;
   if (G.paused) { stopPour(); pauseScreen(); } else hide();
   refreshPrep(); refreshBoard(); refreshOven();
@@ -1791,6 +1886,7 @@ $('#sheet').addEventListener('click', (e) => {
   else if (act === 'quit') { G.paused = false; endShift(true); }
   else if (act === 'clear' || act === 'reset-books') { resetAll(); if (act === 'clear') promiseScreen(); else titleScreen(); }
   else if (act === 'practice') startPractice();
+  else if (act === 'event') chooseEvent(a.dataset.choice);
   else if (act === 'fund') { fundFrom(a.dataset.src); debriefScreen(true); }
   else if (act === 'reveal') { G.deb.guess = parseFloat($('#guessIn').value); G.deb.guessed = true; debriefScreen(); }
   else if (act === 'step') { G.deb.step = +a.dataset.step; debriefScreen(); }
