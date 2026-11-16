@@ -381,6 +381,40 @@ details.math[open] summary { margin-bottom: 10px; }
 .fund b { font-size: 18px; }
 .fund .fline { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
 
+/* Charts. Series colors validated for color-vision deficiency: you #c94d3a, blue #2f6fb5, teal #2a9d8f; standard is neutral gray. */
+.chart-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.chart-card h3 { margin: 0; font-size: 14px; font-weight: 800; }
+.xchart { position: relative; width: 100%; min-width: 0; }
+.xchart svg { display: block; touch-action: pan-y; }
+.xchart text { font-family: var(--font); font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.xchart text.ink { fill: var(--ink); font-weight: 700; }
+.xchart .gl { stroke: #ece2d0; stroke-width: 1; }
+.ckey { display: flex; gap: 4px 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0; }
+.ckey span::before { content: ""; display: inline-block; width: 14px; height: 0; border-top: 2px solid var(--c); vertical-align: middle; margin-right: 6px; }
+.ckey span.dot::before { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--c); }
+.ctip { position: fixed; z-index: 60; pointer-events: none; background: var(--navy); color: var(--on-dark); font-size: 12.5px; font-weight: 600; line-height: 1.35; padding: 6px 9px; border-radius: 8px; max-width: 260px; box-shadow: 0 6px 18px rgba(0,0,0,.25); white-space: pre-line; }
+.strip-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important; align-items: stretch; }
+@media (max-width: 820px) { .strip-row { grid-template-columns: minmax(0, 1fr) !important; } }
+.strip-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.strip-col .strip-item { flex: 1; }
+.wf { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.wf-row { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr); gap: 12px; align-items: center; }
+@media (max-width: 560px) { .wf-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.wf-label { font-size: 13.5px; font-weight: 700; }
+.wf-label small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.wf-track { position: relative; height: 22px; }
+.wf-track i { position: absolute; top: 2px; height: 18px; border-radius: 4px; }
+.wf-total { background: var(--navy-2); }
+.wf-loss { background: #c94d3a; }
+.wf-gain { background: #2f6fb5; }
+.wf-track b { position: absolute; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wf-track .zero { position: absolute; top: -5px; bottom: -5px; width: 1px; background: var(--ink); opacity: .3; }
+.multiples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 6px; }
+@media (max-width: 820px) { .multiples { grid-template-columns: minmax(0, 1fr); } }
+.mtitle { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+.result-l .rbig { font-size: 40px; font-weight: 800; line-height: 1; }
+.result-l > small { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -451,8 +485,13 @@ details.math[open] summary { margin-bottom: 10px; }
   </main>
 
   <section class="strip-row" aria-label="This shift">
-    <div class="strip-item"><small>Your cost per pizza</small><b id="liveCost">…</b><span>Standard $7.00</span></div>
-    <div class="strip-item"><small>Joe's money</small><span id="booksMini"></span></div>
+    <div class="chart-card"><h3>Pizzas boxed vs. the clock</h3>
+      <p class="ckey"><span style="--c:#c94d3a">You</span><span style="--c:#9aa0a6">Standard, 20 an hour</span><span style="--c:#2f6fb5">Your promise</span></p>
+      <div class="xchart" id="liveProd"></div></div>
+    <div class="strip-col">
+      <div class="strip-item"><small>Your cost per pizza</small><b id="liveCost">…</b><span>Standard $7.00</span></div>
+      <div class="strip-item"><small>Joe's money</small><span id="booksMini"></span></div>
+    </div>
   </section>
 </div>
 
@@ -833,8 +872,9 @@ function refreshTop() {
   fill.style.background = late ? 'var(--red)' : 'var(--sage)';
 }
 function refreshLive() {
-  const sh = G.sh, c = sh && !sh.practice ? calc(sh, false) : null;
-  const el = $('#liveCost');
+  const sh = G.sh, live = sh && !sh.practice;
+  prodChart($('#liveProd'), live ? { times: sh.boxTimes, promise: sh.promiseMin, now: nowMin(), h: 170 } : { times: [], promise: (ORDER / G.pickRate) * 60, now: 0, h: 170 });
+  const c = live ? calc(sh, false) : null, el = $('#liveCost');
   if (!c || !c.good) { el.textContent = '…'; el.className = ''; return; }
   const v = c.cogs / c.good;
   el.textContent = money(v);
@@ -884,6 +924,7 @@ function show(html, wide) {
   const s = $('#sheet'); s.className = 'sheet' + (wide ? ' wide' : ''); s.innerHTML = html;
   $('#overlay').hidden = false; $('#overlay').scrollTop = 0;
   const cta = s.querySelector('.btn[data-act]'); if (cta) cta.focus({ preventScroll: true });
+  hideTip(); renderCharts();
 }
 function hide() { $('#overlay').hidden = true; }
 
@@ -1090,6 +1131,171 @@ function reportScreen(c, sh, early) {
 }
 
 
+
+/* ---------- charts ---------- */
+const CC = { you: '#c94d3a', blue: '#2f6fb5', teal: '#2a9d8f', std: '#9aa0a6', surface: '#fffaf2', ink: '#1f2833' };
+const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const tipEl = document.createElement('div'); tipEl.className = 'ctip'; tipEl.hidden = true; document.body.appendChild(tipEl);
+function showTip(text, x, y) {
+  tipEl.textContent = text; tipEl.hidden = false;
+  const r = tipEl.getBoundingClientRect();
+  let L = x + 14, T = y - r.height - 12;
+  if (L + r.width > innerWidth - 8) L = x - r.width - 14;
+  if (T < 8) T = y + 18;
+  tipEl.style.left = Math.max(8, L) + 'px'; tipEl.style.top = T + 'px';
+}
+function hideTip() { tipEl.hidden = true; }
+document.addEventListener('pointermove', (e) => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if (t) showTip(t.dataset.tip, e.clientX, e.clientY);
+  else if (!(e.target.closest && e.target.closest('.xchart'))) hideTip();
+});
+function niceTicks(lo, hi, n = 4) {
+  const raw = (hi - lo) / n || 1, mag = 10 ** Math.floor(Math.log10(raw));
+  const st = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => x >= raw);
+  const a = Math.floor(lo / st) * st, z = Math.ceil(hi / st) * st, out = [];
+  for (let v = a; v <= z + st * 1e-6; v += st) out.push(+v.toFixed(6));
+  return { ticks: out, lo: a, hi: z };
+}
+// Nearest-x hover: a guide line, a highlight dot and a tooltip.
+function hoverX(el, pts) {
+  const svg = el.querySelector('svg'); if (!svg || !pts.length) return;
+  const guide = svg.querySelector('.hv-line'), dot = svg.querySelector('.hv-dot');
+  el.onpointermove = (e) => {
+    const r = svg.getBoundingClientRect(), x = e.clientX - r.left;
+    let best = pts[0]; for (const p of pts) if (Math.abs(p.x - x) < Math.abs(best.x - x)) best = p;
+    guide.setAttribute('x1', best.x); guide.setAttribute('x2', best.x); guide.style.visibility = 'visible';
+    if (best.y != null) { dot.setAttribute('cx', best.x); dot.setAttribute('cy', best.y); dot.style.visibility = 'visible'; } else dot.style.visibility = 'hidden';
+    showTip(best.tip, e.clientX, e.clientY);
+  };
+  el.onpointerleave = () => { guide.style.visibility = 'hidden'; dot.style.visibility = 'hidden'; hideTip(); };
+}
+const hoverMarks = (t, b, col = CC.ink) => `<line class="hv-line" y1="${t}" y2="${b}" stroke="${CC.ink}" stroke-opacity=".25" stroke-width="1" style="visibility:hidden"/>
+  <circle class="hv-dot" r="5" fill="${col}" stroke="${CC.surface}" stroke-width="2" style="visibility:hidden"/>`;
+const shortClock = (m) => clock(m).replace(/ (AM|PM)$/, '');
+
+// 1. Pizzas boxed against the clock, with the standard pace and the promise.
+function prodChart(el, o) {
+  o = { ...o, times: [...o.times].sort((a, b) => a - b) };
+  const w = Math.max(260, el.clientWidth || 600), h = o.h || 170, l = 30, r = 18, t = 18, b = 24;
+  const stdEnd = (ORDER / STD_RATE) * 60, last = o.times.length ? o.times[o.times.length - 1] : 0;
+  let xmax = Math.max(o.promise, o.now, stdEnd, last) * 1.06;
+  const st = xmax > 150 ? 30 : xmax > 75 ? 15 : 10; xmax = Math.ceil(xmax / st) * st;
+  const xs = (m) => l + (m / xmax) * (w - l - r), ys = (n) => t + (1 - n / ORDER) * (h - t - b);
+  let g = '';
+  for (const n of [0, ORDER / 2, ORDER]) g += `<line class="gl" x1="${l}" x2="${w - r}" y1="${ys(n)}" y2="${ys(n)}"/><text x="${l - 6}" y="${ys(n) + 4}" text-anchor="end">${n}</text>`;
+  for (let m = 0; m <= xmax + 1e-6; m += st) g += `<text x="${xs(m)}" y="${h - 6}" text-anchor="middle">${shortClock(m)}</text>`;
+  if (o.gap && o.gap.len >= 3) {
+    g += `<rect x="${xs(o.gap.a)}" y="${t}" width="${Math.max(2, xs(o.gap.b) - xs(o.gap.a))}" height="${h - t - b}" fill="${CC.you}" opacity=".09"/>
+      <text class="ink" x="${(xs(o.gap.a) + xs(o.gap.b)) / 2}" y="${t - 5}" text-anchor="middle">${dur(o.gap.len)} gap</text>`;
+  }
+  g += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(stdEnd)}" y2="${ys(ORDER)}" stroke="${CC.std}" stroke-width="2" stroke-linecap="round"/>`;
+  const px = xs(o.promise), right = px > w - 70;
+  g += `<line x1="${px}" x2="${px}" y1="${t}" y2="${h - b}" stroke="${CC.blue}" stroke-width="2"/>
+    <text x="${px + (right ? -5 : 5)}" y="${h - b - 6}" text-anchor="${right ? 'end' : 'start'}">Promise ${shortClock(o.promise)}</text>`;
+  let d = `M${xs(0)},${ys(0)}`;
+  o.times.forEach((tm, i) => { d += ` H${xs(tm)} V${ys(i + 1)}`; });
+  const endX = Math.max(last, o.now);
+  if (endX > last) d += ` H${xs(endX)}`;
+  g += `<path d="${d} V${ys(0)} H${xs(0)} Z" fill="${CC.you}" opacity=".1"/>`;
+  g += `<path d="${d}" fill="none" stroke="${CC.you}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  g += `<circle cx="${xs(endX)}" cy="${ys(o.times.length)}" r="4" fill="${CC.you}" stroke="${CC.surface}" stroke-width="2"/>`;
+  g += hoverMarks(t, h - b, CC.you);
+  el.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Pizzas boxed over time: ${o.times.length} of ${ORDER}, against the standard of 20 an hour">${g}</svg>`;
+  hoverX(el, o.times.map((tm, i) => ({ x: xs(tm), y: ys(i + 1), tip: `${clock(tm)}\nPizza ${i + 1} boxed\nStandard by then: ${Math.min(ORDER, Math.floor(tm / 3))}` })));
+}
+
+// 2. Cost per pizza across run rates, under the current levers.
+function costChart(el, d, lv) {
+  const w = Math.max(260, el.clientWidth || 400), h = 190, l = 42, r = 16, t = 14, b = 26;
+  const rlo = Math.max(4, Math.floor(Math.min(d.dem, lv.rate, 20)) - 2), rhi = 24;
+  const curve = [];
+  for (let rr = rlo; rr <= rhi + 1e-6; rr += 0.25) curve.push([rr, project(d, { ...lv, rate: rr }).cost]);
+  const base = project(d, { rate: d.dem, exact: false, noScrap: false, honest: false }).cost, now = project(d, lv).cost;
+  const yt = niceTicks(Math.min(STD_COST, ...curve.map((p) => p[1])) - 0.5, Math.max(base, ...curve.map((p) => p[1])) + 0.3, 4);
+  const xs = (x) => l + ((x - rlo) / (rhi - rlo)) * (w - l - r), ys = (y) => t + (1 - (y - yt.lo) / (yt.hi - yt.lo)) * (h - t - b);
+  let g = '';
+  for (const v of yt.ticks) g += `<line class="gl" x1="${l}" x2="${w - r}" y1="${ys(v)}" y2="${ys(v)}"/><text x="${l - 6}" y="${ys(v) + 4}" text-anchor="end">$${v % 1 ? v.toFixed(1) : v}</text>`;
+  for (let x = Math.ceil(rlo / 4) * 4; x <= rhi; x += 4) g += `<text x="${xs(x)}" y="${h - 6}" text-anchor="middle">${x}/hr</text>`;
+  g += `<path d="${curve.map((p, i) => `${i ? 'L' : 'M'}${xs(p[0])},${ys(p[1])}`).join(' ')}" fill="none" stroke="${CC.blue}" stroke-width="2" stroke-linejoin="round"/>`;
+  g += `<circle cx="${xs(20)}" cy="${ys(STD_COST)}" r="5" fill="${CC.std}" stroke="${CC.surface}" stroke-width="2"/><text x="${xs(20)}" y="${ys(STD_COST) + 18}" text-anchor="middle">Standard $7.00</text>`;
+  const moved = Math.abs(now - base) > 0.005 || Math.abs(lv.rate - d.dem) > 0.05;
+  g += `<circle cx="${xs(d.dem)}" cy="${ys(base)}" r="5" fill="${moved ? CC.surface : CC.you}" stroke="${CC.you}" stroke-width="2"/>
+    <text class="ink" x="${xs(d.dem)}" y="${ys(base) - 10}" text-anchor="middle">You ${money(base)}</text>`;
+  if (moved) g += `<circle cx="${xs(lv.rate)}" cy="${ys(now)}" r="6" fill="${CC.you}" stroke="${CC.surface}" stroke-width="2"/>
+    <text class="ink" x="${xs(lv.rate) + 9}" y="${ys(now) + 4}">${money(now)}</text>`;
+  g += hoverMarks(t, h - b, CC.blue);
+  el.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Cost per pizza falls as the run rate rises">${g}</svg>`;
+  hoverX(el, curve.filter((p) => Math.abs(p[0] * 2 - Math.round(p[0] * 2)) < 1e-6).map((p) => ({ x: xs(p[0]), y: ys(p[1]), tip: `At ${p[0]} an hour\n${money(p[1])} a pizza` })));
+}
+
+// 3. Profit bridge: standard profit, each leak, your profit.
+function bridgeHTML(d) {
+  const c = d.c, L = leakList(d), steps = [];
+  let run = c.std.op;
+  steps.push({ label: 'Standard profit', a: 0, b: run, kind: 'total', val: money(run), tip: `Joe's standard for ${c.good} pizzas` });
+  for (const x of L) {
+    const nb = run - x.v;
+    steps.push({ label: x.label, clue: x.clue, a: Math.min(run, nb), b: Math.max(run, nb), kind: x.v > 0 ? 'loss' : 'gain', val: `${x.v > 0 ? '-' : '+'}${money(Math.abs(x.v))}`, tip: `${x.label}: ${x.clue}` });
+    run = nb;
+  }
+  steps.push({ label: 'Your profit', a: Math.min(0, c.op), b: Math.max(0, c.op), kind: 'total', val: money(c.op), tip: `What this Friday kept` });
+  const lo = Math.min(0, ...steps.map((x) => x.a)), hi = Math.max(...steps.map((x) => x.b));
+  const span = (hi - lo) * 1.3 || 1, pos = (v) => ((v - lo) / span) * 100, z = pos(0);
+  return `<div class="wf">${steps.map((x) => `<div class="wf-row"><span class="wf-label">${x.label}${x.clue ? `<small>${x.clue}</small>` : ''}</span>
+    <div class="wf-track"><span class="zero" style="left:${z}%"></span>
+      <i class="wf-${x.kind}" style="left:${pos(x.a)}%;width:${Math.max(0.6, pos(x.b) - pos(x.a))}%" data-tip="${esc(x.tip)}"></i>
+      <b style="left:calc(${pos(x.b)}% + 6px)">${x.val}</b></div></div>`).join('')}</div>`;
+}
+
+// 4. Small multiples across the three Fridays.
+function lineChart(el, cats, series, opts = {}) {
+  const w = Math.max(220, el.clientWidth || 300), h = opts.h || 150, l = 44, r = 52, t = 14, b = 24;
+  const vals = series.flatMap((x) => x.vals.filter((v) => v != null)).concat(opts.ref ? [opts.ref.v] : []);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (opts.zero) lo = Math.min(0, lo);
+  const yt = opts.zero && lo >= 0 ? niceTicks(0, hi * 1.08 || 1, 3) : niceTicks(lo - (hi - lo) * 0.08, hi + (hi - lo) * 0.08 || hi + 1, 3);
+  const xs = (i) => (cats.length === 1 ? (l + w - r) / 2 : l + (i * (w - l - r)) / (cats.length - 1)), ys = (v) => t + (1 - (v - yt.lo) / (yt.hi - yt.lo)) * (h - t - b);
+  let g = '';
+  for (const v of yt.ticks) g += `<line class="gl" x1="${l}" x2="${w - r}" y1="${ys(v)}" y2="${ys(v)}"/><text x="${l - 6}" y="${ys(v) + 4}" text-anchor="end">${opts.fmt(v)}</text>`;
+  cats.forEach((cname, i) => { g += `<text x="${xs(i)}" y="${h - 6}" text-anchor="middle">${cname}</text>`; });
+  if (opts.ref) g += `<line x1="${l}" x2="${w - r}" y1="${ys(opts.ref.v)}" y2="${ys(opts.ref.v)}" stroke="${CC.std}" stroke-width="2"/><text x="${w - r + 4}" y="${ys(opts.ref.v) + 4}">${opts.ref.label}</text>`;
+  for (const sr of series) {
+    const pts = sr.vals.map((v, i) => (v == null ? null : [xs(i), ys(v), v])).filter(Boolean);
+    g += `<path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${p[0]},${p[1]}`).join(' ')}" fill="none" stroke="${sr.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${sr.color}" stroke="${CC.surface}" stroke-width="2"/>`).join('');
+    const e = pts[pts.length - 1];
+    if (e && !opts.ref) g += `<text class="ink" x="${e[0] + 8}" y="${e[1] + 4}">${opts.fmt(e[2])}</text>`;
+  }
+  g += hoverMarks(t, h - b);
+  el.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(opts.label || '')}">${g}</svg>`;
+  hoverX(el, cats.map((cname, i) => ({ x: xs(i), y: series.length === 1 && series[0].vals[i] != null ? ys(series[0].vals[i]) : null,
+    tip: [cname, ...series.filter((x) => x.vals[i] != null).map((x) => `${x.name}: ${opts.fmt(x.vals[i])}`), opts.ref ? `${opts.ref.label}` : ''].filter(Boolean).join('\n') })));
+}
+function renderCharts() {
+  const sheet = $('#sheet');
+  sheet.querySelectorAll('[data-chart]').forEach((el) => {
+    const kind = el.dataset.chart;
+    if (kind === 'prod' && G.deb) prodChart(el, { times: G.deb.sh.boxTimes, promise: G.deb.sh.promiseMin, now: G.deb.c.min, gap: G.deb.gap, h: 180 });
+    else if (kind === 'cost' && G.deb) costChart(el, G.deb, G.deb.lv);
+    else if (kind.startsWith('t-')) {
+      const H = G.hist.filter((x) => x.good > 0), cats = H.map((x) => `Friday ${x.n}`);
+      if (kind === 't-rate') lineChart(el, cats, [{ name: 'You', color: CC.you, vals: H.map((x) => x.dem) }], { ref: { v: STD_RATE, label: 'Standard' }, fmt: (v) => `${r1(v)}/hr`, label: 'Run rate by Friday' });
+      if (kind === 't-cost') lineChart(el, cats, [{ name: 'You', color: CC.you, vals: H.map((x) => x.cost) }], { ref: { v: STD_COST, label: 'Standard' }, fmt: (v) => money(v), label: 'Cost per pizza by Friday' });
+      if (kind === 't-money') {
+        const F = freshBooks(), all = G.hist, bk = all.map((x) => x.books || G.books);
+        lineChart(el, ['Start', ...all.map((x) => `Fri ${x.n}`)], [
+          { name: 'Savings', color: CC.blue, vals: [F.savings, ...bk.map((x) => x.savings)] },
+          { name: 'Oven fund', color: CC.teal, vals: [F.ovenFund, ...bk.map((x) => x.ovenBought ? OVEN_COST + x.ovenFund : x.ovenFund)] },
+          { name: 'Loan', color: CC.you, vals: [F.loan, ...bk.map((x) => x.loan)] },
+        ], { zero: true, fmt: (v) => `$${Math.round(v)}`, label: "Joe's savings, oven fund and loan by Friday" });
+      }
+    }
+  });
+}
+let resizeT = 0;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (!$('#overlay').hidden) renderCharts(); refreshLive(); }, 120); });
+
 /* ---------- debrief ---------- */
 const ING_LABEL = { sauce: 'sauce', cheese: 'cheese', pep: 'pepperoni' };
 const mmss = (min) => { const s = Math.round(min * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -1206,12 +1412,13 @@ function debriefScreen(keepScroll) {
     const timeV = L.filter((x) => x.tag !== 'Material' && x.v > 0).reduce((a, x) => a + x.v, 0);
     const matV = L.filter((x) => x.tag === 'Material' && x.v > 0).reduce((a, x) => a + x.v, 0);
     const h = lost <= 0.005 ? 'You beat the standard.' : timeV >= matV ? 'Most of it was the clock.' : 'Most of it was material.';
-    const rows = L.map((x) => `<div class="leak ${x.v < 0 ? 'good' : ''}"><span class="tag t-${x.tag.toLowerCase()}">${x.tag}</span>
-      <div><b>${x.label}</b><p>${x.clue}</p></div><span class="amt">${x.v < 0 ? '+' : '-'}${money(Math.abs(x.v))}</span>
-      <span class="lbar"><i style="width:${(Math.abs(x.v) / maxV) * 100}%"></i></span></div>`).join('');
     body = `<h2>${h}</h2>
-      <p class="sub">Standard profit <b>${money(c.std.op)}</b> → yours <b class="${c.op < c.std.op - 0.005 ? 'over' : 'under'}">${money(c.op)}</b></p>
-      <div class="leaks">${rows}</div>
+      <div class="chart-card"><h3>Pizzas boxed vs. the clock</h3>
+        <p class="ckey"><span style="--c:#c94d3a">You</span><span style="--c:#9aa0a6">Standard, 20 an hour</span><span style="--c:#2f6fb5">Your promise</span></p>
+        <div class="xchart" data-chart="prod"></div></div>
+      <div class="chart-card"><h3>Standard profit ${money(c.std.op)} → yours ${money(c.op)}</h3>
+        <p class="ckey"><span class="dot" style="--c:#c94d3a">Cost you</span>${L.some((x) => x.v < 0) ? '<span class="dot" style="--c:#2f6fb5">Saved you</span>' : ''}</p>
+        ${bridgeHTML(d)}</div>
       ${next(3, 'Next: payday')}`;
   } else if (d.step === 3) {
     body = paydayHTML(d);
@@ -1240,10 +1447,10 @@ function debriefScreen(keepScroll) {
           <div class="lever switch"><label><input type="checkbox" id="lvScrap" ${lv.noScrap ? 'checked' : ''}> Zero scrap</label></div>
           <div class="lever switch"><label><input type="checkbox" id="lvExact" ${lv.exact ? 'checked' : ''}> Exact portions</label></div>
         </div>
-        <div class="result" aria-live="polite">
+        <div class="chart-card result-l" aria-live="polite">
           <small>Cost per pizza</small><div class="rbig" id="sbCost">$0.00</div>
-          <div class="mbars" id="sbBars"></div>
-          <p id="sbOp"></p>
+          <div class="xchart" id="costChart"></div>
+          <p class="note" id="sbOp"></p>
         </div>
       </div>
       <div class="fixes" role="radiogroup" aria-label="One fix for next Friday">${cards}</div>
@@ -1271,9 +1478,8 @@ function updateSandbox() {
   const now = project(d, lv), base = project(d, { rate: d.dem, exact: false, noScrap: false, honest: false });
   $('#lvRateOut').textContent = `${r1(lv.rate)}/hr`;
   $('#sbCost').textContent = money(now.cost);
-  const scale = Math.max(now.cost, base.cost, STD_COST) * 1.05;
-  const bar = (label, v, col) => `<div class="mbar"><span>${label}</span><span class="mt"><i style="width:${(v / scale) * 100}%;background:${col}"></i></span><b>${money(v)}</b></div>`;
-  $('#sbBars').innerHTML = bar('Standard', STD_COST, '#bfae94') + bar('Yours', base.cost, '#c94d3a') + bar('With changes', now.cost, '#e6ae47');
+
+  costChart($('#costChart'), d, lv);
   $('#sbOp').innerHTML = `Friday profit <b>${money(now.op)}</b> · yours ${money(base.op)} · standard ${money(2 * ORDER)}`;
 }
 
@@ -1512,10 +1718,17 @@ function closeoutScreen() {
     ${last ? `<div class="rep-grid">
       <div class="panel-card"><h3>Every $12, your last Friday</h3><div class="bars">${wf}</div>
         <p class="legend"><span style="--c:#c94d3a">Yours</span><span style="--c:#bfae94">Standard</span></p></div>
-      <div class="panel-card scroll-x"><h3>Your Fridays</h3>
+      <div class="panel-card books-wrap"><h3>Where Joe ended up</h3>${booksHTML()}</div>
+    </div>
+    <div class="chart-card"><h3>Your three Fridays</h3>
+      <div class="multiples">
+        <div><p class="mtitle">Run rate</p><div class="xchart" data-chart="t-rate"></div></div>
+        <div><p class="mtitle">Cost per pizza</p><div class="xchart" data-chart="t-cost"></div></div>
+        <div><p class="mtitle">Joe's money</p><p class="ckey"><span style="--c:#2f6fb5">Savings</span><span style="--c:#2a9d8f">Oven fund</span><span style="--c:#c94d3a">Loan</span></p><div class="xchart" data-chart="t-money"></div></div>
+      </div>
+      <details class="math"><summary>Show the numbers</summary><div class="scroll-x">
         <table class="hist"><thead><tr><th></th><th>Ran</th><th>Cost / pizza</th><th>Profit</th></tr></thead><tbody>
-          <tr><td>Standard</td><td>20/hr</td><td>$7.00</td><td>${money(2 * ORDER)}</td></tr>${friRows}</tbody></table>
-        <div style="margin-top:12px">${booksHTML()}</div></div>
+          <tr><td>Standard</td><td>20/hr</td><td>$7.00</td><td>${money(2 * ORDER)}</td></tr>${friRows}</tbody></table></div></details>
     </div>` : ''}
     <div class="panel-card calc"><h3>A factory is a much bigger pizza shop</h3>
       <p class="note">Try a product from your line. (Example numbers.)</p>

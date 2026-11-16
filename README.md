@@ -53,6 +53,17 @@ These dollar amounts are scaled to a 10-pizza order. The deck's example uses a $
 
 The promise screen frames each Friday: Friday 1 starts from Joe's 20/hr plan, Friday 2 asks which number to trust after seeing the real one, and Friday 3 asks the player to prove the improvement.
 
+## Charts
+
+Four charts carry the lesson. Each has hover tooltips and its numbers available in a table:
+
+- **Pizzas boxed vs. the clock** (live during play, and again in the debrief): your boxing line against Joe's standard pace and your promise. In the debrief, the longest gap is shaded. This is run rate, capacity and the promise in one picture.
+- **Profit bridge** (Find the leaks): standard profit, each leak stepping it down, your profit.
+- **Cost per pizza vs. run rate** (Pick one fix): cost = ingredients + $50 an hour ÷ pizzas per hour. Your dot moves along the curve as you try the levers. The curve is steep when slow and flat near standard.
+- **Your three Fridays** (close-out): run rate and cost per pizza against standard, and Joe's savings, oven fund and loan by Friday.
+
+Series colors were checked with a color-vision-deficiency validator: red for you, blue, teal, and neutral gray for Joe's standard.
+
 ## Using it with the deck
 
 - **Before slide 22 ("Now break the assumption"):** play Friday 1. Most people promise from 20/hr, run well under it, and see the slide 29 chain in their own numbers.
