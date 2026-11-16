@@ -415,6 +415,16 @@ details.math[open] summary { margin-bottom: 10px; }
 .result-l .rbig { font-size: 40px; font-weight: 800; line-height: 1; }
 .result-l > small { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 
+.flow { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+@media (max-width: 620px) { .flow { flex-direction: column; } .flow .arr { transform: rotate(90deg); align-self: center; } }
+.flow .arr { align-self: center; color: var(--muted); font-size: 18px; }
+.node { flex: 1; min-width: 0; position: relative; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.node small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.node b { font-size: 16px; }
+.node span { font-size: 13px; color: #4b5560; }
+.node.bn { border-color: var(--red); background: var(--red-tint); }
+.node .bn-tag { position: absolute; top: -10px; right: 10px; background: var(--red); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -515,7 +525,9 @@ const START = 16 * 60;       // 4:00 PM
 const MAX_MIN = 180;         // Joe sends everyone home after 3 hours
 const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
 const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
-const BAKE_SEC = 7, GOOD_LO = 0.9, GOOD_HI = 1.3, BAKE_MAX = 1.6;
+// 12 s bake (6 kitchen min): two decks just keep pace with the 20/hr standard, so at standard the oven is the bottleneck.
+// The good window stays about 2.8 s wide (10.8 s to 13.6 s), as sharp as before.
+const BAKE_SEC = 12, GOOD_LO = 0.9, GOOD_HI = 1.13, BAKE_MAX = 1.6;
 const BOOKS_KEY = 'joes-pizza-b101-books';
 // Floor events, fixed by Friday so a class shares the same experience.
 const EVENTS = { 2: { id: 'oven', at: 8, down: 15, fast: 5 }, 3: { id: 'callout', at: 0 } };
@@ -552,8 +564,8 @@ function ramp(stops, v) {
   }
   return stops[stops.length - 1][1];
 }
-function freshBooks() { return { savings: 100, ovenFund: 150, loan: 0, decks: 3, ovenBought: false }; }
-function loadBooks() { try { return Object.assign(freshBooks(), JSON.parse(localStorage.getItem(BOOKS_KEY)) || {}); } catch (e) { return freshBooks(); } }
+function freshBooks() { return { savings: 100, ovenFund: 150, loan: 0, decks: 2, ovenBought: false }; }
+function loadBooks() { try { const b = Object.assign(freshBooks(), JSON.parse(localStorage.getItem(BOOKS_KEY)) || {}); b.decks = b.ovenBought ? 3 : 2; return b; } catch (e) { return freshBooks(); } }
 function saveBooks() { try { localStorage.setItem(BOOKS_KEY, JSON.stringify(G.books)); } catch (e) { /* storage unavailable */ } }
 const shiftsToOven = (fund) => Math.max(0, Math.ceil((OVEN_COST - fund) / (2 * ORDER)));
 function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } }
@@ -658,7 +670,8 @@ const G = { phase: 'title', paused: false, shiftNo: 0, hist: loadHist(), pickRat
 function newShift(rate) {
   return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(G.books.decks).fill(null), board: null,
     pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [],
-    event: null, down: null, handDough: false, stretch: 0, cover: false, expedite: false, repromise: false };
+    event: null, down: null, handDough: false, stretch: 0, cover: false, expedite: false, repromise: false,
+    wait: { oven: 0, board: 0, empty: 0, avail: 0 } };
 }
 const nowMin = () => G.sh.t / SEC_PER_MIN;
 const isDown = (i) => !!(G.sh && G.sh.down && G.sh.down.i === i && nowMin() < G.sh.down.until);
@@ -707,6 +720,8 @@ function buildDecks() {
     b.type = 'button'; b.className = 'deck'; b.disabled = true;
     b.innerHTML = `<canvas></canvas><span class="deck-info"><span class="deck-top"><span class="deck-label">Empty deck</span><kbd>${i + 1}</kbd></span><span class="bgauge"><i></i></span></span>`;
     b.addEventListener('click', () => pull(i));
+    const lo = (GOOD_LO / BAKE_MAX) * 100, hi = (GOOD_HI / BAKE_MAX) * 100;
+    b.querySelector('.bgauge').style.background = `linear-gradient(90deg, #56606b 0 ${lo}%, #5f9a6c ${lo}% ${hi}%, #c94d3a ${hi}%)`;
     el.appendChild(b);
     deckEls.push({ b, ctx: setupCanvas(b.querySelector('canvas'), 70), label: b.querySelector('.deck-label'), needle: b.querySelector('.bgauge i'), g: null });
   }
@@ -926,6 +941,16 @@ function update(dt) {
     if (before < GOOD_LO && p.bake >= GOOD_LO) sfx('ready');
     if (before < GOOD_HI && p.bake >= GOOD_HI) { sfx('burn'); toast('A pizza is burning in the oven!', 'bad'); }
   }
+  if (!sh.practice) {
+    // Who waited on whom: the basis for naming the bottleneck.
+    const dm = dt / SEC_PER_MIN, w = sh.wait;
+    const avail = sh.oven.map((p, i) => !isDown(i));
+    w.avail += avail.filter(Boolean).length * dm;
+    w.empty += sh.oven.filter((p, i) => avail[i] && !p).length * dm;
+    const p = sh.prep;
+    if (p && p.sauce >= MIN_P && p.cheese >= MIN_P && p.pep >= MIN_P && freeDeck() < 0) w.oven += dm;
+    if (sh.board && sh.oven.some((q) => q && q.bake >= GOOD_LO)) w.board += dm;
+  }
   if (!sh.practice && !sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promise. Overtime now.', 'bad'); }
   refreshOven(); refreshTop();
   if (sh.practice) { coach(); return; }
@@ -966,7 +991,7 @@ function titleScreen() {
     <ol class="routing" aria-label="The routing">
       <li><span class="step">1</span><b>Dough</b><span><kbd>D</kbd></span></li>
       <li><span class="step">2</span><b>Toppings</b><span>Hold <kbd>S</kbd> <kbd>C</kbd> <kbd>P</kbd></span></li>
-      <li><span class="step">3</span><b>Bake</b><span><kbd>O</kbd>, pull <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></li>
+      <li><span class="step">3</span><b>Bake</b><span><kbd>O</kbd>, pull <kbd>1</kbd> <kbd>2</kbd></span></li>
       <li><span class="step">4</span><b>Cut</b><span><kbd>K</kbd></span></li>
       <li><span class="step">5</span><b>Box</b><span><kbd>B</kbd></span></li>
     </ol>
@@ -1039,7 +1064,7 @@ function endShift(early) {
     goal: goal ? goal.short : '', hit: res ? res.hit : null,
     rev: c.rev, cogs: c.cogs, other: c.other, cost: c.good ? c.cogs / c.good : null,
     lab: c.good ? c.labor / c.good : null, oh: c.good ? c.oh / c.good : null,
-    overPer: c.good ? c.parts.over / c.good : 0, scrap: sh.scrapN, rework: sh.reworkN, books: null });
+    overPer: c.good ? c.parts.over / c.good : 0, scrap: sh.scrapN, rework: sh.reworkN, books: null, bn: d ? d.bn.id : null });
   saveHist(G.hist);
   refreshPrep(); refreshOven(); refreshBoard(); refreshLive();
   if (!d) {
@@ -1345,11 +1370,35 @@ function debData(c, sh) {
     if (h) heavyPies++;
   });
   const worst = Object.entries(heavyBy).sort((a, b) => b[1] - a[1])[0];
-  let prev = 0, gap = { len: 0, a: 0, b: 0 };
-  sh.boxTimes.forEach((t) => { if (t - prev > gap.len) gap = { len: t - prev, a: prev, b: t }; prev = t; });
+  // Gaps between boxed pizzas only: the first bake at the start isn't a gap.
+  let gap = { len: 0, a: 0, b: 0 };
+  sh.boxTimes.forEach((t, i) => { if (i && t - sh.boxTimes[i - 1] > gap.len) gap = { len: t - sh.boxTimes[i - 1], a: sh.boxTimes[i - 1], b: t }; });
   return { c, sh, good, dem: c.rate, overPer: P.over / good, scrapPer: P.scrap / good, schedHrs: sh.promiseMin / 60, evPer: P.event / good,
     per: { mat: c.mat / good, lab: c.labor / good, oh: c.oh / good, cost: c.cogs / good },
-    heavyPies, worst, gap, leftovers: sh.pies.filter((p) => p.leftover).length };
+    heavyPies, worst, gap, leftovers: sh.pies.filter((p) => p.leftover).length, bn: bottleneck(sh, c) };
+}
+const BN_NAME = { prep: 'Prep (you)', oven: 'The oven', cut: 'Cut + box' };
+function bottleneck(sh, c) {
+  const w = sh.wait, thr = Math.max(1.5, c.min * 0.06);
+  const emptyPct = w.avail ? w.empty / w.avail : 0;
+  let id = 'prep';
+  if (w.oven >= thr && w.oven >= w.board) id = 'oven';
+  else if (w.board >= thr) id = 'cut';
+  return { id, ovenWait: w.oven, boardWait: w.board, emptyPct, perPizza: c.min / Math.max(1, c.good) };
+}
+function bottleneckHTML(d) {
+  const bn = d.bn, pct = Math.round(bn.emptyPct * 100);
+  const node = (id, step, name, stat) => `<div class="node ${bn.id === id ? 'bn' : ''}">${bn.id === id ? '<span class="bn-tag">Bottleneck</span>' : ''}<small>${step}</small><b>${name}</b><span>${stat}</span></div>`;
+  const why = bn.id === 'oven' ? `Ready pizzas waited <b>${dur(bn.ovenWait)}</b> for a free deck. Faster prep wouldn't have helped. More oven would.`
+    : bn.id === 'cut' ? `Baked pizzas waited <b>${dur(bn.boardWait)}</b> because the board was full. Cut and box sooner to keep the oven turning.`
+    : `The oven sat empty <b>${pct}%</b> of the time, waiting for your next pizza. A bigger oven wouldn't have helped. Faster prep would.`;
+  return `<div class="chart-card"><h3>This Friday's bottleneck: ${BN_NAME[bn.id]}</h3>
+    <div class="flow">
+      ${node('prep', 'Steps 1–2', 'Prep (you)', `a pizza every ${mmss(bn.perPizza)}`)}<span class="arr" aria-hidden="true">→</span>
+      ${node('oven', 'Step 3', 'Oven', `decks empty ${pct}% of the time`)}<span class="arr" aria-hidden="true">→</span>
+      ${node('cut', 'Steps 4–5', 'Cut + box', bn.boardWait >= 0.5 ? `held pizzas ${dur(bn.boardWait)}` : 'never held things up')}
+    </div>
+    <p class="lesson-line" style="margin-top:6px">${why}</p></div>`;
 }
 function project(d, L) {
   const hrs = ORDER / L.rate, sched = L.honest ? hrs : d.schedHrs;
@@ -1378,9 +1427,10 @@ function leakList(d) {
   if (P.ot + P.disc > 0.004) L.push({ tag: 'Promise', label: 'Missed the promise', v: P.ot + P.disc, clue: `${dur(c.late)} late: overtime${c.discPct ? ` + ${Math.round(c.discPct * 100)}% off` : ''}` });
   if (P.idle > 0.004) L.push({ tag: 'Promise', label: 'Promised too slow', v: P.idle, clue: `Done ${dur(sh.promiseMin - c.min)} early, hours already paid` });
   if (P.scrap > 0.004) {
-    const items = sh.log.map((e) => `${e.why.toLowerCase()} ${clock(e.min)}`);
-    if (d.leftovers) items.push(`${d.leftovers} unfinished`);
-    L.push({ tag: 'Material', label: 'Scrapped pizzas', v: P.scrap, clue: items.join(' · ') });
+    const leftMat = sh.pies.filter((p) => p.leftover).reduce((a, p) => a + pieMat(p), 0);
+    const scrapMat = P.scrap - leftMat;
+    if (scrapMat > 0.004) L.push({ tag: 'Material', label: 'Scrapped pizzas', v: scrapMat, clue: sh.log.map((e) => `${e.why.toLowerCase()} ${clock(e.min)}`).join(' · ') || 'scrapped' });
+    if (leftMat > 0.004) L.push({ tag: 'Material', label: 'Made but not needed', v: leftMat, clue: `${d.leftovers} started past the order: overproduction` });
   }
   const ev = sh.event;
   if (ev && ev.choice && P.event > 0.004) {
@@ -1460,6 +1510,7 @@ function debriefScreen(keepScroll) {
       <div class="chart-card"><h3>Pizzas boxed vs. the clock</h3>
         <p class="ckey"><span style="--c:#c94d3a">You</span><span style="--c:#9aa0a6">Standard, 20 an hour</span><span style="--c:#2f6fb5">Your promise</span></p>
         <div class="xchart" data-chart="prod"></div></div>
+      ${bottleneckHTML(d)}
       <div class="chart-card"><h3>Standard profit ${money(c.std.op)} → yours ${money(c.op)}</h3>
         <p class="ckey"><span class="dot" style="--c:#c94d3a">Cost you</span>${L.some((x) => x.v < 0) ? '<span class="dot" style="--c:#2f6fb5">Saved you</span>' : ''}</p>
         ${bridgeHTML(d)}</div>
@@ -1597,7 +1648,7 @@ function refreshBooks() {
 
 function buyOvenIfReady(pay) {
   const B = G.books;
-  if (!B.ovenBought && B.ovenFund >= OVEN_COST - 0.005) { B.ovenFund -= OVEN_COST; B.ovenBought = true; B.decks = 4; pay.bought = true; }
+  if (!B.ovenBought && B.ovenFund >= OVEN_COST - 0.005) { B.ovenFund -= OVEN_COST; B.ovenBought = true; B.decks = 3; pay.bought = true; }
 }
 function settle(c) {
   // Joe's plan: every Friday's standard profit (10 pizzas x $2) goes into the new-oven fund.
@@ -1756,7 +1807,7 @@ function closeoutScreen() {
     ["Customer's $12", 'Revenue', `${money(sum('rev'))} over the run`],
     ['$5 after manufacturing cost', 'Gross profit', `${money((last.rev - last.cogs) / last.good)} a pizza on your last Friday`],
   ].map(([a, b, c]) => `<tr><td>${a}</td><td><b>${b}</b></td><td>${c}</td></tr>`).join('') : '';
-  const friRows = H.map((h) => `<tr><td>Friday ${h.n}</td><td>${h.dem}/hr</td><td class="${h.cost > STD_COST + 0.005 ? 'over' : 'under'}">${h.cost ? money(h.cost) : '…'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td></tr>`).join('');
+  const friRows = H.map((h) => `<tr><td>Friday ${h.n}</td><td>${h.dem}/hr</td><td class="${h.cost > STD_COST + 0.005 ? 'over' : 'under'}">${h.cost ? money(h.cost) : '…'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td><td>${h.bn ? BN_NAME[h.bn] : '…'}</td></tr>`).join('');
   show(`
     <p class="eyebrow">${broke ? `Joe's closed after Friday ${H.length}` : 'Three Fridays · close-out'}</p>
     <h2>One last time: did Joe make $12?</h2>
@@ -1772,8 +1823,8 @@ function closeoutScreen() {
         <div><p class="mtitle">Joe's money</p><p class="ckey"><span style="--c:#2f6fb5">Savings</span><span style="--c:#2a9d8f">Oven fund</span><span style="--c:#c94d3a">Loan</span></p><div class="xchart" data-chart="t-money"></div></div>
       </div>
       <details class="math"><summary>Show the numbers</summary><div class="scroll-x">
-        <table class="hist"><thead><tr><th></th><th>Ran</th><th>Cost / pizza</th><th>Profit</th></tr></thead><tbody>
-          <tr><td>Standard</td><td>20/hr</td><td>$7.00</td><td>${money(2 * ORDER)}</td></tr>${friRows}</tbody></table></div></details>
+        <table class="hist"><thead><tr><th></th><th>Ran</th><th>Cost / pizza</th><th>Profit</th><th>Bottleneck</th></tr></thead><tbody>
+          <tr><td>Standard</td><td>20/hr</td><td>$7.00</td><td>${money(2 * ORDER)}</td><td>The oven</td></tr>${friRows}</tbody></table></div></details>
     </div>` : ''}
     <div class="panel-card calc"><h3>A factory is a much bigger pizza shop</h3>
       <p class="note">Try a product from your line. (Example numbers.)</p>
@@ -1818,7 +1869,7 @@ function eventScreen() {
       <p class="sub">Maintenance says ${ev.down} minutes. You promised <b>${clock(sh.promiseMin)}</b>.</p>
       <div class="funds">
         ${card('call', 'Call the customer now', `New time: ${clock(sh.promiseMin + ev.down)}`, `${Math.round(REPROMISE_OFF * 100)}% off for the change`)}
-        ${card('push', 'Push on', `Keep ${clock(sh.promiseMin)} on ${sh.oven.length - 1} decks`, 'If late: overtime + a bigger discount')}
+        ${card('push', 'Push on', `Keep ${clock(sh.promiseMin)} on ${sh.oven.length - 1} deck${sh.oven.length - 1 === 1 ? '' : 's'}`, 'If late: overtime + a bigger discount')}
         ${card('expedite', 'Expedite the repair', `Back in ${ev.fast} minutes`, `$${EXPEDITE_COST} emergency call-out`)}
       </div>`);
   } else {
@@ -1852,7 +1903,8 @@ function eventLesson(d) {
   const txt = ev.choice === 'call' ? `${what}. You told the customer early and paid ${money(c.repDisc)}.`
     : ev.choice === 'push' ? (c.late > 0.5 ? `${what}. You pushed on and missed by ${dur(c.late)}: ${money(c.parts.ot + c.parts.disc)} in overtime and discount.` : `${what}. You pushed on and made it. This time.`)
     : `${what}. You paid ${money(c.evCost)} to protect the promise.`;
-  return `<p class="insight">${txt} <b>${QUOTE}</b></p>`;
+  const bnNote = ev.id === 'oven' ? (d.bn.id === 'oven' ? ' The oven was your bottleneck, so every minute of that deck was lost output.' : " The oven wasn't your bottleneck this Friday, so the lost deck cost less than it looked.") : '';
+  return `<p class="insight">${txt}${bnNote} <b>${QUOTE}</b></p>`;
 }
 
 function pauseScreen() {

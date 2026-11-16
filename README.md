@@ -64,6 +64,18 @@ Four charts carry the lesson. Each has hover tooltips and its numbers available 
 
 Series colors were checked with a color-vision-deficiency validator: red for you, blue, teal, and neutral gray for Joe's standard.
 
+## The oven and the bottleneck
+
+Joe's oven has **two decks**, and a pizza bakes for 6 kitchen minutes (12 seconds of play). That's set so two decks *just* keep pace with the 20-an-hour standard. At standard, the oven is the bottleneck; slower than that, the player is. The good window is about 2.8 seconds wide, so a pizza burns as quickly as ever. Buying the new oven adds a third deck.
+
+Every Friday's debrief names that shift's bottleneck from what happened in it:
+
+- **The oven:** ready pizzas waited for a free deck. Faster prep wouldn't have helped.
+- **Prep (you):** decks sat empty waiting for the next pizza. A bigger oven wouldn't have helped.
+- **Cut + box:** baked pizzas waited because the board was full.
+
+It's shown on the routing (prep → oven → cut + box) with the bottleneck highlighted. The Friday 2 downtime lesson says whether the lost deck hit the bottleneck, and the close-out table lists each Friday's bottleneck. Pizzas started past the order are shown as "Made but not needed" (overproduction), not as scrap.
+
 ## Floor events
 
 Fridays 2 and 3 each bring one event. They're fixed, so everyone in a class gets the same experience and results can be compared:
