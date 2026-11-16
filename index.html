@@ -344,7 +344,7 @@ button { font: inherit; color: inherit; }
 .result p { font-size: 13.5px; color: var(--on-dark-muted); }
 .result p b { color: var(--on-dark); }
 .mbars { display: flex; flex-direction: column; gap: 6px; }
-.mbar { display: grid; grid-template-columns: 112px minmax(0, 1fr) 52px; gap: 8px; align-items: center; font-size: 12.5px; }
+.mbar { display: grid; grid-template-columns: 92px minmax(0, 1fr) 52px; gap: 8px; align-items: center; font-size: 12.5px; }
 .mbar > b { text-align: right; font-variant-numeric: tabular-nums; }
 .mbar .mt { height: 12px; border-radius: 3px; background: #33404d; overflow: hidden; }
 .mbar .mt i { display: block; height: 100%; border-radius: 3px; transition: width .2s; }
@@ -357,6 +357,29 @@ button { font: inherit; color: inherit; }
 .fix .gain { font-size: 20px; font-weight: 800; color: var(--sage); font-variant-numeric: tabular-nums; }
 .fix .rank { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
 .goal-banner { background: var(--sage-tint); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+
+.strip-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 620px) { .strip-row { grid-template-columns: minmax(0, 1fr); } }
+.strip-item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; }
+.strip-item small { flex-basis: 100%; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.strip-item b { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.strip-item span { font-size: 14px; color: var(--muted); }
+.sub { font-size: 17px; color: #3c4652; }
+.sub b { color: var(--ink); }
+.vs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 22px; }
+.vs small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.vs b { font-size: clamp(36px, 7vw, 52px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.vs .arrow { font-size: 30px; color: var(--muted); padding-bottom: 6px; }
+.vs .guessed { margin-left: auto; }
+.vs .guessed b { font-size: 22px; color: var(--muted); }
+.lesson-line { font-size: 17px; }
+details.math { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+details.math summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--muted); }
+details.math[open] summary { margin-bottom: 10px; }
+.btn.link { background: none; color: var(--muted); box-shadow: none; padding: 10px 6px; text-decoration: underline; font-weight: 600; font-size: 14px; }
+.cta-row .btn.link { font-size: 14px; padding: 10px 6px; }
+.fund b { font-size: 18px; }
+.fund .fline { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
@@ -381,20 +404,20 @@ button { font: inherit; color: inherit; }
     </div>
   </header>
   <div class="progress" aria-hidden="true"><i id="progFill"></i></div>
-  <div class="coach" id="coach" hidden><span class="coach-tag">Practice pizza · no clock, no cost</span><p id="coachText"></p><button class="ghost" id="btnSkipPractice" type="button">Skip practice</button></div>
+  <div class="coach" id="coach" hidden><span class="coach-tag">Practice · no clock</span><p id="coachText"></p><button class="ghost" id="btnSkipPractice" type="button">Skip practice</button></div>
 
   <main class="line">
     <section class="station" aria-label="Prepare dough and add toppings">
-      <div class="st-head"><span class="steps"><span class="step">1</span><span class="step">2</span></span><h2>Prep: dough and toppings</h2><small>Hold to pour.<br>Let go in the green.</small></div>
+      <div class="st-head"><span class="steps"><span class="step">1</span><span class="step">2</span></span><h2>Dough + toppings</h2></div>
       <div class="prep-body">
-        <div class="peel"><canvas id="prepCv" aria-label="Pizza on the prep counter"></canvas><div class="peel-hint" id="peelHint">Stretch dough to start a pizza</div></div>
+        <div class="peel"><canvas id="prepCv" aria-label="Pizza on the prep counter"></canvas><div class="peel-hint" id="peelHint">Press D</div></div>
         <div class="prep-side">
           <div class="btns">
             <button class="btn mustard" id="btnDough" type="button">Stretch dough <kbd>D</kbd></button>
           </div>
-          <button class="pour" id="pour-sauce" data-k="sauce" type="button"><b>Sauce <kbd>S</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 1 ladle · $0.50</span></button>
-          <button class="pour" id="pour-cheese" data-k="cheese" type="button"><b>Cheese <kbd>C</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 1 handful · $2.00</span></button>
-          <button class="pour" id="pour-pep" data-k="pep" type="button"><b>Pepperoni <kbd>P</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">BOM: 12 slices · $1.00</span></button>
+          <button class="pour" id="pour-sauce" data-k="sauce" type="button"><b>Sauce <kbd>S</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">1 portion · $0.50</span></button>
+          <button class="pour" id="pour-cheese" data-k="cheese" type="button"><b>Cheese <kbd>C</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">1 portion · $2.00</span></button>
+          <button class="pour" id="pour-pep" data-k="pep" type="button"><b>Pepperoni <kbd>P</kbd></b><span class="state"></span><span class="pgauge"><i></i><em></em></span><span class="cost">1 portion · $1.00</span></button>
           <div class="btns">
             <button class="btn red" id="btnOven" type="button">Into the oven <kbd>O</kbd></button>
             <button class="btn light" id="btnBinPrep" type="button">Scrap it</button>
@@ -404,12 +427,12 @@ button { font: inherit; color: inherit; }
     </section>
 
     <section class="station dark" aria-label="Bake">
-      <div class="st-head"><span class="steps"><span class="step">3</span></span><h2>Bake</h2><small>Pull it in the green</small></div>
+      <div class="st-head"><span class="steps"><span class="step">3</span></span><h2>Bake</h2></div>
       <div class="decks" id="decks"></div>
     </section>
 
     <section class="station" aria-label="Cut">
-      <div class="st-head"><span class="steps"><span class="step">4</span></span><h2>Cut</h2><small>Check it, then cut</small></div>
+      <div class="st-head"><span class="steps"><span class="step">4</span></span><h2>Cut</h2></div>
       <div class="board"><canvas id="boardCv" aria-label="Pizza on the cutting board"></canvas></div>
       <p class="board-status" id="boardStatus">Board is empty</p>
       <div class="btns">
@@ -420,26 +443,16 @@ button { font: inherit; color: inherit; }
     </section>
 
     <section class="station" aria-label="Box">
-      <div class="st-head"><span class="steps"><span class="step">5</span></span><h2>Box</h2><small>The order</small></div>
+      <div class="st-head"><span class="steps"><span class="step">5</span></span><h2>Box</h2></div>
       <div class="boxes" id="boxes"></div>
       <p class="box-count"><b id="boxN">0</b> of 10 boxed</p>
       <div class="btns"><button class="btn red" id="btnBox" type="button">Box it <kbd>B</kbd></button></div>
     </section>
   </main>
 
-  <section class="ledger-live">
-    <div class="panel-card">
-      <h3>Cost per pizza: Joe's standard vs. this shift so far</h3>
-      <table class="tbl" id="liveTbl"></table>
-    </div>
-    <div class="panel-card">
-      <h3>What the shift has used</h3>
-      <div class="facts" id="liveFacts"></div>
-    </div>
-    <div class="panel-card books-wrap">
-      <h3>Joe's money</h3>
-      <div id="booksLive"></div>
-    </div>
+  <section class="strip-row" aria-label="This shift">
+    <div class="strip-item"><small>Your cost per pizza</small><b id="liveCost">…</b><span>Standard $7.00</span></div>
+    <div class="strip-item"><small>Joe's money</small><span id="booksMini"></span></div>
   </section>
 </div>
 
@@ -700,7 +713,7 @@ function toOven() {
 function scrapPrep() {
   if (!playing() || !G.sh.prep) return;
   G.sh.prep.state = 'scrap'; G.sh.scrapN++; G.sh.log.push({ min: nowMin(), why: 'Scrapped at prep' }); G.sh.prep = null; G.sh.pouring = null;
-  sfx('bad'); toast('Scrapped. The ingredients are still paid for.', 'bad'); refreshPrep(); refreshLive();
+  sfx('bad'); toast('Scrapped. Paid for, never sold.', 'bad'); refreshPrep(); refreshLive();
 }
 function pull(i) {
   if (!playing()) return;
@@ -732,7 +745,7 @@ function scrapBoard() {
   if (!playing() || !G.sh.board) return;
   G.sh.log.push({ min: nowMin(), why: grade(G.sh.board.bake) === 'burnt' ? 'Burnt' : 'Underbaked, scrapped' });
   G.sh.board.state = 'scrap'; G.sh.scrapN++; G.sh.board = null;
-  sfx('bad'); toast('Scrapped. Ingredients, labor and oven time, all for nothing.', 'bad'); refreshBoard(); refreshLive();
+  sfx('bad'); toast('Scrapped. Paid for, never sold.', 'bad'); refreshBoard(); refreshLive();
 }
 function box() {
   if (!playing()) return;
@@ -820,28 +833,14 @@ function refreshTop() {
   fill.style.background = late ? 'var(--red)' : 'var(--sage)';
 }
 function refreshLive() {
-  const sh = G.sh, c = sh ? calc(sh, false) : null, g = c ? c.good : 0;
-  const cell = (act, std) => {
-    if (!g) return '<td>…</td><td>…</td>';
-    const v = act / g, d = v - std;
-    return `<td>${money(v)}</td><td class="${d > 0.005 ? 'over' : d < -0.005 ? 'under' : ''}">${Math.abs(d) < 0.005 ? '$0.00' : signed(d)}</td>`;
-  };
-  $('#liveTbl').innerHTML = `
-    <thead><tr><th>Per boxed pizza</th><th>Standard</th><th>This shift</th><th>Difference</th></tr></thead>
-    <tbody>
-      <tr><td>Ingredients</td><td>$4.50</td>${cell(c ? c.mat : 0, STD_MAT)}</tr>
-      <tr><td>Labor</td><td>$1.00</td>${cell(c ? c.labor : 0, STD_LAB)}</tr>
-      <tr><td>Overhead</td><td>$1.50</td>${cell(c ? c.oh : 0, STD_OH)}</tr>
-      <tr class="total"><td>Cost to make</td><td>$7.00</td>${cell(c ? c.cogs : 0, STD_COST)}</tr>
-    </tbody>`;
-  const f = (label, val) => `<div class="fact"><small>${label}</small><b>${val}</b></div>`;
-  $('#liveFacts').innerHTML = [
-    f('Ingredients used', c ? money(c.mat) : '$0.00'),
-    f('Labor so far', c ? money(c.labor) : '$0.00'),
-    f('Oven and shop overhead', c ? money(c.oh) : '$0.00'),
-    f('Scrapped / reworked', sh ? `${sh.scrapN} / ${sh.reworkN}` : '0 / 0'),
-  ].join('');
+  const sh = G.sh, c = sh && !sh.practice ? calc(sh, false) : null;
+  const el = $('#liveCost');
+  if (!c || !c.good) { el.textContent = '…'; el.className = ''; return; }
+  const v = c.cogs / c.good;
+  el.textContent = money(v);
+  el.className = v > STD_COST + 0.005 ? 'over' : 'under';
 }
+
 let liveTick = 0;
 
 /* ---------- loop ---------- */
@@ -853,7 +852,7 @@ function update(dt) {
     if (!p || pourBlock(k)) sh.pouring = null;
     else {
       p[k] = Math.min(MAX_P, p[k] + dt / POUR_SEC);
-      if (p[k] >= MAX_P) { sh.pouring = null; toast(`That's ${Math.round(MAX_P * 100)}% of a portion. The customer still pays $12.`, 'bad'); }
+      if (p[k] >= MAX_P) { sh.pouring = null; toast('Way over the portion. The customer still pays $12.', 'bad'); }
     }
     refreshPrep();
   }
@@ -864,7 +863,7 @@ function update(dt) {
     if (before < GOOD_LO && p.bake >= GOOD_LO) sfx('ready');
     if (before < GOOD_HI && p.bake >= GOOD_HI) { sfx('burn'); toast('A pizza is burning in the oven!', 'bad'); }
   }
-  if (!sh.practice && !sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promised time. You are on overtime and the customer is waiting.', 'bad'); }
+  if (!sh.practice && !sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promise. Overtime now.', 'bad'); }
   refreshOven(); refreshTop();
   if (sh.practice) { coach(); return; }
   liveTick += dt;
@@ -893,60 +892,56 @@ function titleScreen() {
   show(`
     <p class="eyebrow">Business 101 · Joe's Pizza</p>
     <h1>Run Joe's Friday shift</h1>
-    <p class="lead">A caterer just ordered <b>${ORDER} pepperoni pizzas at $12 each</b>. You're on the line. Make them to Joe's standard, keep your promise, then see what the shift really earned.</p>
+    <p class="sub">${ORDER} pizzas. $12 each. Can you make them for Joe's $7?</p>
     <div class="cost-eq" aria-label="Joe's standard cost">
       <div class="chip m"><b>$4.50</b><small>Ingredients</small></div><span class="op">+</span>
       <div class="chip r"><b>$1.00</b><small>Labor</small></div><span class="op">+</span>
       <div class="chip g"><b>$1.50</b><small>Overhead</small></div><span class="op">=</span>
-      <div class="chip total"><b>$7.00</b><small>Standard cost</small></div>
+      <div class="chip total"><b>$7.00</b><small>at 20 an hour</small></div>
     </div>
-    <p class="note">Labor is $20 an hour at Joe's standard run rate of 20 pizzas an hour. Overhead is the oven and the shop, about $30 an hour. The customer pays $12, which leaves $5 of gross profit, and $2 after other business costs.</p>
     <ol class="routing" aria-label="The routing">
-      <li><span class="step">1</span><b>Prepare dough</b><span>Press <kbd>D</kbd></span></li>
-      <li><span class="step">2</span><b>Add toppings</b><span>Hold <kbd>S</kbd> <kbd>C</kbd> <kbd>P</kbd>. Let go in the green: one BOM portion.</span></li>
-      <li><span class="step">3</span><b>Bake</b><span><kbd>O</kbd> to load. Pull with <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> in the green.</span></li>
-      <li><span class="step">4</span><b>Cut</b><span>Press <kbd>K</kbd></span></li>
-      <li><span class="step">5</span><b>Box</b><span>Press <kbd>B</kbd></span></li>
+      <li><span class="step">1</span><b>Dough</b><span><kbd>D</kbd></span></li>
+      <li><span class="step">2</span><b>Toppings</b><span>Hold <kbd>S</kbd> <kbd>C</kbd> <kbd>P</kbd></span></li>
+      <li><span class="step">3</span><b>Bake</b><span><kbd>O</kbd>, pull <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></li>
+      <li><span class="step">4</span><b>Cut</b><span><kbd>K</kbd></span></li>
+      <li><span class="step">5</span><b>Box</b><span><kbd>B</kbd></span></li>
     </ol>
-    <p class="note">Mouse and touch work too: hold a topping button to pour. Two seconds of play is one minute in the kitchen, so the 20-an-hour standard means a pizza every 6 seconds.</p>
-    <p>Every shift's profit or loss lands on Joe's books. He has <b>${money(G.books.savings)}</b> in savings and <b>${money(G.books.ovenFund)}</b> saved toward a <b>${money(OVEN_COST)}</b> new oven. His plan puts each Friday's standard profit, ${ORDER} × $2 = ${money(2 * ORDER)}, toward it.</p>
-    <p class="note">A run is three Fridays. Then Joe closes the books and you see what it all adds up to.</p>
+    <p class="note">Three Fridays. Then Joe closes the books.</p>
     <div class="cta-row">${G.hist.length >= RUN_SHIFTS || G.books.closed
       ? `<button class="btn red" type="button" data-act="newrun">Start a new run</button><button class="btn light" type="button" data-act="closeout">See the last close-out</button>`
       : G.hist.length
-      ? `<button class="btn red" type="button" data-act="promise">Continue: Friday ${G.hist.length + 1} of ${RUN_SHIFTS}</button><button class="btn light" type="button" data-act="practice">Practice a pizza</button>`
+      ? `<button class="btn red" type="button" data-act="promise">Continue: Friday ${G.hist.length + 1}</button><button class="btn light" type="button" data-act="practice">Practice a pizza</button>`
       : G.practiced
       ? `<button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button>`
-      : `<button class="btn red" type="button" data-act="practice">Practice one pizza first</button><button class="btn light" type="button" data-act="promise">Skip to the order</button>`}</div>`);
+      : `<button class="btn red" type="button" data-act="practice">Practice one pizza</button><button class="btn light" type="button" data-act="promise">Skip practice</button>`}</div>`);
 }
 
 const FRAMES = [
-  "Joe's plan assumes 20 pizzas an hour. That's the number the business built its costs on.",
-  'Now you know what the kitchen actually did last Friday. Which number will you promise from?',
-  'Last Friday of the run. If you really got faster, you can promise faster. Can you prove it?',
+  () => "Joe's plan says 20 an hour.",
+  () => `Last Friday you ran ${G.hist[G.hist.length - 1].dem} an hour. Which number do you trust?`,
+  () => 'Got faster? Promise faster.',
 ];
 function promiseScreen() {
   if (G.shiftNo >= RUN_SHIFTS || G.books.closed) { closeoutScreen(); return; }
   G.phase = 'promise';
   const lastDem = G.hist.length ? G.hist[G.hist.length - 1].dem : 0;
   const rates = [{ r: STD_RATE, tag: "Joe's standard" }];
-  if (lastDem > 0 && Math.abs(lastDem - STD_RATE) >= 0.05) rates.push({ r: lastDem, tag: 'You demonstrated last shift' });
-  [15, 12].forEach((r) => { if (!rates.some((o) => Math.abs(o.r - r) < 0.05)) rates.push({ r, tag: r === 15 ? 'A cautious guess' : 'A slow night' }); });
+  if (lastDem > 0 && Math.abs(lastDem - STD_RATE) >= 0.05) rates.push({ r: lastDem, tag: 'What you ran' });
+  [15, 12].forEach((r) => { if (!rates.some((o) => Math.abs(o.r - r) < 0.05)) rates.push({ r, tag: r === 15 ? 'A guess' : 'A slow night' }); });
   G.pickRate = lastDem > 0 ? rates.find((o) => Math.abs(o.r - lastDem) < 0.05 || o.r === lastDem)?.r ?? STD_RATE : STD_RATE;
   const opts = rates.map((o) => {
     const min = (ORDER / o.r) * 60;
     return `<button type="button" class="opt" role="radio" aria-checked="${o.r === G.pickRate}" data-rate="${o.r}">
       <span class="tag">${o.tag}</span><span class="rate">${o.r}<small> pizzas / hr</small></span>
-      <span class="math">${ORDER} ÷ ${o.r} = ${dur(min)}</span><span class="ready">Ready ${clock(min)}</span></button>`;
+      <span class="math">${dur(min)}</span><span class="ready">Ready ${clock(min)}</span></button>`;
   }).join('');
   show(`
-    <p class="eyebrow">Friday ${G.shiftNo + 1} of ${RUN_SHIFTS} · Order: ${ORDER} pizzas · Start: 4:00 PM</p>
+    <p class="eyebrow">Friday ${G.shiftNo + 1} of ${RUN_SHIFTS} · ${ORDER} pizzas · starts 4:00 PM</p>
     <p class="quote">"When will it be ready?"</p>
-    <p>${FRAMES[G.shiftNo] || ''}</p>
-    ${G.goal ? `<p class="goal-banner"><b>Your goal this shift:</b> ${G.goal.label}. The debrief will check it.</p>` : ''}
-    <p>Pick the run rate you'll plan with. Joe schedules and pays your hours to match the promise. Finish late and every extra hour is overtime at $30, and the caterer takes 5% off the bill for every 15 minutes they wait, up to 25%.</p>
+    <p class="sub">${FRAMES[G.shiftNo] ? FRAMES[G.shiftNo]() : ''}</p>
+    ${G.goal ? `<p class="goal-banner"><b>Your goal:</b> ${G.goal.label}</p>` : ''}
     <div class="options" role="radiogroup" aria-label="Planning run rate">${opts}</div>
-    <div class="panel-card books-wrap"><h3>Joe's money going into this shift</h3>${booksHTML()}</div>
+    <p class="note">Late means overtime and a discount.</p>
     <div class="cta-row"><button class="btn red" type="button" data-act="start">Promise it and start</button>
       <button class="btn light" type="button" data-act="title">Back</button></div>`);
 }
@@ -957,7 +952,7 @@ function startShift() {
   G.phase = 'play'; G.paused = false;
   hide();
   refreshPrep(); refreshOven(); refreshBoard(); refreshBoxes(); refreshTop(); refreshLive();
-  toast(`Promised for ${clock(G.sh.promiseMin)}. The clock is running.`);
+  toast(`Promised ${clock(G.sh.promiseMin)}. Go!`);
 }
 
 function endShift(early) {
@@ -1124,37 +1119,36 @@ function project(d, L) {
 }
 function goalResult(goal, d) {
   const c = d.c;
-  if (goal.id === 'rate') return { hit: d.dem >= goal.target - 0.2, txt: `You ran ${r1(d.dem)}/hr against a goal of ${goal.target}/hr.` };
-  if (goal.id === 'scrap') return { hit: d.sh.scrapN === 0, txt: d.sh.scrapN ? `${d.sh.scrapN} pizza${d.sh.scrapN > 1 ? 's' : ''} scrapped this time.` : 'Not one pizza scrapped.' };
-  if (goal.id === 'exact') return { hit: d.overPer <= 0.05, txt: `Heavy portions cost ${money(Math.max(0, d.overPer))} a pizza this time.` };
+  if (goal.id === 'rate') return { hit: d.dem >= goal.target - 0.2, txt: `You ran ${r1(d.dem)}.` };
+  if (goal.id === 'scrap') return { hit: d.sh.scrapN === 0, txt: d.sh.scrapN ? `${d.sh.scrapN} scrapped.` : 'Nothing scrapped.' };
+  if (goal.id === 'exact') return { hit: d.overPer <= 0.05, txt: `${money(Math.max(0, d.overPer))} a pizza over.` };
   const early = d.sh.promiseMin - c.min;
-  return { hit: c.late <= 0.5 && early < 5, txt: c.late > 0.5 ? `You finished ${dur(c.late)} late.` : early >= 5 ? `You finished ${dur(early)} early, so Joe paid for hours nobody needed.` : 'You finished within a few minutes of the promise.' };
+  return { hit: c.late <= 0.5 && early < 5, txt: c.late > 0.5 ? `${dur(c.late)} late.` : early >= 5 ? `${dur(early)} early.` : 'Right on time.' };
 }
+
 function leakList(d) {
   const c = d.c, P = c.parts, sh = d.sh, L = [];
   const pace = P.slow + P.oh;
   L.push({ tag: 'Time', label: pace >= 0 ? 'Slower than 20 an hour' : 'Faster than 20 an hour', v: pace,
-    detail: `At ${r1(d.dem)}/hr each pizza took ${mmss(c.min / d.good)} against the 3:00 standard. Labor and the oven are paid by the hour, not by the pizza.${d.gap.len >= 4 ? ` Your longest stretch without boxing a pizza was ${dur(d.gap.len)} (${clock(d.gap.a)} to ${clock(d.gap.b)}).` : ''}` });
-  if (P.ot + P.disc > 0.004) L.push({ tag: 'Promise', label: 'Missed the promise', v: P.ot + P.disc,
-    detail: `Ready ${dur(c.late)} after ${clock(sh.promiseMin)}. Overtime premium ${money(P.ot)}${P.disc ? `, and the caterer took ${Math.round(c.discPct * 100)}% off the bill (${money(P.disc)})` : ''}.` });
-  if (P.idle > 0.004) L.push({ tag: 'Promise', label: 'Promised slower than you ran', v: P.idle,
-    detail: `Done ${dur(sh.promiseMin - c.min)} early. Joe had already scheduled and paid for those hours.` });
+    clue: `${mmss(c.min / d.good)} a pizza vs. 3:00${d.gap.len >= 4 ? ` · longest gap ${dur(d.gap.len)}` : ''}` });
+  if (P.ot + P.disc > 0.004) L.push({ tag: 'Promise', label: 'Missed the promise', v: P.ot + P.disc, clue: `${dur(c.late)} late: overtime${c.discPct ? ` + ${Math.round(c.discPct * 100)}% off` : ''}` });
+  if (P.idle > 0.004) L.push({ tag: 'Promise', label: 'Promised too slow', v: P.idle, clue: `Done ${dur(sh.promiseMin - c.min)} early, hours already paid` });
   if (P.scrap > 0.004) {
-    const items = sh.log.map((e) => `${e.why} at ${clock(e.min)}`);
-    if (d.leftovers) items.push(`${d.leftovers} left unfinished when the shift ended`);
-    L.push({ tag: 'Material', label: 'Scrapped pizzas', v: P.scrap, detail: `${items.join('. ')}. Ingredients you paid for and couldn't sell.` });
+    const items = sh.log.map((e) => `${e.why.toLowerCase()} ${clock(e.min)}`);
+    if (d.leftovers) items.push(`${d.leftovers} unfinished`);
+    L.push({ tag: 'Material', label: 'Scrapped pizzas', v: P.scrap, clue: items.join(' · ') });
   }
-  if (Math.abs(P.over) > 0.004) L.push({ tag: 'Material', label: P.over > 0 ? 'Heavy portions' : 'Light portions', v: P.over,
-    detail: P.over > 0 ? `${d.heavyPies} of ${d.good} pizzas went over the BOM. Most of it was ${ING_LABEL[d.worst[0]]} (${money(d.worst[1])}).` : 'You poured slightly under the BOM.' });
+  if (Math.abs(P.over) > 0.004) L.push({ tag: 'Material', label: P.over > 0 ? 'Heavy portions' : 'Light portions', v: P.over, clue: P.over > 0 ? `mostly ${ING_LABEL[d.worst[0]]}` : 'slightly under' });
   return L.sort((a, b) => b.v - a.v);
 }
+
 function fixList(d) {
   const base = { rate: d.dem, exact: false, noScrap: false, honest: false }, b = project(d, base);
   const tgt = d.dem >= STD_RATE - 0.05 ? null : Math.min(STD_RATE, Math.round(d.dem) + 4);
   const list = [
-    { id: 'rate', label: tgt ? `Raise the run rate to ${tgt}/hr` : 'Raise the run rate', short: tgt ? `${tgt}/hr` : 'Rate', target: tgt,
+    { id: 'rate', label: tgt ? `Run ${tgt} an hour` : 'Run faster', short: tgt ? `${tgt}/hr` : 'Rate', target: tgt,
       how: 'Keep a dough ready and the oven loaded so the line never waits.', L: { ...base, rate: tgt || d.dem } },
-    { id: 'honest', label: 'Promise from the rate you actually run', short: 'Honest promise',
+    { id: 'honest', label: 'Honest promise', short: 'Honest promise',
       how: 'Plan with demonstrated capability instead of the standard.', L: { ...base, honest: true } },
     { id: 'scrap', label: 'Zero scrap', short: 'Zero scrap', how: 'Pull every pizza in the green. Never let a deck burn.', L: { ...base, noScrap: true } },
     { id: 'exact', label: 'Exact portions', short: 'Exact portions', how: 'Let go in the green on every pour.', L: { ...base, exact: true } },
@@ -1177,112 +1171,95 @@ function stackRow(label, mat, lab, oh, scale, guess) {
 }
 function debriefScreen(keepScroll) {
   const d = G.deb, c = d.c, sh = d.sh;
-  const head = `<p class="eyebrow">Shift ${G.shiftNo} debrief · ${d.early ? `${c.good} of ${ORDER} boxed` : 'Order complete'} · ${clock(c.min)}</p>`;
+  const head = `<p class="eyebrow">Friday ${G.shiftNo} debrief${d.early ? ` · ${c.good} of ${ORDER} boxed` : ''}</p>`;
+  const next = (n, label) => `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="${n}">${label}</button></div>`;
   let body = '';
   if (d.step === 1) {
     const goalCard = d.goal ? `<div class="goal-card ${d.res.hit ? 'hit' : 'miss'}"><span class="mark">${d.res.hit ? '✓' : '✗'}</span>
-      <p><b>Your goal was: ${d.goal.label}.</b> ${d.res.hit ? 'You hit it.' : 'Not this time.'} ${d.res.txt}</p></div>` : '';
+      <p><b>Goal ${d.res.hit ? 'hit' : 'missed'}: ${d.goal.label}.</b> ${d.res.txt}</p></div>` : '';
     const per = d.per;
     if (!d.guessed) {
       body = `${goalCard}
-        <h2>Joe's standard pizza costs $7.00 to make. What did one of yours cost?</h2>
-        <p>Count everything it took: ingredients, your time on the line, and the oven. Drag to your guess, then lock it in.</p>
-        <div class="guess"><label for="guessIn" class="note">Your guess</label><input type="range" id="guessIn" min="5" max="15" step="0.25" value="${d.guess}"><output id="guessOut" for="guessIn">${money(d.guess)}</output></div>
+        <h2>Joe's pizza costs $7.00 to make. What did yours cost?</h2>
+        <div class="guess"><input type="range" id="guessIn" aria-label="Your guess" min="5" max="15" step="0.25" value="${d.guess}"><output id="guessOut" for="guessIn">${money(d.guess)}</output></div>
         <div class="cta-row"><button class="btn red" type="button" data-act="reveal">Lock in my guess</button></div>`;
     } else {
       const matD = per.mat - STD_MAT, timeD = per.lab - STD_LAB + per.oh - STD_OH, diff = per.cost - STD_COST;
       const scale = Math.max(per.cost, STD_COST, d.guess) * 1.06;
-      const off = d.guess - per.cost;
-      const fb = Math.abs(off) <= 0.3 ? 'Spot on. You counted the clock as well as the ingredients.'
-        : off < 0 ? `You guessed ${money(-off)} low. Most people do: they price what's on the pizza and forget what the clock costs.`
-        : `You guessed ${money(off)} high. Your shift ran closer to standard than you thought.`;
-      const most = diff <= 0.05 ? `That's Joe's standard. The BOM, the routing and the run rate all held, so the $12 left the $5 the plan promised.`
-        : timeD >= matD ? `Most of the extra came from <b>time</b>. The pizza didn't change, the process did: the same $20 hour and the same oven, spread over fewer pizzas.`
-        : `Most of the extra came from <b>ingredients</b>: heavy portions and scrap. The recipe is the BOM, and the $12 price only covers one portion.`;
+      const h = diff <= 0.05 ? 'Right on standard.' : timeD >= matD ? "The pizza didn't change. The process did." : 'The recipe is the BOM.';
+      const why = diff <= 0.05 ? 'Recipe, routing and run rate all held.'
+        : timeD >= matD ? `<b>${signed(timeD)}</b> of it was time: the same $50 hour spread over fewer pizzas.`
+        : `<b>${signed(matD)}</b> of it was ingredients: heavy portions and scrap.`;
       body = `${goalCard}
-        <h2>What one of your pizzas cost</h2>
-        <p class="big-line">You guessed <b>${money(d.guess)}</b>. Each pizza you boxed cost <b class="${diff > 0.05 ? 'over' : 'under'}">${money(per.cost)}</b> to make.</p>
-        <div class="stacks">
-          ${stackRow("Joe's standard", STD_MAT, STD_LAB, STD_OH, scale, d.guess)}
-          ${stackRow('Your shift', per.mat, per.lab, per.oh, scale, d.guess)}
-        </div>
-        <p class="legend"><span style="--c:var(--mustard)">Ingredients</span><span style="--c:var(--red)">Labor</span><span style="--c:var(--sage)">Overhead</span><span style="--c:transparent;border-left:2px dashed var(--navy);padding-left:4px">Your guess</span></p>
-        <p>${fb}</p>
-        <div class="split">
-          <div class="mat"><small>Ingredients · what's on the pizza</small><b>${signed(matD)}</b><span>a pizza against the $4.50 BOM</span></div>
-          <div class="time"><small>Labor + overhead · paid by the hour</small><b>${signed(timeD)}</b><span>a pizza against $2.50 at 20/hr</span></div>
-        </div>
-        <p class="insight">The customer still paid $12. Gross profit per pizza went from $5.00 to <b>${money(PRICE - per.cost)}</b>. ${most}</p>
-        <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="2">Next: find the leaks</button>
-          <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+        <h2>${h}</h2>
+        <div class="vs"><div><small>Joe's standard</small><b>$7.00</b></div><span class="arrow" aria-hidden="true">→</span>
+          <div><small>Your pizza</small><b class="${diff > 0.05 ? 'over' : 'under'}">${money(per.cost)}</b></div>
+          <div class="guessed"><small>You guessed</small><b>${money(d.guess)}</b></div></div>
+        <div class="stacks">${stackRow("Joe's standard", STD_MAT, STD_LAB, STD_OH, scale, d.guess)}${stackRow('Your pizza', per.mat, per.lab, per.oh, scale, d.guess)}</div>
+        <p class="legend"><span style="--c:var(--mustard)">Ingredients</span><span style="--c:var(--red)">Labor</span><span style="--c:var(--sage)">Overhead</span></p>
+        <p class="lesson-line">${why}</p>
+        ${next(2, 'Next: where did it go?')}`;
     }
   } else if (d.step === 2) {
     const L = leakList(d), maxV = Math.max(...L.map((x) => Math.abs(x.v)), 0.01);
     const lost = c.std.op - c.op;
-    const timeV = L.filter((x) => x.tag !== 'Material' && x.v > 0).reduce((s, x) => s + x.v, 0);
-    const matV = L.filter((x) => x.tag === 'Material' && x.v > 0).reduce((s, x) => s + x.v, 0);
-    const share = timeV + matV > 0 ? Math.round((timeV / (timeV + matV)) * 100) : 0;
+    const timeV = L.filter((x) => x.tag !== 'Material' && x.v > 0).reduce((a, x) => a + x.v, 0);
+    const matV = L.filter((x) => x.tag === 'Material' && x.v > 0).reduce((a, x) => a + x.v, 0);
+    const h = lost <= 0.005 ? 'You beat the standard.' : timeV >= matV ? 'Most of it was the clock.' : 'Most of it was material.';
     const rows = L.map((x) => `<div class="leak ${x.v < 0 ? 'good' : ''}"><span class="tag t-${x.tag.toLowerCase()}">${x.tag}</span>
-      <div><b>${x.label}</b><p>${x.detail}</p></div><span class="amt">${x.v < 0 ? '+' : '-'}${money(Math.abs(x.v))}</span>
+      <div><b>${x.label}</b><p>${x.clue}</p></div><span class="amt">${x.v < 0 ? '+' : '-'}${money(Math.abs(x.v))}</span>
       <span class="lbar"><i style="width:${(Math.abs(x.v) / maxV) * 100}%"></i></span></div>`).join('');
-    body = `<h2>Where did the money go?</h2>
-      <p>Joe's standard for ${c.good} pizzas is <b>${money(c.std.op)}</b> of operating profit. ${c.op < 0 ? 'You ended at' : 'You kept'} <b>${money(c.op)}</b>. ${lost > 0.005 ? `Here's where the other <b>${money(lost)}</b> went, biggest first.` : 'You beat the standard.'}</p>
+    body = `<h2>${h}</h2>
+      <p class="sub">Standard profit <b>${money(c.std.op)}</b> → yours <b class="${c.op < c.std.op - 0.005 ? 'over' : 'under'}">${money(c.op)}</b></p>
       <div class="leaks">${rows}</div>
-      ${lost > 0.005 ? `<p class="insight">Time and promises cost you <b>${money(timeV)}</b>. Ingredients cost <b>${money(matV)}</b>. ${share >= 50
-        ? `That's ${share}% of the leak on the clock. Supervisors control the clock: run rate, gaps, and the promise.`
-        : `Most of the leak was material this time. Every gram over the BOM and every scrapped pizza is paid for and never sold.`}</p>` : ''}
-      <div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="3">Next: payday</button>
-        <button class="btn light" type="button" data-act="step" data-step="1">Back</button>
-        <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+      ${next(3, 'Next: payday')}`;
   } else if (d.step === 3) {
     body = paydayHTML(d);
   } else {
     const F = fixList(d), best = F.list[0];
     const lo = Math.max(4, Math.floor(Math.min(d.dem, 20)) - 2);
-    const lv = d.lv;
+    const lv = d.lv, final = G.shiftNo >= RUN_SHIFTS;
     const cards = ['rate', 'honest', 'scrap', 'exact'].map((id) => {
       const f = F.list.find((x) => x.id === id), rank = F.list.indexOf(f) + 1, none = f.gain < 0.01;
       return `<button type="button" class="fix" role="radio" aria-checked="${d.pick === id}" data-act="pick" data-id="${id}" ${none ? 'disabled' : ''}>
         ${d.locked && !none ? `<span class="rank">${rank === 1 ? 'Biggest lever' : `#${rank}`}</span>` : ''}
-        <b>${f.label}</b><span>${none ? 'Nothing to win here this shift.' : f.how}</span>
-        ${d.locked && !none ? `<span class="gain">+${money(f.gain)}</span><span>more operating profit on this order</span>` : ''}</button>`;
+        <b>${f.label}</b>${none ? '<span>Nothing to win here</span>' : ''}
+        ${d.locked && !none ? `<span class="gain">+${money(f.gain)}</span>` : ''}</button>`;
     }).join('');
     const picked = F.list.find((x) => x.id === d.pick);
     const verdict = d.locked && picked ? (picked.id === best.id
-      ? `<p class="insight"><b>Best call.</b> ${picked.label} is worth ${money(picked.gain)} on this order, more than any other single fix.</p>`
-      : `<p class="insight">${picked.label} is worth ${money(picked.gain)}. <b>${best.label}</b> was worth ${money(best.gain)}.${G.shiftNo >= RUN_SHIFTS ? '' : ' You can switch, or keep your pick: the next shift will check it.'}</p>`) : '';
-    const final = G.shiftNo >= RUN_SHIFTS;
-    body = `<h2>${final ? "Last Friday's done. If there were one more, which fix would you make?" : "You're the supervisor. Pick one fix for the next shift."}</h2>
-      <p>Try the levers first and watch what each one does to the cost of a pizza and to Joe's profit on a ${ORDER}-pizza order.${d.early ? ' You ended early, so these numbers project your pace across the full order.' : ''}</p>
+      ? `<p class="insight"><b>Best call.</b> Worth ${money(picked.gain)} on a Friday.</p>`
+      : `<p class="insight">The biggest lever was <b>${best.label}</b>: ${money(best.gain)}.</p>`) : '';
+    body = `<h2>${final ? 'One more Friday: which fix?' : 'Pick one fix for next Friday.'}</h2>
+      <p class="sub">Try the levers. Then pick.</p>
       <div class="sandbox">
         <div class="levers">
           <div class="lever"><label for="lvRate">Run rate <span id="lvRateOut">${r1(lv.rate)}/hr</span></label>
-            <input type="range" id="lvRate" min="${lo}" max="24" step="0.1" value="${r1(lv.rate)}"><small>You ran ${r1(d.dem)}/hr. Joe's standard is 20.</small></div>
-          <div class="lever switch"><label><input type="checkbox" id="lvHonest" ${lv.honest ? 'checked' : ''}> Promise from the rate you run</label><small>You promised from ${sh.rate}/hr.</small></div>
-          <div class="lever switch"><label><input type="checkbox" id="lvScrap" ${lv.noScrap ? 'checked' : ''}> Zero scrap</label><small>${sh.scrapN} scrapped this shift.</small></div>
-          <div class="lever switch"><label><input type="checkbox" id="lvExact" ${lv.exact ? 'checked' : ''}> Exact portions</label><small>Heavy portions cost ${money(Math.max(0, d.overPer))} a pizza.</small></div>
+            <input type="range" id="lvRate" min="${lo}" max="24" step="0.1" value="${r1(lv.rate)}"><small>You ran ${r1(d.dem)}. Standard 20.</small></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvHonest" ${lv.honest ? 'checked' : ''}> Honest promise</label></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvScrap" ${lv.noScrap ? 'checked' : ''}> Zero scrap</label></div>
+          <div class="lever switch"><label><input type="checkbox" id="lvExact" ${lv.exact ? 'checked' : ''}> Exact portions</label></div>
         </div>
         <div class="result" aria-live="polite">
-          <small>Cost to make one pizza</small><div class="rbig" id="sbCost">$0.00</div>
+          <small>Cost per pizza</small><div class="rbig" id="sbCost">$0.00</div>
           <div class="mbars" id="sbBars"></div>
           <p id="sbOp"></p>
         </div>
       </div>
-      <h3 style="margin:4px 0 0;font-size:16px">Which one fix is worth the most? Pick yours.</h3>
-      <div class="fixes" role="radiogroup" aria-label="One fix for the next shift">${cards}</div>
+      <div class="fixes" role="radiogroup" aria-label="One fix for next Friday">${cards}</div>
       ${verdict}
       <div class="cta-row">
         ${d.locked ? (final ? '<button class="btn red" type="button" data-act="closeout">Close out the run</button>'
-          : `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal and plan the next shift</button>`)
+          : `<button class="btn red" type="button" data-act="commit" ${d.pick ? '' : 'disabled'}>Make it my goal</button>`)
           : `<button class="btn red" type="button" data-act="lock" ${d.pick ? '' : 'disabled'}>Lock in my pick</button>`}
-        <button class="btn light" type="button" data-act="step" data-step="3">Back</button>
-        <button class="btn light" type="button" data-act="full">See the full numbers</button></div>`;
+        <button class="btn link" type="button" data-act="full">Full numbers</button></div>`;
   }
   const scrollY = $('#overlay').scrollTop;
   show(`${stepper(d.step)}${head}${body}`, true);
   if (keepScroll) $('#overlay').scrollTop = scrollY;
   if (d.step === 4) updateSandbox();
 }
+
 function readLevers() {
   const lv = G.deb.lv;
   lv.rate = parseFloat($('#lvRate').value);
@@ -1296,8 +1273,8 @@ function updateSandbox() {
   $('#sbCost').textContent = money(now.cost);
   const scale = Math.max(now.cost, base.cost, STD_COST) * 1.05;
   const bar = (label, v, col) => `<div class="mbar"><span>${label}</span><span class="mt"><i style="width:${(v / scale) * 100}%;background:${col}"></i></span><b>${money(v)}</b></div>`;
-  $('#sbBars').innerHTML = bar("Joe's standard", STD_COST, '#bfae94') + bar(d.early ? 'Your pace, full order' : 'Your shift', base.cost, '#c94d3a') + bar('With these changes', now.cost, '#e6ae47');
-  $('#sbOp').innerHTML = `Operating profit on ${ORDER} pizzas: <b>${money(now.op)}</b>. ${d.early ? 'At your pace' : 'Your shift'}: ${money(base.op)}. Standard: ${money(2 * ORDER)}.${now.pct ? ` Still late, so the caterer takes ${Math.round(now.pct * 100)}% off.` : ''}`;
+  $('#sbBars').innerHTML = bar('Standard', STD_COST, '#bfae94') + bar('Yours', base.cost, '#c94d3a') + bar('With changes', now.cost, '#e6ae47');
+  $('#sbOp').innerHTML = `Friday profit <b>${money(now.op)}</b> · yours ${money(base.op)} · standard ${money(2 * ORDER)}`;
 }
 
 /* ---------- practice ---------- */
@@ -1317,32 +1294,33 @@ function endPractice() {
 }
 function practiceDone() {
   endPractice(); G.practiced = true; sfx('done');
-  show(`<p class="eyebrow">Practice complete</p><h2>That's the routing.</h2>
-    <p>Dough, toppings, bake, cut, box. On the real shift the clock runs and every portion, minute and scrapped pizza costs Joe money. His standard is 20 pizzas an hour: one every 6 seconds of play.</p>
-    <p class="note">Tip: you don't have to wait for the oven. Start the next pizza while one bakes. There are ${G.books.decks} decks.</p>
+  show(`<p class="eyebrow">Practice done</p><h2>That's the routing.</h2>
+    <p class="sub">Now the clock runs. Joe's standard: one pizza every 6 seconds.</p>
+    <p class="note">Tip: start the next pizza while one bakes.</p>
     <div class="cta-row"><button class="btn red" type="button" data-act="promise">Take the order</button><button class="btn light" type="button" data-act="practice">Practice again</button></div>`);
 }
+
 function coach() {
   const sh = G.sh, b = sh.board, ov = sh.oven.findIndex((x) => x);
   let key, txt, sel;
   if (b) {
     const g = grade(b.bake);
-    if (g === 'burnt') { key = 'scrap'; txt = 'That one burned. Nobody pays $12 for it. Press Scrap, then make another.'; sel = '#btnScrapBoard'; }
-    else if (g === 'under') { key = 'rework'; txt = 'Pulled too early: it is still pale. Press Back in oven to rework it.'; sel = '#btnRework'; }
-    else if (!b.cut) { key = 'cut'; txt = 'Step 4: baked to standard. Press K (or Cut).'; sel = '#btnCut'; }
-    else { key = 'box'; txt = 'Step 5: press B (or Box it) to finish the pizza.'; sel = '#btnBox'; }
+    if (g === 'burnt') { key = 'scrap'; txt = 'Burnt. Press Scrap.'; sel = '#btnScrapBoard'; }
+    else if (g === 'under') { key = 'rework'; txt = 'Too pale. Back in oven.'; sel = '#btnRework'; }
+    else if (!b.cut) { key = 'cut'; txt = 'Press K to cut.'; sel = '#btnCut'; }
+    else { key = 'box'; txt = 'Press B to box.'; sel = '#btnBox'; }
   } else if (ov >= 0) {
     const g = grade(sh.oven[ov].bake);
-    if (g === 'good') { key = 'pull'; txt = `In the green! Press ${ov + 1} (or tap the oven deck) to pull it.`; sel = '#decks'; }
-    else if (g === 'burnt') { key = 'burn'; txt = `It's burning! Pull it with ${ov + 1} anyway and see what happens.`; sel = '#decks'; }
-    else { key = 'wait'; txt = 'Step 3: baking. Watch the needle and pull it when it reaches the green. On the real shift you would start the next pizza now.'; sel = '#decks'; }
+    if (g === 'good') { key = 'pull'; txt = `Green! Press ${ov + 1} to pull it.`; sel = '#decks'; }
+    else if (g === 'burnt') { key = 'burn'; txt = `Burning! Press ${ov + 1}.`; sel = '#decks'; }
+    else { key = 'wait'; txt = 'Baking. Pull it when the needle hits green.'; sel = '#decks'; }
   } else if (sh.prep) {
     const p = sh.prep;
-    if (p.sauce < MIN_P) { key = 'sauce'; txt = 'Step 2: hold S (or press and hold Sauce). Let go when the bar is in the green: that is one BOM portion.'; sel = '#pour-sauce'; }
-    else if (p.cheese < MIN_P) { key = 'cheese'; txt = 'Now hold C for cheese. Same rule: let go in the green.'; sel = '#pour-cheese'; }
-    else if (p.pep < MIN_P) { key = 'pep'; txt = 'Hold P for pepperoni. Going past the green costs Joe money.'; sel = '#pour-pep'; }
-    else { key = 'oven'; txt = 'Every portion is on. Press O to put it in the oven.'; sel = '#btnOven'; }
-  } else { key = 'dough'; txt = 'Step 1 of the routing: press D (or Stretch dough).'; sel = '#btnDough'; }
+    if (p.sauce < MIN_P) { key = 'sauce'; txt = 'Hold S. Let go in the green.'; sel = '#pour-sauce'; }
+    else if (p.cheese < MIN_P) { key = 'cheese'; txt = 'Hold C. Let go in the green.'; sel = '#pour-cheese'; }
+    else if (p.pep < MIN_P) { key = 'pep'; txt = 'Hold P. Let go in the green.'; sel = '#pour-pep'; }
+    else { key = 'oven'; txt = 'Press O to bake.'; sel = '#btnOven'; }
+  } else { key = 'dough'; txt = 'Press D for dough.'; sel = '#btnDough'; }
   if (key === coachKey) return;
   clearCoach(); coachKey = key;
   $('#coachText').textContent = txt;
@@ -1352,15 +1330,20 @@ function coach() {
 
 /* ---------- Joe's books ---------- */
 function booksHTML() {
-  const B = G.books, pct = B.ovenBought ? 100 : clamp(B.ovenFund / OVEN_COST, 0, 1) * 100, n = shiftsToOven(B.ovenFund);
+  const B = G.books, pct = B.ovenBought ? 100 : clamp(B.ovenFund / OVEN_COST, 0, 1) * 100;
   return `<div class="books">
     <div class="bk"><small>Savings</small><b>${money(B.savings)}</b></div>
     <div class="bk"><small>Bank loan</small><b class="${B.loan > 0.005 ? 'over' : ''}">${money(B.loan)}</b></div>
-    <div class="bk"><small>New oven fund</small><b>${B.ovenBought ? 'Bought' : money(B.ovenFund)}</b></div></div>
+    <div class="bk"><small>Oven fund</small><b>${B.ovenBought ? 'Bought' : money(B.ovenFund)}</b></div></div>
     <div class="ovenbar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-    <p class="note">${B.ovenBought ? `New oven bought: ${B.decks} decks in the kitchen.` : `The new oven costs ${money(OVEN_COST)}. At standard profit that's about ${n} more shift${n === 1 ? '' : 's'}.`}${B.loan > 0.005 ? ` Interest due next shift: ${money(B.loan * INTEREST)}.` : ''}</p>`;
+    <p class="note">${B.ovenBought ? `New oven bought: ${B.decks} decks.` : `${money(Math.max(0, OVEN_COST - B.ovenFund))} to go for the ${money(OVEN_COST)} oven.`}</p>`;
 }
-function refreshBooks() { $('#booksLive').innerHTML = booksHTML(); }
+
+function refreshBooks() {
+  const B = G.books;
+  $('#booksMini').innerHTML = `Savings <b style="font-size:18px">${money(B.savings)}</b> · Oven fund <b style="font-size:18px">${B.ovenBought ? 'bought' : `${money(B.ovenFund)}/${money(OVEN_COST)}`}</b>${B.loan > 0.005 ? ` · Loan <b style="font-size:18px" class="over">${money(B.loan)}</b>` : ''}`;
+}
+
 function buyOvenIfReady(pay) {
   const B = G.books;
   if (!B.ovenBought && B.ovenFund >= OVEN_COST - 0.005) { B.ovenFund -= OVEN_COST; B.ovenBought = true; B.decks = 4; pay.bought = true; }
@@ -1424,74 +1407,53 @@ function resetAll() {
   G.hist = []; G.shiftNo = 0; G.goal = null; G.books = freshBooks();
   saveHist(G.hist); saveBooks(); buildDecks(); refreshBooks();
 }
-const SRC_NAME = { savings: "Joe's savings", loan: 'the bank', oven: 'the oven plan' };
+const SRC_NAME = { savings: 'savings', loan: 'the bank', oven: 'the oven' };
 function paydayHTML(d) {
   const c = d.c, pay = d.pay, B = G.books, plan = pay.plan;
   const left = Math.max(0, pay.gap - pay.covered), open = left > 0.005;
   const broke = open && ['savings', 'loan', 'oven'].every((x) => available(x) < 0.005);
-  const nav = `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="4" ${open ? 'disabled' : ''}>Next: pick one fix</button>
-    <button class="btn light" type="button" data-act="step" data-step="2">Back</button></div>`;
+  const nav = `<div class="cta-row"><button class="btn red" type="button" data-act="step" data-step="4" ${open ? 'disabled' : ''}>Next: pick one fix</button></div>`;
+  const books = `<div class="panel-card books-wrap"><h3>Joe's money</h3>${booksHTML()}</div>`;
 
   if (pay.gap < 0.005) {
-    return `<h2>Payday: the profit funds what's next</h2>
-      <p>Joe's plan puts each Friday's standard profit, ${ORDER} pizzas × $2 = <b>${money(plan)}</b>, into the new-oven fund. This Friday delivered.</p>
-      <div class="panel-card"><table class="tbl"><tbody>
-        <tr><td>Operating profit</td><td>${money(c.op)}</td></tr>
-        ${pay.interest ? `<tr><td>Interest on Joe's loan</td><td class="over">-${money(pay.interest)}</td></tr>` : ''}
-        <tr><td>Planned deposit to the oven fund</td><td>-${money(plan)}</td></tr>
-        ${pay.repaid ? `<tr><td>Extra, paid back to the bank</td><td>-${money(pay.repaid)}</td></tr>` : ''}
-        ${pay.extra > 0.005 ? `<tr><td>Extra, also into the oven fund</td><td>-${money(pay.extra)}</td></tr>` : ''}
-        <tr class="total"><td>Left over</td><td>$0.00</td></tr>
-      </tbody></table></div>
-      <div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
-      <p class="insight">${pay.bought ? `<b>Joe bought the new oven.</b> Next shift there are ${B.decks} oven decks. That's what profit is for: it funds the next cycle.` : '<b>Revenue pays the bills. Profit funds reinvestment.</b> Running to standard is what keeps the new oven on schedule.'}</p>
-      ${nav}`;
+    return `<h2>${pay.bought ? 'Joe bought the new oven.' : "Profit funds what's next."}</h2>
+      <p class="sub"><b>${money(plan + pay.extra)}</b> into the oven fund${pay.repaid ? `, <b>${money(pay.repaid)}</b> paid to the bank` : ''}.${pay.bought ? ` Next Friday: ${B.decks} oven decks.` : ''}</p>
+      ${books}${nav}`;
   }
 
   const loss = pay.net < 0;
   const why = leakList(d).filter((x) => Math.abs(x.v) >= 0.005).map((x) => [x.label, x.v]);
-  if (c.good < ORDER) why.push([`${ORDER - c.good} pizza${ORDER - c.good > 1 ? 's' : ''} never delivered ($2 each)`, 2 * (ORDER - c.good)]);
-  if (pay.interest) why.push(["Interest on Joe's loan", pay.interest]);
+  if (c.good < ORDER) why.push([`${ORDER - c.good} pizza${ORDER - c.good > 1 ? 's' : ''} not delivered`, 2 * (ORDER - c.good)]);
+  if (pay.interest) why.push(['Loan interest', pay.interest]);
   const rows = roundRows(why, pay.gap).map(([l, v]) => `<tr><td>${l}</td><td class="${v >= 0 ? 'over' : 'under'}">${v < 0 ? '-' : ''}${money(Math.abs(v))}</td></tr>`).join('');
+  const math = `<details class="math"><summary>Show the math</summary>
+    <table class="tbl"><tbody>
+      <tr><td>Joe's plan: ${ORDER} pizzas × $2 for the oven</td><td>${money(plan)}</td></tr>
+      <tr><td>This Friday delivered</td><td class="${loss ? 'over' : ''}">${money(pay.net)}</td></tr>
+      <tr class="total"><td>Short</td><td>${money(pay.gap)}</td></tr>
+    </tbody></table>
+    <table class="tbl" style="margin-top:12px"><thead><tr><th>Where it went</th><th></th></tr></thead><tbody>${rows}
+      <tr class="total"><td>Total</td><td>${money(pay.gap)}</td></tr></tbody></table></details>`;
 
   const take = (x) => Math.min(left, available(x));
-  const planned = pay.fundStart + plan;
-  const fundAfter = (x) => B.ovenFund - take(x);
-  const n0 = shiftsToOven(planned), n1 = shiftsToOven(fundAfter('oven')), delay = n1 - n0;
-  const label = (a, none) => (a > 0.005 ? `Take ${money(a)}${a < left - 0.005 ? ', all there is' : ''}` : none);
-  const card = (src, chip, title, line, cons, none) => `<div class="fund"><span class="ftag">${chip}</span><b>${title}</b><p>${line}</p><p class="cons">${cons}</p>
-    <button class="btn" type="button" data-act="fund" data-src="${src}" ${open && take(src) > 0.005 ? '' : 'disabled'}>${label(take(src), none)}</button></div>`;
+  const planned = pay.fundStart + plan, fundAfter = B.ovenFund - take('oven');
+  const delay = shiftsToOven(fundAfter) - shiftsToOven(planned);
+  const card = (src, title, line, cons, none) => `<div class="fund"><b>${title}</b><p class="fline">${line}</p><p class="cons">${cons}</p>
+    <button class="btn" type="button" data-act="fund" data-src="${src}" ${open && take(src) > 0.005 ? '' : 'disabled'}>${take(src) > 0.005 ? `Take ${money(take(src))}` : none}</button></div>`;
   const used = Object.entries(pay.from).filter(([, v]) => v > 0.005).map(([k, v]) => `${money(v)} from ${SRC_NAME[k]}`);
-  const after = [];
-  if (pay.from.savings > 0.005) after.push("Joe's cushion is thinner for the next bad night.");
-  if (pay.from.loan > 0.005) after.push(`Next Friday starts with ${money(B.loan * INTEREST)} of interest to pay before anything goes to the oven.`);
-  if (pay.from.oven > 0.005) after.push('The new oven just got further away.');
 
-  return `<h2>${loss ? 'Payday still comes.' : 'Payday: every dollar has to come from somewhere'}</h2>
-    ${loss ? `<div class="split">
-      <div class="mat"><small>Cash coming in</small><b>+${money(c.rev)}</b><span>${c.good} pizzas at $12${c.disc ? `, less a ${Math.round(c.discPct * 100)}% late discount` : ''}</span></div>
-      <div class="time"><small>Cash going out</small><b>-${money(c.rev - pay.net)}</b><span>Ingredients, payroll, oven and shop, other bills${pay.interest ? ', loan interest' : ''}</span></div>
+  return `<h2>${open ? `Joe is ${money(pay.gap)} short. Where does it come from?` : 'Every dollar came from somewhere.'}</h2>
+    <p class="sub">${loss ? `The night lost <b>${money(-pay.net)}</b>, and the plan needed <b>${money(plan)}</b> for the oven.` : `The plan needed <b>${money(plan)}</b> for the oven. This Friday made <b>${money(pay.net)}</b>.`}</p>
+    ${open ? `<div class="funds">
+      ${card('savings', 'Savings', `${money(B.savings)} → ${money(B.savings - take('savings'))}`, 'Less cash for the next bad night', 'Empty')}
+      ${card('loan', 'Borrow', `Owe ${money(B.loan + take('loan'))}`, `Debt + ${Math.round(INTEREST * 100)}% a Friday`, 'Bank says no')}
+      ${card('oven', 'Delay the oven', `Fund ${money(planned)} → ${money(fundAfter)}`, B.ovenBought ? 'Next upgrade later' : delay > 0 ? `Oven ${delay} Friday${delay > 1 ? 's' : ''} later` : 'Oven later', 'Empty')}
     </div>` : ''}
-    <div class="panel-card">
-      <h3>This Friday is ${money(pay.gap)} short of Joe's plan</h3>
-      <p>Joe built his plan on standard: ${ORDER} pizzas × $2 = <b>${money(plan)}</b> into the new-oven fund every Friday. ${loss
-        ? `This Friday lost <b>${money(-pay.net)}</b>, so the bills aren't covered and nothing is left for the oven: <b>${money(-pay.net)}</b> of bills plus the <b>${money(plan)}</b> deposit.`
-        : `This Friday delivered <b>${money(pay.net)}</b>.`} The gap is exactly what you found in the leaks:</p>
-      <table class="tbl" style="margin-top:8px"><tbody>${rows}
-        <tr class="total"><td>Short of plan</td><td class="over">${money(pay.gap)}</td></tr></tbody></table>
-    </div>
-    ${open ? `<p>Every unnecessary dollar of cost has to come from somewhere.${loss ? ' Payroll, the suppliers and the power company still expect to be paid.' : ''} <b>${money(left)}</b> left to cover. Where does it come from?</p>
-    <div class="funds">
-      ${card('savings', 'Use savings', "Joe's savings", `${money(B.savings)} now, ${money(B.savings - take('savings'))} after. The oven stays on schedule.`, 'Less cash remains for the next bad night.', 'Nothing left here')}
-      ${card('loan', 'Borrow', 'A loan from the bank', `Owed: ${money(B.loan)} now, ${money(B.loan + take('loan'))} after. ${Math.round(INTEREST * 100)}% of the balance is due every Friday until it's repaid. Limit ${money(BANK_LIMIT)}.`, 'Debt and interest grow.', 'Bank limit reached')}
-      ${card('oven', 'Delay investment', 'The new oven plan', `The plan says the fund reaches ${money(planned)} after tonight. Taking this leaves ${money(fundAfter('oven'))}.${loss && pay.fundStart > 0.005 ? ' Money already saved for the oven pays the bills.' : ''}`,
-        B.ovenBought ? 'The next upgrade arrives later.' : delay > 0 ? `The new oven arrives about ${delay} Friday${delay > 1 ? 's' : ''} later.` : 'The new oven arrives later.', 'The oven fund is empty')}
-    </div>` : ''}
-    ${used.length ? `<p class="paid">Covered with ${used.join(' and ')}.</p>` : ''}
-    ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> Savings are gone, the oven fund is empty and the bank won't lend more. The shop closes.</p>
+    ${used.length ? `<p class="paid">Covered: ${used.join(' + ')}.</p>` : ''}
+    ${broke ? `<p class="insight"><b>Joe can't make payroll.</b> The shop closes.</p>
       <div class="cta-row"><button class="btn red" type="button" data-act="closeout" data-broke="1">Close out the run</button></div>` : ''}
-    ${!open ? `<div class="panel-card books-wrap"><h3>Joe's money now</h3>${booksHTML()}</div>
-      <p class="insight"><b>Losses and leaks consume cash, and they can steal from tomorrow.</b> ${after.join(' ')}</p>` : ''}
+    ${!open ? books : ''}
+    ${math}
     ${broke ? '' : nav}`;
 }
 
@@ -1543,37 +1505,36 @@ function closeoutScreen() {
     ["Customer's $12", 'Revenue', `${money(sum('rev'))} over the run`],
     ['$5 after manufacturing cost', 'Gross profit', `${money((last.rev - last.cogs) / last.good)} a pizza on your last Friday`],
   ].map(([a, b, c]) => `<tr><td>${a}</td><td><b>${b}</b></td><td>${c}</td></tr>`).join('') : '';
+  const friRows = H.map((h) => `<tr><td>Friday ${h.n}</td><td>${h.dem}/hr</td><td class="${h.cost > STD_COST + 0.005 ? 'over' : 'under'}">${h.cost ? money(h.cost) : '…'}</td><td class="${h.op < 0 ? 'over' : ''}">${money(h.op)}</td></tr>`).join('');
   show(`
-    <p class="eyebrow">${broke ? `Joe's closed after Friday ${H.length}` : `Three Fridays at Joe's · Close-out`}</p>
+    <p class="eyebrow">${broke ? `Joe's closed after Friday ${H.length}` : 'Three Fridays · close-out'}</p>
     <h2>One last time: did Joe make $12?</h2>
     ${last ? `<div class="rep-grid">
-      <div class="panel-card"><h3>Every $12 on your last Friday</h3><div class="bars">${wf}</div>
-        <p class="legend"><span style="--c:#c94d3a">Your pizza</span><span style="--c:#bfae94">Joe's standard</span></p></div>
-      <div class="panel-card"><h3>Where the run left Joe</h3><p>${money3}</p>${booksHTML()}</div>
+      <div class="panel-card"><h3>Every $12, your last Friday</h3><div class="bars">${wf}</div>
+        <p class="legend"><span style="--c:#c94d3a">Yours</span><span style="--c:#bfae94">Standard</span></p></div>
+      <div class="panel-card scroll-x"><h3>Your Fridays</h3>
+        <table class="hist"><thead><tr><th></th><th>Ran</th><th>Cost / pizza</th><th>Profit</th></tr></thead><tbody>
+          <tr><td>Standard</td><td>20/hr</td><td>$7.00</td><td>${money(2 * ORDER)}</td></tr>${friRows}</tbody></table>
+        <div style="margin-top:12px">${booksHTML()}</div></div>
     </div>` : ''}
-    <div class="panel-card scroll-x"><h3>Your Fridays</h3>
-      <table class="hist"><thead><tr><th>Shift</th><th>Promised at</th><th>Ran</th><th>Promise</th><th>Cost / pizza</th><th>Op. profit</th><th>Savings</th><th>Loan</th><th>Oven fund</th></tr></thead><tbody>${fri}</tbody></table>
-      ${trend ? `<p style="margin-top:10px">${trend}</p>` : ''}
-    </div>
-    ${last ? `<div class="panel-card scroll-x"><h3>Joe's Pizza is a small factory</h3>
-      <table class="hist xlate"><thead><tr><th>Joe's Pizza</th><th>Manufacturing</th><th>Your run</th></tr></thead><tbody>${xl}</tbody></table></div>` : ''}
     <div class="panel-card calc"><h3>A factory is a much bigger pizza shop</h3>
-      <p class="note">Try it on a product from your own line. These are example numbers: replace them with yours.</p>
+      <p class="note">Try a product from your line. (Example numbers.)</p>
       <div class="calc-grid" style="margin-top:10px">
-        <label for="cStd">Standard rate (units/hr)<input id="cStd" type="number" min="0" step="any" value="100" inputmode="decimal"></label>
-        <label for="cAct">Demonstrated rate (units/hr)<input id="cAct" type="number" min="0" step="any" value="80" inputmode="decimal"></label>
-        <label for="cHrs">Shift length (hours)<input id="cHrs" type="number" min="0" step="any" value="8" inputmode="decimal"></label>
-        <label for="cCrew">Crew on the line<input id="cCrew" type="number" min="0" step="any" value="4" inputmode="decimal"></label>
-        <label for="cWage">Labor rate ($/hr)<input id="cWage" type="number" min="0" step="any" value="22" inputmode="decimal"></label>
-        <label for="cOh">Overhead ($/hr)<input id="cOh" type="number" min="0" step="any" value="60" inputmode="decimal"></label>
+        <label for="cStd">Standard rate / hr<input id="cStd" type="number" min="0" step="any" value="100" inputmode="decimal"></label>
+        <label for="cAct">Actual rate / hr<input id="cAct" type="number" min="0" step="any" value="80" inputmode="decimal"></label>
+        <label for="cHrs">Shift hours<input id="cHrs" type="number" min="0" step="any" value="8" inputmode="decimal"></label>
+        <label for="cCrew">Crew<input id="cCrew" type="number" min="0" step="any" value="4" inputmode="decimal"></label>
+        <label for="cWage">Labor $ / hr<input id="cWage" type="number" min="0" step="any" value="22" inputmode="decimal"></label>
+        <label for="cOh">Overhead $ / hr<input id="cOh" type="number" min="0" step="any" value="60" inputmode="decimal"></label>
       </div>
       <div class="calc-out" id="calcOut" aria-live="polite"></div>
       <p class="note" id="calcNote" style="margin-top:10px"></p>
     </div>
-    <div class="closing"><p>Revenue is earned by the customer. <span>Profit is protected by execution.</span></p>
-      <small>That's why costing, capacity, planning and production performance matter.</small></div>
+    ${last ? `<details class="math"><summary>Joe's Pizza in factory terms</summary><div class="scroll-x">
+      <table class="hist xlate"><thead><tr><th>Joe's Pizza</th><th>Factory</th><th>Your run</th></tr></thead><tbody>${xl}</tbody></table></div></details>` : ''}
+    <div class="closing"><p>Revenue is earned by the customer. <span>Profit is protected by execution.</span></p></div>
     <div class="cta-row"><button class="btn red" type="button" data-act="newrun">Start a new run</button>
-      ${G.deb ? '<button class="btn light" type="button" data-act="full">Last Friday in full</button>' : ''}</div>`, true);
+      ${G.deb ? '<button class="btn link" type="button" data-act="full">Full numbers</button>' : ''}</div>`, true);
   updateCalc();
 }
 function updateCalc() {
@@ -1585,9 +1546,7 @@ function updateCalc() {
     <div><small>Labor + overhead per unit</small><b>${money(au)}</b><span>vs. ${money(su)} at standard</span></div>
     <div><small>Capacity ${lost >= 0 ? 'given up' : 'gained'} per shift</small><b>${Math.round(Math.abs(lost)).toLocaleString()} units</b><span>${Math.round(std * hrs).toLocaleString()} planned, ${Math.round(act * hrs).toLocaleString()} demonstrated</span></div>
     <div><small>Cost of the gap</small><b>${money(Math.abs(gap))}</b><span>a shift. ${money(Math.abs(gap) * 5)} a week, ${money(Math.abs(gap) * 250)} a year</span></div>`;
-  $('#calcNote').textContent = act < std
-    ? `Same crew, same hour, same product. At ${act} an hour instead of ${std}, every unit carries ${money(au - su)} more labor and overhead. The product didn't change. The process did.`
-    : `You're at or above standard. The question for planning: is it a rate the line can repeat every shift?`;
+  $('#calcNote').textContent = act < std ? "The product didn't change. The process did." : 'At standard. Can the line repeat it every shift?';
 }
 
 function pauseScreen() {
