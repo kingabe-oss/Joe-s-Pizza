@@ -525,9 +525,10 @@ const START = 16 * 60;       // 4:00 PM
 const MAX_MIN = 180;         // Joe sends everyone home after 3 hours
 const POUR_SEC = 1.0;        // seconds of holding to pour one BOM portion
 const MIN_P = 0.95, OK_HI = 1.15, MAX_P = 1.6;
-// 12 s bake (6 kitchen min): two decks just keep pace with the 20/hr standard, so at standard the oven is the bottleneck.
-// The good window stays about 2.8 s wide (10.8 s to 13.6 s), as sharp as before.
-const BAKE_SEC = 12, GOOD_LO = 0.9, GOOD_HI = 1.13, BAKE_MAX = 1.6;
+// 11 s bake (5.5 kitchen min). Two decks top out near 24/hr with perfect pulls, about 22/hr for a sharp
+// human: standard (20/hr) is reachable, and the oven still caps the best players just above it.
+// The good window stays about 2.8 s wide (9.9 s to 12.65 s), as sharp as before.
+const BAKE_SEC = 11, GOOD_LO = 0.9, GOOD_HI = 1.15, BAKE_MAX = 1.6;
 const BOOKS_KEY = 'joes-pizza-b101-books';
 // Floor events, fixed by Friday so a class shares the same experience.
 const EVENTS = { 2: { id: 'oven', at: 8, down: 15, fast: 5 }, 3: { id: 'callout', at: 0 } };
@@ -671,7 +672,7 @@ function newShift(rate) {
   return { rate, promiseMin: (ORDER / rate) * 60, t: 0, prep: null, oven: Array(G.books.decks).fill(null), board: null,
     pies: [], boxed: 0, scrapN: 0, reworkN: 0, pouring: null, lateNoted: false, ended: false, log: [], boxTimes: [],
     event: null, down: null, handDough: false, stretch: 0, cover: false, expedite: false, repromise: false,
-    wait: { oven: 0, board: 0, empty: 0, avail: 0 } };
+    wait: { avail: 0, empty: 0, baking: 0, holding: 0 } };
 }
 const nowMin = () => G.sh.t / SEC_PER_MIN;
 const isDown = (i) => !!(G.sh && G.sh.down && G.sh.down.i === i && nowMin() < G.sh.down.until);
@@ -943,13 +944,14 @@ function update(dt) {
   }
   if (!sh.practice) {
     // Who waited on whom: the basis for naming the bottleneck.
+    // What each available deck was doing: baking (oven working), holding a finished pizza (waiting to be
+    // unloaded), or empty (waiting for prep). The bottleneck is judged from these shares.
     const dm = dt / SEC_PER_MIN, w = sh.wait;
-    const avail = sh.oven.map((p, i) => !isDown(i));
-    w.avail += avail.filter(Boolean).length * dm;
-    w.empty += sh.oven.filter((p, i) => avail[i] && !p).length * dm;
-    const p = sh.prep;
-    if (p && p.sauce >= MIN_P && p.cheese >= MIN_P && p.pep >= MIN_P && freeDeck() < 0) w.oven += dm;
-    if (sh.board && sh.oven.some((q) => q && q.bake >= GOOD_LO)) w.board += dm;
+    sh.oven.forEach((q, i) => {
+      if (isDown(i)) return;
+      w.avail += dm;
+      if (!q) w.empty += dm; else if (q.bake < GOOD_LO) w.baking += dm; else w.holding += dm;
+    });
   }
   if (!sh.practice && !sh.lateNoted && nowMin() > sh.promiseMin) { sh.lateNoted = true; toast('Past the promise. Overtime now.', 'bad'); }
   refreshOven(); refreshTop();
@@ -1377,26 +1379,26 @@ function debData(c, sh) {
     per: { mat: c.mat / good, lab: c.labor / good, oh: c.oh / good, cost: c.cogs / good },
     heavyPies, worst, gap, leftovers: sh.pies.filter((p) => p.leftover).length, bn: bottleneck(sh, c) };
 }
-const BN_NAME = { prep: 'Prep (you)', oven: 'The oven', cut: 'Cut + box' };
+const BN_NAME = { prep: 'Prep (you)', oven: 'The oven', cut: 'Pull, cut + box' };
 function bottleneck(sh, c) {
-  const w = sh.wait, thr = Math.max(1.5, c.min * 0.06);
-  const emptyPct = w.avail ? w.empty / w.avail : 0;
-  let id = 'prep';
-  if (w.oven >= thr && w.oven >= w.board) id = 'oven';
-  else if (w.board >= thr) id = 'cut';
-  return { id, ovenWait: w.oven, boardWait: w.board, emptyPct, perPizza: c.min / Math.max(1, c.good) };
+  const w = sh.wait, A = w.avail || 1;
+  const baking = w.baking / A, holding = w.holding / A, empty = w.empty / A;
+  // The oven only sets the pace when it is baking almost nonstop.
+  // Otherwise the oven was waiting on someone: on unloading if finished pizzas sat longer than decks sat empty, else on prep.
+  const id = baking >= 0.8 ? 'oven' : holding > empty ? 'cut' : 'prep';
+  return { id, baking, holding, empty, perPizza: c.min / Math.max(1, c.good) };
 }
 function bottleneckHTML(d) {
-  const bn = d.bn, pct = Math.round(bn.emptyPct * 100);
+  const bn = d.bn, pct = (x) => Math.round(x * 100);
   const node = (id, step, name, stat) => `<div class="node ${bn.id === id ? 'bn' : ''}">${bn.id === id ? '<span class="bn-tag">Bottleneck</span>' : ''}<small>${step}</small><b>${name}</b><span>${stat}</span></div>`;
-  const why = bn.id === 'oven' ? `Ready pizzas waited <b>${dur(bn.ovenWait)}</b> for a free deck. Faster prep wouldn't have helped. More oven would.`
-    : bn.id === 'cut' ? `Baked pizzas waited <b>${dur(bn.boardWait)}</b> because the board was full. Cut and box sooner to keep the oven turning.`
-    : `The oven sat empty <b>${pct}%</b> of the time, waiting for your next pizza. A bigger oven wouldn't have helped. Faster prep would.`;
+  const why = bn.id === 'oven' ? `The oven was baking <b>${pct(bn.baking)}%</b> of the time. It set the pace: faster prep wouldn't have helped. More oven would.`
+    : bn.id === 'cut' ? `Finished pizzas sat in the decks <b>${pct(bn.holding)}%</b> of the time before being pulled. The oven had room. Pull, cut and box sooner to keep it turning.`
+    : `The oven was baking only <b>${pct(bn.baking)}%</b> of the time and sat empty <b>${pct(bn.empty)}%</b>, waiting for your next pizza. A bigger oven wouldn't have helped. Faster prep would.`;
   return `<div class="chart-card"><h3>This Friday's bottleneck: ${BN_NAME[bn.id]}</h3>
     <div class="flow">
       ${node('prep', 'Steps 1–2', 'Prep (you)', `a pizza every ${mmss(bn.perPizza)}`)}<span class="arr" aria-hidden="true">→</span>
-      ${node('oven', 'Step 3', 'Oven', `decks empty ${pct}% of the time`)}<span class="arr" aria-hidden="true">→</span>
-      ${node('cut', 'Steps 4–5', 'Cut + box', bn.boardWait >= 0.5 ? `held pizzas ${dur(bn.boardWait)}` : 'never held things up')}
+      ${node('oven', 'Step 3', 'Oven', `baking ${pct(bn.baking)}% · empty ${pct(bn.empty)}%`)}<span class="arr" aria-hidden="true">→</span>
+      ${node('cut', 'Steps 4–5', 'Pull, cut + box', bn.holding >= 0.05 ? `done pizzas waited ${pct(bn.holding)}%` : 'kept up')}
     </div>
     <p class="lesson-line" style="margin-top:6px">${why}</p></div>`;
 }

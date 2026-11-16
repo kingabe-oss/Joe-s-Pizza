@@ -66,13 +66,13 @@ Series colors were checked with a color-vision-deficiency validator: red for you
 
 ## The oven and the bottleneck
 
-Joe's oven has **two decks**, and a pizza bakes for 6 kitchen minutes (12 seconds of play). That's set so two decks *just* keep pace with the 20-an-hour standard. At standard, the oven is the bottleneck; slower than that, the player is. The good window is about 2.8 seconds wide, so a pizza burns as quickly as ever. Buying the new oven adds a third deck.
+Joe's oven has **two decks**, and a pizza bakes for 5.5 kitchen minutes (11 seconds of play). Two decks top out at about 24 an hour with perfect pulls, and about 22 for a sharp player. So the 20-an-hour standard is reachable, and the oven still caps the best players just above it. The good window is about 2.8 seconds wide, so a pizza burns as quickly as ever. Buying the new oven adds a third deck.
 
-Every Friday's debrief names that shift's bottleneck from what happened in it:
+Every Friday's debrief names that shift's bottleneck from what the oven's decks were doing while available: baking, holding a finished pizza, or empty.
 
-- **The oven:** ready pizzas waited for a free deck. Faster prep wouldn't have helped.
-- **Prep (you):** decks sat empty waiting for the next pizza. A bigger oven wouldn't have helped.
-- **Cut + box:** baked pizzas waited because the board was full.
+- **The oven:** decks were baking at least 80% of the time. The oven set the pace, and faster prep wouldn't have helped.
+- **Pull, cut + box:** otherwise, if finished pizzas sat in the decks longer than decks sat empty. The oven had room, but unloading didn't keep up.
+- **Prep (you):** otherwise. Decks sat empty waiting for the next pizza, and a bigger oven wouldn't have helped.
 
 It's shown on the routing (prep → oven → cut + box) with the bottleneck highlighted. The Friday 2 downtime lesson says whether the lost deck hit the bottleneck, and the close-out table lists each Friday's bottleneck. Pizzas started past the order are shown as "Made but not needed" (overproduction), not as scrap.
 
